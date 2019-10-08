@@ -31,6 +31,8 @@ invG = [[-9.25221813226351e-14,  2.32272588749499e-13,  5.30001389997814e-15],
 #p1=18446744073709551653#4294967291
 #p2=18446744073709551629#4294967279
 
+# je remets le commentaire
+
 #Calcul des factorisations LU
 L1,U1=FactorisationLUMod(Lreduite,p1)
 L2,U2=FactorisationLUMod(Lreduite,p2)'''
