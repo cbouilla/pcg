@@ -64,12 +64,12 @@ void prodMatMatU(unsigned long long* res, unsigned long long* M1, unsigned long 
 
 ////////////////Fonctions pour la récupération de S//////////////
 
-void getPolW(mpz_t *polW, unsigned long long W0, mpz_t a, mpz_t m, int nbiter){ //OK !
+void getPolW(mpz_t *polW, unsigned long long W0, mpz_t a, int k, int nbiter){ //OK !
     mpz_init_set_si(polW[0], W0);
     for(int i = 1 ; i < nbiter ; i++){
         mpz_init(polW[i]);
         mpz_addmul(polW[i], polW[i-1], a);
-        mpz_mod(polW[i], polW[i], m);
+        mpz_mod_2exp(polW[i], polW[i], k);
     }
 }
 
@@ -106,17 +106,37 @@ void findSprim(unsigned long long* Sprim, unsigned long long* Yprim, unsigned lo
     free(tmp2);
 }
  
-void findS(mpz_t* S, unsigned long long* Sprim, unsigned long long* X, mpz_t* polC, mpz_t* polW, int known_low, int k, int nbiter){
+void findS(mpz_t* S, unsigned long long* Sprim, unsigned long long* X, mpz_t* polC, mpz_t* polW, int known_low, int k, int nbiter){ //OK !
     unsigned long long tmp ;
     for(int i = 0 ; i < nbiter ; i++){
         tmp = (Sprim[i] << known_low) + mpz_get_ull(polW[i]) + mpz_get_ull(polC[i]);
         mpz_init_set_si(S[i], tmp ^ X[i]);
         mpz_mul_2exp(S[i], S[i], k);
         mpz_add_ui(S[i], S[i], tmp);
+        mpz_mod_2exp(S[i], S[i], 2 * k);
     }
 }
 
-
+void Solve(mpz_t* S, unsigned long long* X, unsigned long long W0, unsigned long long* rot, unsigned long long* Greduite, float* invG, mpz_t* polC, mpz_t a, int known_low, int known_up, int k, int nbiter){
+    mpz_t* polW = malloc(nbiter*sizeof(mpz_t));
+    getPolW(polW, W0, a, k, nbiter);
+    
+    unsigned long long* Y = malloc(nbiter*sizeof(unsigned long long));
+    getY(Y, polW, polC, rot, X, nbiter, known_low, known_up, k);
+    
+    unsigned long long* Yprim = malloc(nbiter*sizeof(unsigned long long));
+    getYprim(Yprim, Y, polW, polC, nbiter, known_low, known_up, k);
+    
+    unsigned long long* Sprim = malloc(nbiter*sizeof(unsigned long long));
+    findSprim(Sprim, Yprim, Greduite, invG, known_low, known_up, k, nbiter);
+    
+    findS(S, Sprim, X, polC, polW, known_low, k, nbiter);
+    
+    //memory liberation
+    free(polW);
+    free(Y);
+    free(Yprim);
+}
 /* Sorties du générateur sans rotation 
 void sortiesGenerateur(mpz_t* X, mpz_t* S, mpz_t m,  mpz_t a, mpz_t c, int nbiter){
     gmp_randstate_t state;

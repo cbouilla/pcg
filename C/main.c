@@ -54,39 +54,18 @@ int main(){
      5.71040610630735e-14,  3.06929503514353e-14,  6.39750297008745e-14};    
         
     /********** Calculs/Tests plus ou moins à la con ***********/
-    unsigned long long W0 = 234270;
-    unsigned long long rot[3] = {25, 53, 44};
-    unsigned long long X[3] = {9681998970132172112, 3255734256114478613, 12077861056297022149};
-    mpz_t* polW = malloc(nbiter*sizeof(mpz_t));
-    getPolW(polW, W0, a, m, nbiter);
-    /*for(int i = 0 ; i < nbiter ; i++)
-        gmp_printf("%Zd\n",polW[i]);*/
-    unsigned long long* Y = malloc(nbiter*sizeof(unsigned long long));
-    getY(Y, polW, polC, rot, X, nbiter, known_low, known_up, k);
-    printf("Y :\n");
-    for(int i = 0 ; i < nbiter ; i++)
-        printf("%llu\n",Y[i]);
-    unsigned long long* Yprim = malloc(nbiter*sizeof(unsigned long long));
-    getYprim(Yprim, Y, polW, polC, nbiter, known_low, known_up, k);
-    printf("Yprim :\n");
-    for(int i = 0 ; i < nbiter ; i++)
-        printf("%llu\n",Yprim[i]);
-    
-    unsigned long long* Sprim = malloc(nbiter*sizeof(unsigned long long));
-    findSprim(Sprim, Yprim, Greduite, invG, known_low, known_up, k, nbiter);
-    for(int i = 0 ; i < nbiter ; i++)
-        printf("%llu\n",Sprim[i]);
+    unsigned long long W0 = 194862;
+    unsigned long long rot[3] = {22, 63, 27};
+    unsigned long long X[3] = {3624567837688616196, 1507876942650318042, 2606871921509724861};
     
     mpz_t* S = malloc(nbiter*sizeof(mpz_t));
-    findS(S, Sprim, X, polC, polW, known_low, k, nbiter);
+    Solve(S, X, W0, rot, Greduite, invG, polC, a, known_low, known_up, k, nbiter);
+    printf("S :\n");
     for(int i = 0 ; i < nbiter ; i++)
-        printf("%Zd\n",S[i]);
+        gmp_printf("%Zd\n",S[i]);
     
     //memory liberation
     free(polC);
-    free(polW);
-    free(Y);
-    free(Yprim);
     free(S);
     
     return(0);
