@@ -87,7 +87,7 @@ void getYprim(unsigned long long* Yprim, unsigned long long* Y, mpz_t* polW, mpz
     mpz_init(tmp);
     for(int i = 0 ; i < nbiter ; i++){
         mpz_add(tmp, polC[i], polW[i]);
-        mpz_cdiv_q_2exp (tmp, tmp, k - known_up);
+        mpz_fdiv_q_2exp (tmp, tmp, k - known_up);
         Yprim[i] = Y[i] - mpz_get_ull(tmp);
         Yprim[i] = Yprim[i] % (1 << (known_low + known_up));
     }
