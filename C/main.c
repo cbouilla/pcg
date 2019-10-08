@@ -54,53 +54,40 @@ int main(){
      5.71040610630735e-14,  3.06929503514353e-14,  6.39750297008745e-14};    
         
     /********** Calculs/Tests plus ou moins à la con ***********/
-    unsigned long long W0 = 196971;
-    unsigned long long rot[3] = {61, 48, 7};
-    unsigned long long X[3] = {8941035003019423752, 18172245047826298292, 68897887937242410};
-    
-    mpz_t* S = malloc(nbiter*sizeof(mpz_t));
-    
-    /*Zone Solve*/
+    unsigned long long W0 = 38904;
+    unsigned long long rot[3] = {45, 24, 52};
+    unsigned long long X[3] = {12920242165399613079, 2534493022523250514, 10525173963589828199};
     mpz_t* polW = malloc(nbiter*sizeof(mpz_t));
-    getPolW(polW, W0, a, k, nbiter);
-    
+    getPolW(polW, W0, a, m, nbiter);
+    /*for(int i = 0 ; i < nbiter ; i++)
+        gmp_printf("%Zd\n",polW[i]);*/
     unsigned long long* Y = malloc(nbiter*sizeof(unsigned long long));
     getY(Y, polW, polC, rot, X, nbiter, known_low, known_up, k);
     printf("Y :\n");
     for(int i = 0 ; i < nbiter ; i++)
-        gmp_printf("%llu ",Y[i]);
-    printf("\n");
-    
+        printf("%llu\n",Y[i]);
     unsigned long long* Yprim = malloc(nbiter*sizeof(unsigned long long));
     getYprim(Yprim, Y, polW, polC, nbiter, known_low, known_up, k);
     printf("Yprim :\n");
     for(int i = 0 ; i < nbiter ; i++)
-        gmp_printf("%llu ",Yprim[i]);
-    printf("\n");
+        printf("%llu\n",Yprim[i]);
     
     unsigned long long* Sprim = malloc(nbiter*sizeof(unsigned long long));
     findSprim(Sprim, Yprim, Greduite, invG, known_low, known_up, k, nbiter);
-    printf("Sprim :\n");
     for(int i = 0 ; i < nbiter ; i++)
-        gmp_printf("%llu ",Sprim[i]);
-    printf("\n");
+        printf("%llu\n",Sprim[i]);
     
+    mpz_t* S = malloc(nbiter*sizeof(mpz_t));
     findS(S, Sprim, X, polC, polW, known_low, k, nbiter);
-    /*fin zone Solve*/ 
-    //Solve(S, X, W0, rot, Greduite, invG, polC, a, known_low, known_up, k, nbiter);
-    printf("S :\n");
     for(int i = 0 ; i < nbiter ; i++)
-        gmp_printf("%Zd ",S[i]);
-    printf("\n");
-    
+        gmp_printf("%Zd\n",S[i]);
     
     //memory liberation
     free(polC);
-    free(S);
-    
     free(polW);
     free(Y);
     free(Yprim);
+    free(S);
     
     return(0);
 }
