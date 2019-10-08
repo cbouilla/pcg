@@ -1,9 +1,9 @@
 CFLAGS = -O3 -Wall -Wextra
-LDADD = -lgmp
+LDLIBS = -lgmp -lm
 
 all: main
 
-main: fonctions.o parametres.o main.o
+main: fonctions.o main.o
 
 .PHONY: clean
 
