@@ -56,7 +56,7 @@ int main(){
     /********** Calculs/Tests plus ou moins à la con ***********/
     unsigned long long W0 = 38904;
     unsigned long long rot[3] = {45, 24, 52};
-    unsigned long long X[3] = {12920242165399613079, 2534493022523250514, 10525173963589828199};
+    unsigned long long X[3] = {12920242165399613079ull, 2534493022523250514ull, 10525173963589828199ull};
     mpz_t* polW = malloc(nbiter*sizeof(mpz_t));
     getPolW(polW, W0, a, m, nbiter);
     /*for(int i = 0 ; i < nbiter ; i++)
