@@ -54,9 +54,15 @@ int main(){
      5.71040610630735e-14,  3.06929503514353e-14,  6.39750297008745e-14};    
         
     /********** Calculs/Tests plus ou moins à la con ***********/
+<<<<<<< HEAD
     unsigned long long W0 = 98735;
     unsigned long long rot[3] = {7, 54, 50};
     unsigned long long X[3] = {9067441263659890769llu, 12674224149338242009llu, 2612107274013664962llu};
+=======
+    unsigned long long W0 = 38904;
+    unsigned long long rot[3] = {45, 24, 52};
+    unsigned long long X[3] = {12920242165399613079ull, 2534493022523250514ull, 10525173963589828199ull};
+>>>>>>> 6f503f08e44d4357d9a7b8e770a0eb4657d52189
     mpz_t* polW = malloc(nbiter*sizeof(mpz_t));
     getPolW(polW, W0, a, m, nbiter);
     /*for(int i = 0 ; i < nbiter ; i++)
