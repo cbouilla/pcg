@@ -73,22 +73,30 @@ void getPolW(mpz_t *polW, unsigned long long W0, mpz_t a, mpz_t m, int nbiter){ 
     }
 }
 
-void getY(unsigned long long* Y, mpz_t* polW, mpz_t* polC, unsigned long long* rot, unsigned long long* X, int nbiter, int known_low, int known_up, int k){ //OK !
-    unsigned long long tmp;
+void getSumPol(unsigned long long* sumPol,unsigned long long* sumPolY, mpz_t* polC, mpz_t* polW, int nbiter, int known_low, int known_up, int k){
     for(int i = 0 ; i < nbiter ; i++){
-        tmp = (mpz_get_ull(polC[i]) + mpz_get_ull(polW[i])) % (1 << known_low);
-        Y[i] = ((tmp ^ (X[i] % (1 << known_low))) << known_up ) + (rot[i] ^ (X[i] >> (k - known_up)));
+        mpz_t tmp;
+        mpz_init(tmp);
+        mpz_add(tmp, polC[i], polW[i]);
+        sumPol[i] = mpz_get_ull(tmp);
+        mpz_cdiv_q_2exp(tmp, tmp, k - known_up);
+        sumPolY[i] = mpz_get_ull(tmp) % (1 << (known_low + known_up));
     }
 }
 
-void getYprim(unsigned long long* Yprim, unsigned long long* Y, mpz_t* polW, mpz_t* polC,
+void getY(unsigned long long* Y, unsigned long long* sumPol, unsigned long long* rot, unsigned long long* X, int nbiter, int known_low, int known_up, int k){ //OK !
+    for(int i = 0 ; i < nbiter ; i++){
+        Y[i] = (((sumPol[i] ^ X[i]) % (1 << known_low)) << known_up ) + (rot[i] ^ (X[i] >> (k - known_up)));
+    }
+}
+
+void getYprim(unsigned long long* Yprim, unsigned long long* Y, unsigned long long* sumPolY,
  int nbiter, int known_low, int known_up, int k){//OK ! avec erreurs arrondi
+     //Utiliser sumPolY
     mpz_t tmp;
     mpz_init(tmp);
     for(int i = 0 ; i < nbiter ; i++){
-        mpz_add(tmp, polC[i], polW[i]);
-        mpz_cdiv_q_2exp (tmp, tmp, k - known_up);
-        Yprim[i] = Y[i] - mpz_get_ull(tmp);
+        Yprim[i] = Y[i] - sumPolY[i];
         Yprim[i] = Yprim[i] % (1 << (known_low + known_up));
     }
 }
@@ -106,10 +114,10 @@ void findSprim(unsigned long long* Sprim, unsigned long long* Yprim, unsigned lo
     free(tmp2);
 }
  
-void findS(mpz_t* S, unsigned long long* Sprim, unsigned long long* X, mpz_t* polC, mpz_t* polW, int known_low, int k, int nbiter){
+void findS(mpz_t* S, unsigned long long* Sprim, unsigned long long* X, unsigned long long* sumPol, int known_low, int k, int nbiter){
     unsigned long long tmp ;
     for(int i = 0 ; i < nbiter ; i++){
-        tmp = (Sprim[i] << known_low) + mpz_get_ull(polW[i]) + mpz_get_ull(polC[i]);
+        tmp = (Sprim[i] << known_low) + sumPol[i];
         mpz_init_set_si(S[i], tmp ^ X[i]);
         mpz_mul_2exp(S[i], S[i], k);
         mpz_add_ui(S[i], S[i], tmp);

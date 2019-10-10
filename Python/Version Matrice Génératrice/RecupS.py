@@ -25,8 +25,6 @@ def FindSprim(X, rot, polW): #rajouter rot dans la version non test ? #OK! ~64bi
     Yprim = getYprim(Y, polC, polW) #OK avec erreurs de retenues!
     tmp = [y * 2**(k//2 - connus_up - connus_low) for y in Yprim]#on rajoute les zéros, recentrage impossible à cause des erreurs de retenues
     u = prodMatVec(invG, tmp)
-    print("u")
-    print(u)
     Sprim = prodMatVec(Greduite, [round(u_) for u_ in u])
     
     return Sprim

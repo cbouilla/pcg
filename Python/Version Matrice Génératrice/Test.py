@@ -27,5 +27,6 @@ Sprim = FindSprim(X,rot,polW)
 print("Sprim")
 print(Sprim)
 S2 = FindS(X, rot, W0)
-print(S == S2)
+print("S")
+print(S)
 
