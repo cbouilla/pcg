@@ -5,6 +5,43 @@
 #include <math.h>
 #include "fonctions.h"
 
+unsigned long long Greduite[9] = {-1241281756092, -5001120657083,  8655886039732,
+    3827459685972, -2117155768935,  3303731088004,
+    -728312298332,  5479732607037,  6319848582548};
+
+float invG[9] = {-9.25221813226351e-14,  2.32272588749499e-13,  5.30001389997814e-15,
+    -7.81560146462246e-14, -4.52719459143047e-15,  1.09411828555506e-13,
+    5.71040610630735e-14,  3.06929503514353e-14,  6.39750297008745e-14};
+
+void init_var_globales(){
+
+    //m le modulo 2**128
+    mpz_init_set_ui(m,1);
+    mpz_mul_2exp(m,m,k*2);
+    
+    //multiplier a OK !
+    mpz_init_set_ui(a,2549297995355413924); 
+    mpz_mul_2exp(a,a,k);
+    mpz_add_ui(a,a,4865540595714422341);
+    
+    //increment c OK !
+    mpz_init_set_ui(c,6364136223846793005); 
+    mpz_mul_2exp(c,c,k);
+    mpz_add_ui(c,c,1442695040888963407);
+    
+    //increment polynome polC OK !
+    mpz_init_set_ui(polC[0], 0);
+    mpz_t powA;
+    mpz_init_set_ui(powA,1);
+    for(int i = 1; i < nbiter ; i++){
+        mpz_init_set(polC[i],polC[i-1]);
+        mpz_addmul(polC[i],powA,c);
+        mpz_mod(polC[i],polC[i],m);
+        mpz_mul(powA, powA, a);
+        mpz_mod (powA, powA, m);
+    }
+}
+
 ////////////////Fonction conversion mpz - int64 //////////////
 unsigned long long mpz_get_ull(mpz_t n)
 {
@@ -65,7 +102,7 @@ void prodMatMatU(unsigned long long* res, unsigned long long* M1, unsigned long 
 
 ////////////////Fonctions pour la récupération de S//////////////
 
-void getPolW(mpz_t *polW, unsigned long long W0, mpz_t a, mpz_t m){ //OK !
+void getPolW(mpz_t *polW, unsigned long long W0){ //OK !
     mpz_init_set_si(polW[0], W0);
     for(int i = 1 ; i < nbiter ; i++){
         mpz_init(polW[i]);
@@ -74,7 +111,7 @@ void getPolW(mpz_t *polW, unsigned long long W0, mpz_t a, mpz_t m){ //OK !
     }
 }
 
-void getSumPol(unsigned long long* sumPol,unsigned long long* sumPolY, mpz_t* polC, mpz_t* polW){
+void getSumPol(unsigned long long* sumPol,unsigned long long* sumPolY, mpz_t* polW){
     for(int i = 0 ; i < nbiter ; i++){
         mpz_t tmp;
         mpz_init(tmp);
@@ -101,7 +138,7 @@ void getYprim(unsigned long long* Yprim, unsigned long long* Y, unsigned long lo
     }
 }
 
-void findSprim(unsigned long long* Sprim, unsigned long long* Yprim, unsigned long long* Greduite, float* invG){ //OK !
+void findSprim(unsigned long long* Sprim, unsigned long long* Yprim){ //OK !
     unsigned long long* tmp1 = malloc(nbiter * sizeof(unsigned long long));
     for(int i = 0 ; i < nbiter ; i++)
         tmp1[i] = Yprim[i] << (k - known_low - known_up);
