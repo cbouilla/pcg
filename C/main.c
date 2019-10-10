@@ -5,10 +5,6 @@
 int main(){
     
     /*  INITIALISATION DES PARAMETRES  */
-    int k = 64;
-    int known_up = 6;
-    int known_low = 18;
-    int nbiter = 3;
     
     //m le modulo 2**128
     mpz_t m;
@@ -54,46 +50,42 @@ int main(){
      5.71040610630735e-14,  3.06929503514353e-14,  6.39750297008745e-14};    
         
     /********** Calculs/Tests plus ou moins à la con ***********/
-<<<<<<< HEAD
+    
     unsigned long long W0 = 98735;
-    unsigned long long rot[3] = {7, 54, 50};
-    unsigned long long X[3] = {9067441263659890769llu, 12674224149338242009llu, 2612107274013664962llu};
-=======
-    unsigned long long W0 = 38904;
-    unsigned long long rot[3] = {45, 24, 52};
-    unsigned long long X[3] = {12920242165399613079ull, 2534493022523250514ull, 10525173963589828199ull};
->>>>>>> 6f503f08e44d4357d9a7b8e770a0eb4657d52189
+    unsigned long long rot[nbiter] = {7, 54, 50};
+    unsigned long long X[nbiter] = {9067441263659890769llu, 12674224149338242009llu, 2612107274013664962llu};
     mpz_t* polW = malloc(nbiter*sizeof(mpz_t));
-    getPolW(polW, W0, a, m, nbiter);
+    getPolW(polW, W0, a, m);
     /*for(int i = 0 ; i < nbiter ; i++)
         gmp_printf("%Zd\n",polW[i]);*/
     
-    unsigned long long* sumPol = malloc(nbiter*sizeof(unsigned long long));
-    unsigned long long* sumPolY = malloc(nbiter*sizeof(unsigned long long));
-    getSumPol(sumPol,sumPolY, polC, polW, nbiter, known_low, known_up, k);
+    unsigned long long sumPol[nbiter];
+    unsigned long long sumPolY[nbiter];
+    getSumPol(sumPol,sumPolY, polC, polW);
     
-    unsigned long long* Y = malloc(nbiter*sizeof(unsigned long long));
-    getY(Y, sumPol, rot, X, nbiter, known_low, known_up, k);
+    unsigned long long Y[nbiter];
+    getY(Y, sumPol, rot, X);
     printf("Y :\n");
     for(int i = 0 ; i < nbiter ; i++)
         printf("%llu\n",Y[i]);
-    unsigned long long* Yprim = malloc(nbiter*sizeof(unsigned long long));
-    getYprim(Yprim, Y, sumPolY, nbiter, known_low, known_up, k);
+    unsigned long long Yprim[nbiter];
+    getYprim(Yprim, Y, sumPolY);
     printf("Yprim :\n");
     for(int i = 0 ; i < nbiter ; i++)
         printf("%llu\n",Yprim[i]);
     
-    unsigned long long* Sprim = malloc(nbiter*sizeof(unsigned long long));
-    findSprim(Sprim, Yprim, Greduite, invG, known_low, known_up, k, nbiter);
+    unsigned long long Sprim[nbiter];
+    findSprim(Sprim, Yprim, Greduite, invG);
     printf("Sprim :\n");
     for(int i = 0 ; i < nbiter ; i++)
         printf("%llu\n",Sprim[i]);
     
-    mpz_t* S = malloc(nbiter*sizeof(mpz_t));
-    findS(S, Sprim, X, sumPol, known_low, k, nbiter);
+    mpz_t S[nbiter];
+    findS(S, Sprim, X, sumPol);
     printf("S :\n");
     for(int i = 0 ; i < nbiter ; i++)
         gmp_printf("%Zd\n",S[i]);
     
+    printf("resultat du test %d\n",test(S,X));
     return(0);
 }

@@ -3,6 +3,7 @@
 #include <time.h>
 #include <gmp.h>
 #include <math.h>
+#include "fonctions.h"
 
 ////////////////Fonction conversion mpz - int64 //////////////
 unsigned long long mpz_get_ull(mpz_t n)
@@ -51,12 +52,12 @@ void prodMatVecFFU(float* res, float* M, unsigned long long* v, int n){
 }
 
 void prodMatMatU(unsigned long long* res, unsigned long long* M1, unsigned long long* M2, int n){//juste pour verif
-    int i, j, k;
+    int i, j, l;
     for(i=0 ; i<n ; i++){
         for(j=0 ; j<n ; j++){
             res[i * + j] = 0;
-            for(k=0; k<n ; k++)
-                res[i * n + j]+= M1[i * n + k] * M2[k * n + j];
+            for(l=0; l<n ; l++)
+                res[i * n + j]+= M1[i * n + l] * M2[l * n + j];
         }
     }
 }
@@ -64,7 +65,7 @@ void prodMatMatU(unsigned long long* res, unsigned long long* M1, unsigned long 
 
 ////////////////Fonctions pour la récupération de S//////////////
 
-void getPolW(mpz_t *polW, unsigned long long W0, mpz_t a, mpz_t m, int nbiter){ //OK !
+void getPolW(mpz_t *polW, unsigned long long W0, mpz_t a, mpz_t m){ //OK !
     mpz_init_set_si(polW[0], W0);
     for(int i = 1 ; i < nbiter ; i++){
         mpz_init(polW[i]);
@@ -73,25 +74,24 @@ void getPolW(mpz_t *polW, unsigned long long W0, mpz_t a, mpz_t m, int nbiter){ 
     }
 }
 
-void getSumPol(unsigned long long* sumPol,unsigned long long* sumPolY, mpz_t* polC, mpz_t* polW, int nbiter, int known_low, int known_up, int k){
+void getSumPol(unsigned long long* sumPol,unsigned long long* sumPolY, mpz_t* polC, mpz_t* polW){
     for(int i = 0 ; i < nbiter ; i++){
         mpz_t tmp;
         mpz_init(tmp);
         mpz_add(tmp, polC[i], polW[i]);
         sumPol[i] = mpz_get_ull(tmp);
-        mpz_cdiv_q_2exp(tmp, tmp, k - known_up);
+        mpz_tdiv_q_2exp(tmp, tmp, k - known_up);
         sumPolY[i] = mpz_get_ull(tmp) % (1 << (known_low + known_up));
     }
 }
 
-void getY(unsigned long long* Y, unsigned long long* sumPol, unsigned long long* rot, unsigned long long* X, int nbiter, int known_low, int known_up, int k){ //OK !
+void getY(unsigned long long* Y, unsigned long long* sumPol, unsigned long long* rot, unsigned long long* X){ //OK !
     for(int i = 0 ; i < nbiter ; i++){
         Y[i] = (((sumPol[i] ^ X[i]) % (1 << known_low)) << known_up ) + (rot[i] ^ (X[i] >> (k - known_up)));
     }
 }
 
-void getYprim(unsigned long long* Yprim, unsigned long long* Y, unsigned long long* sumPolY,
- int nbiter, int known_low, int known_up, int k){//OK ! avec erreurs arrondi
+void getYprim(unsigned long long* Yprim, unsigned long long* Y, unsigned long long* sumPolY){//OK ! avec erreurs arrondi
      //Utiliser sumPolY
     mpz_t tmp;
     mpz_init(tmp);
@@ -101,7 +101,7 @@ void getYprim(unsigned long long* Yprim, unsigned long long* Y, unsigned long lo
     }
 }
 
-void findSprim(unsigned long long* Sprim, unsigned long long* Yprim, unsigned long long* Greduite, float* invG, int known_low, int known_up, int k, int nbiter){ //OK !
+void findSprim(unsigned long long* Sprim, unsigned long long* Yprim, unsigned long long* Greduite, float* invG){ //OK !
     unsigned long long* tmp1 = malloc(nbiter * sizeof(unsigned long long));
     for(int i = 0 ; i < nbiter ; i++)
         tmp1[i] = Yprim[i] << (k - known_low - known_up);
@@ -114,7 +114,7 @@ void findSprim(unsigned long long* Sprim, unsigned long long* Yprim, unsigned lo
     free(tmp2);
 }
  
-void findS(mpz_t* S, unsigned long long* Sprim, unsigned long long* X, unsigned long long* sumPol, int known_low, int k, int nbiter){
+void findS(mpz_t* S, unsigned long long* Sprim, unsigned long long* X, unsigned long long* sumPol){
     unsigned long long tmp ;
     for(int i = 0 ; i < nbiter ; i++){
         tmp = (Sprim[i] << known_low) + sumPol[i];
@@ -125,6 +125,17 @@ void findS(mpz_t* S, unsigned long long* Sprim, unsigned long long* X, unsigned 
     }
 }
 
+int test(mpz_t* S, unsigned long long* X){
+    unsigned long long tmp;
+    for(int i = 0 ; i < nbiter ; i++){
+        tmp = mpz_get_ull(S[i]);
+        mpz_tdiv_q_2exp(S[i], S[i], k);
+        tmp = tmp ^ mpz_get_ull(S[i]);
+        if(tmp != X[i])
+            return 0;
+    }
+    return 1;
+}
 /* Sorties du générateur sans rotation 
 void sortiesGenerateur(mpz_t* X, mpz_t* S, mpz_t m,  mpz_t a, mpz_t c, int nbiter){
     gmp_randstate_t state;
