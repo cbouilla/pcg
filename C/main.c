@@ -19,11 +19,15 @@ int main(){
     unsigned long long sumPolY[nbiter];
     mpz_t S[nbiter];
     mpz_t polW[nbiter];
+    for(int i = 0 ; i < nbiter ; i++){
+        mpz_init(S[i]);
+        mpz_init(polW[i]);
+    }
     
-    int time = clock();
-    
-    
-    for(W0 = 0 ; W0 < (1<<15) ; W0++){//(1<<known_low)
+    float temps;
+    clock_t t1, t2;
+    t1 = clock();
+    for(W0 = 0 ; W0 < (1<<known_low) ; W0++){//(1<<known_low)
         getPolW(polW, W0);
         getSumPol(sumPol,sumPolY, polW);
         for(int r = 0 ; r < 1<<(3*known_up) ; r++){
@@ -42,7 +46,8 @@ int main(){
             }
         }
     }
-    int time2 = clock();
-    printf("Temps d'execution = %d ms\n", time2 - time); 
+    t2 = clock();
+    temps = (float)(t2-t1)/CLOCKS_PER_SEC;
+    printf("temps = %f\n", temps);
     return(0);
 }

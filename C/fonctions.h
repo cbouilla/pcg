@@ -1,5 +1,6 @@
 #include <stdint.h>
 #include <gmp.h>
+//#include "pcg_oneseq.h"
 
 /***** Macro et Variables globales *****/
 #define k 64
