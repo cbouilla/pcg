@@ -15,10 +15,10 @@ float invG[9] = {-9.25221813226351e-14,  2.32272588749499e-13,  5.30001389997814
 
 void init_var_globales(){
     //multiplier a OK !
-    a = (2549297995355413924ull << (k)) + 4865540595714422341;
+    a = (((pcg128_t) 2549297995355413924) << k) + ((pcg128_t) 4865540595714422341);
     
     //increment c OK !
-    c = (6364136223846793005 << (k)) + 1442695040888963407;
+    c = (((pcg128_t)6364136223846793005) << k) + 1442695040888963407;
     
     //increment polynome polC OK !
     polC[0] = 0;
@@ -114,7 +114,7 @@ void getSumPol(unsigned long long* sumPol,unsigned long long* sumPolY, pcg128_t*
     pcg128_t sum;
     for(int i = 0 ; i < nbiter ; i++){
         sum = polC[i] + polW[i];
-        sumPol[i] = (sum % (1<<k));
+        sumPol[i] = sum;
         sumPolY[i] = (sum >> (k - known_up)) % (1 << (known_low + known_up));
     }
 }
@@ -150,7 +150,7 @@ void findS(pcg128_t* S, unsigned long long* Sprim, unsigned long long* X, unsign
     unsigned long long Smod ;
     for(int i = 0 ; i < nbiter ; i++){
         Smod = (Sprim[i] << known_low) + sumPol[i];
-        S[i] = (((Smod ^ X[i]) << k) + Smod);
+        S[i] = (((pcg128_t)(Smod ^ X[i])) << k) + ((pcg128_t) Smod);
     }
 }
 
