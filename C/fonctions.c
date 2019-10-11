@@ -102,6 +102,20 @@ void prodMatMatU(unsigned long long* res, unsigned long long* M1, unsigned long 
 
 ////////////////Fonctions pour la récupération de S//////////////
 
+
+
+void rotate(unsigned long long* X,int* rot){ //pas verifié, repris de pcg_random
+    for(int i = 0 ; i < nbiter ; i++)
+        X[i]= (X[i] >> rot[i]) | (X[i] << ((- rot[i]) & 63));
+}
+
+void unrotate(unsigned long long* X, int* rot){//pas verifié, repris de pcg_random
+    int rot2[nbiter];
+    for( int i = 0 ; i < nbiter ; i++)
+        rot2[i] = (k - rot[i]) % k;
+    rotate(X, rot2);
+}
+
 void getPolW(mpz_t *polW, unsigned long long W0){ //OK !
     mpz_init_set_si(polW[0], W0);
     for(int i = 1 ; i < nbiter ; i++){
@@ -122,7 +136,7 @@ void getSumPol(unsigned long long* sumPol,unsigned long long* sumPolY, mpz_t* po
     }
 }
 
-void getY(unsigned long long* Y, unsigned long long* sumPol, unsigned long long* rot, unsigned long long* X){ //OK !
+void getY(unsigned long long* Y, unsigned long long* sumPol, int* rot, unsigned long long* X){ //OK !
     for(int i = 0 ; i < nbiter ; i++){
         Y[i] = (((sumPol[i] ^ X[i]) % (1 << known_low)) << known_up ) + (rot[i] ^ (X[i] >> (k - known_up)));
     }
@@ -163,16 +177,30 @@ void findS(mpz_t* S, unsigned long long* Sprim, unsigned long long* X, unsigned 
 }
 
 int test(mpz_t* S, unsigned long long* X){
-    unsigned long long tmp;
-    for(int i = 0 ; i < nbiter ; i++){
-        tmp = mpz_get_ull(S[i]);
-        mpz_tdiv_q_2exp(S[i], S[i], k);
-        tmp = tmp ^ mpz_get_ull(S[i]);
-        if(tmp != X[i])
+    mpz_t tmp;
+    mpz_init_set(tmp,S[0]);
+    for(int i = 1 ; i < nbiter ; i++){
+        mpz_mul(tmp, tmp, a);
+        mpz_add(tmp, tmp, c);
+        mpz_mod_2exp(tmp, tmp, 2*k);
+        if(mpz_cmp(tmp, S[i]) != 0){
             return 0;
+        }
     }
     return 1;
 }
+
+int solve(mpz_t* S, unsigned long long* X, int* rot,unsigned long long* sumPol,unsigned long long* sumPolY){
+    unsigned long long Y[nbiter];
+    getY(Y, sumPol, rot, X);
+    unsigned long long Yprim[nbiter];
+    getYprim(Yprim, Y, sumPolY);
+    unsigned long long Sprim[nbiter];
+    findSprim(Sprim, Yprim);
+    findS(S, Sprim, X, sumPol);
+    return test(S,X);
+}
+
 /* Sorties du générateur sans rotation 
 void sortiesGenerateur(mpz_t* X, mpz_t* S, mpz_t m,  mpz_t a, mpz_t c, int nbiter){
     gmp_randstate_t state;

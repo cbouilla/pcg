@@ -1,6 +1,7 @@
 #include "fonctions.h"
 #include <stdlib.h>
 #include <stdio.h>
+#include <time.h>
 
 int main(){
     
@@ -10,41 +11,38 @@ int main(){
         
     /********** Calculs/Tests plus ou moins à la con ***********/
     
-    unsigned long long W0 = 98735;
-    unsigned long long rot[nbiter] = {7, 54, 50};
     unsigned long long X[nbiter] = {9067441263659890769llu, 12674224149338242009llu, 2612107274013664962llu};
-    mpz_t polW[nbiter];
-    getPolW(polW, W0);
-    /*for(int i = 0 ; i < nbiter ; i++)
-        gmp_printf("%Zd\n",polW[i]);*/
     
+    unsigned long long W0;
+    int rot[nbiter];
     unsigned long long sumPol[nbiter];
     unsigned long long sumPolY[nbiter];
-    getSumPol(sumPol,sumPolY, polW);
-    
-    unsigned long long Y[nbiter];
-    getY(Y, sumPol, rot, X);
-    printf("Y :\n");
-    for(int i = 0 ; i < nbiter ; i++)
-        printf("%llu\n",Y[i]);
-    unsigned long long Yprim[nbiter];
-    getYprim(Yprim, Y, sumPolY);
-    printf("Yprim :\n");
-    for(int i = 0 ; i < nbiter ; i++)
-        printf("%llu\n",Yprim[i]);
-    
-    unsigned long long Sprim[nbiter];
-    findSprim(Sprim, Yprim);
-    printf("Sprim :\n");
-    for(int i = 0 ; i < nbiter ; i++)
-        printf("%llu\n",Sprim[i]);
-    
     mpz_t S[nbiter];
-    findS(S, Sprim, X, sumPol);
-    printf("S :\n");
-    for(int i = 0 ; i < nbiter ; i++)
-        gmp_printf("%Zd\n",S[i]);
+    mpz_t polW[nbiter];
     
-    printf("resultat du test %d\n",test(S,X));
+    int time = clock();
+    
+    
+    for(W0 = 0 ; W0 < (1<<15) ; W0++){//(1<<known_low)
+        getPolW(polW, W0);
+        getSumPol(sumPol,sumPolY, polW);
+        for(int r = 0 ; r < 1<<(3*known_up) ; r++){
+            //modif de rot :
+            rot[0]=(rot[0] + 1) % k;
+            int i = 0;
+            while(rot[i] == 0 && i < nbiter){
+                i++;
+                rot[i]=(rot[i] + 1) %k;
+            }
+            //decaler X à rajouter avec vraie sortie de pcg
+            if(solve(S, X, rot,sumPol,sumPolY)){
+                printf("S :\n");
+                for(int i = 0 ; i < nbiter ; i++)
+                    gmp_printf("Si :%Zd, rot :%d %d %d, W0 : %llu\n",S[i],rot[0], rot[1], rot[2],W0);
+            }
+        }
+    }
+    int time2 = clock();
+    printf("Temps d'execution = %d ms\n", time2 - time); 
     return(0);
 }
