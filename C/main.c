@@ -11,18 +11,14 @@ int main(){
         
     /********** Calculs/Tests plus ou moins à la con ***********/
     
-    unsigned long long X[nbiter] = {9067441263659890769llu, 12674224149338242009llu, 2612107274013664962llu};
+    unsigned long long X[nbiter] = {15511475948252377726llu, 6234043309952295463llu, 9845631557281214488llu};
     
     unsigned long long W0;
     int rot[nbiter];
     unsigned long long sumPol[nbiter];
     unsigned long long sumPolY[nbiter];
-    mpz_t S[nbiter];
-    mpz_t polW[nbiter];
-    for(int i = 0 ; i < nbiter ; i++){
-        mpz_init(S[i]);
-        mpz_init(polW[i]);
-    }
+    pcg128_t S[nbiter];
+    pcg128_t polW[nbiter];
     
     float temps;
     clock_t t1, t2;
@@ -42,7 +38,7 @@ int main(){
             if(solve(S, X, rot,sumPol,sumPolY)){
                 printf("S :\n");
                 for(int i = 0 ; i < nbiter ; i++)
-                    gmp_printf("Si :%Zd, rot :%d %d %d, W0 : %llu\n",S[i],rot[0], rot[1], rot[2],W0);
+                    gmp_printf("Si : ..., rot :%d %d %d, W0 : %llu\n",rot[0], rot[1], rot[2],W0);
             }
         }
     }

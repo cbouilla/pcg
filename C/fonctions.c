@@ -14,31 +14,18 @@ float invG[9] = {-9.25221813226351e-14,  2.32272588749499e-13,  5.30001389997814
     5.71040610630735e-14,  3.06929503514353e-14,  6.39750297008745e-14};
 
 void init_var_globales(){
-
-    //m le modulo 2**128
-    mpz_init_set_ui(m,1);
-    mpz_mul_2exp(m,m,k*2);
-    
     //multiplier a OK !
-    mpz_init_set_ui(a,2549297995355413924); 
-    mpz_mul_2exp(a,a,k);
-    mpz_add_ui(a,a,4865540595714422341);
+    a = (2549297995355413924ull << (k)) + 4865540595714422341;
     
     //increment c OK !
-    mpz_init_set_ui(c,6364136223846793005); 
-    mpz_mul_2exp(c,c,k);
-    mpz_add_ui(c,c,1442695040888963407);
+    c = (6364136223846793005 << (k)) + 1442695040888963407;
     
     //increment polynome polC OK !
-    mpz_init_set_ui(polC[0], 0);
-    mpz_t powA;
-    mpz_init_set_ui(powA,1);
+    polC[0] = 0;
+    pcg128_t powA =1;
     for(int i = 1; i < nbiter ; i++){
-        mpz_init_set(polC[i],polC[i-1]);
-        mpz_addmul(polC[i],powA,c);
-        mpz_mod(polC[i],polC[i],m);
-        mpz_mul(powA, powA, a);
-        mpz_mod (powA, powA, m);
+        polC[i] = polC[i-1] + powA * c;
+        powA *= a;
     }
 }
 
@@ -116,23 +103,19 @@ void unrotate(unsigned long long* X, int* rot){//pas verifié, repris de pcg_ran
     rotate(X, rot2);
 }
 
-void getPolW(mpz_t *polW, unsigned long long W0){ //OK !
-    mpz_init_set_si(polW[0], W0);
+void getPolW(pcg128_t *polW, unsigned long long W0){ //OK !
+    polW[0] = W0;
     for(int i = 1 ; i < nbiter ; i++){
-        mpz_addmul(polW[i], polW[i-1], a);
-        mpz_mod(polW[i], polW[i], m);
+        polW[i] = polW[i-1] * a;
     }
 }
 
-void getSumPol(unsigned long long* sumPol,unsigned long long* sumPolY, mpz_t* polW){
+void getSumPol(unsigned long long* sumPol,unsigned long long* sumPolY, pcg128_t* polW){
+    pcg128_t sum;
     for(int i = 0 ; i < nbiter ; i++){
-        mpz_t tmp;
-        mpz_init(tmp);
-        mpz_add(tmp, polC[i], polW[i]);
-        sumPol[i] = mpz_get_ull(tmp);
-        mpz_tdiv_q_2exp(tmp, tmp, k - known_up);
-        sumPolY[i] = mpz_get_ull(tmp) % (1 << (known_low + known_up));
-        mpz_clear(tmp);
+        sum = polC[i] + polW[i];
+        sumPol[i] = (sum % (1<<k));
+        sumPolY[i] = (sum >> (k - known_up)) % (1 << (known_low + known_up));
     }
 }
 
@@ -163,34 +146,26 @@ void findSprim(unsigned long long* Sprim, unsigned long long* Yprim){ //OK !
     free(tmp2);
 }
  
-void findS(mpz_t* S, unsigned long long* Sprim, unsigned long long* X, unsigned long long* sumPol){
-    unsigned long long tmp ;
+void findS(pcg128_t* S, unsigned long long* Sprim, unsigned long long* X, unsigned long long* sumPol){
+    unsigned long long Smod ;
     for(int i = 0 ; i < nbiter ; i++){
-        tmp = (Sprim[i] << known_low) + sumPol[i];
-        mpz_set_si(S[i], tmp ^ X[i]);
-        mpz_mul_2exp(S[i], S[i], k);
-        mpz_add_ui(S[i], S[i], tmp);
-        mpz_mod_2exp(S[i], S[i], 2 * k);
+        Smod = (Sprim[i] << known_low) + sumPol[i];
+        S[i] = (((Smod ^ X[i]) << k) + Smod);
     }
 }
 
-int test(mpz_t* S, unsigned long long* X){
-    mpz_t tmp;
-    mpz_init_set(tmp,S[0]);
+int test(pcg128_t* S, unsigned long long* X){
+    pcg128_t Si;
+    Si = S[0];
     for(int i = 1 ; i < nbiter ; i++){
-        mpz_mul(tmp, tmp, a);
-        mpz_add(tmp, tmp, c);
-        mpz_mod_2exp(tmp, tmp, 2*k);
-        if(mpz_cmp(tmp, S[i]) != 0){
-            mpz_clear(tmp);
+        Si = Si * a + c ; //mod 2^128 auto
+        if(Si != S[i])
             return 0;
-        }
     }
-    mpz_clear(tmp);
     return 1;
 }
 
-int solve(mpz_t* S, unsigned long long* X, int* rot,unsigned long long* sumPol,unsigned long long* sumPolY){
+int solve(pcg128_t* S, unsigned long long* X, int* rot,unsigned long long* sumPol,unsigned long long* sumPolY){
     unsigned long long Y[nbiter];
     getY(Y, sumPol, rot, X);
     unsigned long long Yprim[nbiter];

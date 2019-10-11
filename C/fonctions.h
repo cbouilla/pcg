@@ -1,6 +1,6 @@
 #include <stdint.h>
 #include <gmp.h>
-//#include "pcg_oneseq.h"
+#include "pcg_oneseq.h"
 
 /***** Macro et Variables globales *****/
 #define k 64
@@ -8,10 +8,9 @@
 #define known_low 18
 #define nbiter 3
 
-mpz_t m;
-mpz_t a;
-mpz_t c;
-mpz_t polC[nbiter];
+pcg128_t a;
+pcg128_t c;
+pcg128_t polC[nbiter];
 
 extern unsigned long long Greduite[9];
 
@@ -31,9 +30,9 @@ void prodMatMatI(unsigned long long* res, unsigned long long* M1, unsigned long 
 void rotate(unsigned long long* X,int* rot);
 void unrotate(unsigned long long* X,int* rot);
 
-void getPolW(mpz_t *polW, unsigned long long W0);
+void getPolW(pcg128_t *polW, unsigned long long W0);
 
-void getSumPol(unsigned long long* sumPol,unsigned long long* sumPolY, mpz_t* polW);
+void getSumPol(unsigned long long* sumPol,unsigned long long* sumPolY, pcg128_t* polW);
 
 void getY(unsigned long long* Y, unsigned long long* sumPol, int* rot, unsigned long long* X);
 
@@ -41,9 +40,9 @@ void getYprim(unsigned long long* Yprim, unsigned long long* Y, unsigned long lo
 
 void findSprim(unsigned long long* Sprim, unsigned long long* Yprim);
 
-void findS(mpz_t* S, unsigned long long* Sprim, unsigned long long* X, unsigned long long*sumPol);
+void findS(pcg128_t* S, unsigned long long* Sprim, unsigned long long* X, unsigned long long*sumPol);
 
-int test(mpz_t* S, unsigned long long* X);
+int test(pcg128_t* S, unsigned long long* X);
 
-int solve(mpz_t* S, unsigned long long* X, int* rot,unsigned long long* sumPol,unsigned long long* sumPolY);
+int solve(pcg128_t* S, unsigned long long* X, int* rot,unsigned long long* sumPol,unsigned long long* sumPolY);
 

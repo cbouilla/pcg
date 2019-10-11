@@ -30,3 +30,5 @@ S2 = FindS(X, rot, W0)
 print("S")
 print(S)
 
+print("invG * polC")
+print(prodMatVec(invG,polC))
