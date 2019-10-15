@@ -23,7 +23,7 @@ int main(){
     float temps;
     clock_t t1, t2;
     t1 = clock();
-    for(W0 = 0 ; W0 < (1<<known_low) ; W0++){//(1<<known_low)
+    for(W0 = 32232 ; W0 < (1<<known_low) ; W0++){//(1<<known_low)
         getPolW(polW, W0);
         getSumPol(sumPol,sumPolY, polW);
         for(int r = 0 ; r < 1<<(3*known_up) ; r++){

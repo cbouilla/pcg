@@ -1,7 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
-#include <gmp.h>
 #include <math.h>
 #include "fonctions.h"
 
@@ -28,30 +27,6 @@ void init_var_globales(){
         powA *= a;
     }
 }
-
-////////////////Fonction conversion mpz - int64 //////////////
-unsigned long long mpz_get_ull(mpz_t n)
-{
-    unsigned int lo, hi;
-    mpz_t tmp;
-
-    mpz_init( tmp );
-    mpz_mod_2exp( tmp, n, 64 );   /* tmp = (lower 64 bits of n) */
-
-    lo = mpz_get_ui( tmp );       /* lo = tmp & 0xffffffff */ 
-    mpz_div_2exp( tmp, tmp, 32 ); /* tmp >>= 32 */
-    hi = mpz_get_ui( tmp );       /* hi = tmp & 0xffffffff */
-
-    mpz_clear( tmp );
-
-    return (((unsigned long long)hi) << 32) + lo;
-}
-
-long long mpz_get_sll(mpz_t n) //a verif
-{
-    return (long long)mpz_get_ull(n); /* just use unsigned version */
-}
-
 
 
 ////////////////Fonctions calcul matriciel//////////////
@@ -176,15 +151,14 @@ int solve(pcg128_t* S, unsigned long long* X, int* rot,unsigned long long* sumPo
     return test(S,X);
 }
 
-/* Sorties du générateur sans rotation 
-void sortiesGenerateur(mpz_t* X, mpz_t* S, mpz_t m,  mpz_t a, mpz_t c, int nbiter){
-    gmp_randstate_t state;
-    gmp_randinit_default(state);
-    mpz_init(S[0])
-    mpz_urandomb (S[0], state, 2*k);
-    for(int i = 1 ; i < nbiter ; i++){
-        mpz_init_set(S[i],c)
-        mpz_addmul(S[i], a, S[i-1])
-        mpz_mod(
-    
-}*/
+void pcg(pcg128_t* S, unsigned long long* X, pcg128_t S0, int n){
+    struct pcg_state_128* rng;
+    pcg_oneseq_128_srandom_r(rng, S0);
+    for(int i = 0 ; i < n ; i++){
+        S[i] = rng->state;
+        X[i] = pcg_output_xsl_rr_128_64(rng->state);
+        pcg_oneseq_128_step_r(rng);
+    }
+}
+        
+
