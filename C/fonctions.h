@@ -46,3 +46,5 @@ int test(pcg128_t* S, unsigned long long* X);
 
 int solve(pcg128_t* S, unsigned long long* X, int* rot,unsigned long long* sumPol,unsigned long long* sumPolY);
 
+void pcg(pcg128_t* S, unsigned long long* X, pcg128_t S0, int n);
+

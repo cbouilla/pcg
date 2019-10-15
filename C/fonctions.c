@@ -152,7 +152,7 @@ int solve(pcg128_t* S, unsigned long long* X, int* rot,unsigned long long* sumPo
 }
 
 void pcg(pcg128_t* S, unsigned long long* X, pcg128_t S0, int n){
-    struct pcg_state_128* rng;
+    struct pcg_state_128* rng = malloc(sizeof(struct pcg_state_128));
     pcg_oneseq_128_srandom_r(rng, S0);
     for(int i = 0 ; i < n ; i++){
         S[i] = rng->state;
