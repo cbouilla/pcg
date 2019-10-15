@@ -22,16 +22,18 @@ int main(){
     pcg128_t S[nbiter];
     pcg128_t polW[nbiter];
     
-    //FILE *f;
-    //f = fopen("result.txt","w");
+    FILE *f;
+    f = fopen("result.txt","w");
     
     float temps;
     clock_t t1, t2;
     t1 = clock();
-    for(W0 = 0 ; W0 < (1<<known_low) ; W0++){//(1<<known_low)//W0=209818
-        if((W0 % (1<<10)) == 0)
+    for(W0 = 209817 ; W0 < (1<<known_low) ; W0++){//(1<<known_low)//W0=209818
+        if((W0 % (1<<10)) == 0){
             printf("W0 : %llu\n", W0);
-        
+            fprintf(f, "W0 : %llu\n", W0);
+            fflush(f);
+        }
         getPolW(polW, W0);
         getSumPol(sumPol,sumPolY, polW);
         for(int r = 0 ; r < 1<<(3*known_up) ; r++){
@@ -46,18 +48,20 @@ int main(){
             //decaler X à rajouter avec vraie sortie de pcg
             
             if(solve(S, X, rot,sumPol,sumPolY)){
-                printf("S :\n");
+                fprintf(f,"S :\n");
+                printf("S trouvé !!\n");
                 for(int i = 0 ; i < nbiter ; i++)
-                    printf("%016llx %016llx\n", (unsigned long long) (S[i]>>64), (unsigned long long) S[i]);
+                    fprintf(f,"%016llx %016llx\n", (unsigned long long) (S[i]>>64), (unsigned long long) S[i]);
                 t2 = clock();
                 temps = (float)(t2-t1)/CLOCKS_PER_SEC;
-                printf("temps pour trouver la solution = %f\n", temps);
+                fprintf(f,"temps pour trouver la solution = %f\n", temps);
+                fflush(f);
             }
             rotate(X,rot);
         }
     }
     t2 = clock();
     temps = (float)(t2-t1)/CLOCKS_PER_SEC;
-    printf("temps total = %f\n", temps);
+    fprintf(f,"temps total = %f\n", temps);
     return(0);
 }
