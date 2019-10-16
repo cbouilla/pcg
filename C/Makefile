@@ -1,9 +1,9 @@
-CFLAGS = -O3 -Wall -Wextra
+CFLAGS = -O3 -Wall -Wextra -march=native -mtune=native
 LDLIBS = -lgmp -lm
 
 all: main
 
-main: fonctions.o main.o
+main: fonctions.o pcg_oneseq.o main.o
 
 .PHONY: clean
 
