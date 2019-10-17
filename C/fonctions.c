@@ -139,7 +139,7 @@ int test(pcg128_t* S, unsigned long long* X){
     Si = S[0];
     for(int i = 1 ; i < nbiter ; i++){
         Si = Si * a + c ; //mod 2^128 auto
-        if(Si != S[i])
+        if (Si != S[i])
             return 0;
     }
     return 1;
@@ -175,18 +175,17 @@ int solve(pcg128_t* S, unsigned long long* X, const int* rot, const unsigned lon
     prodMatVecU(Sprim, Greduite, tmp3, nbiter);
     
     findS(S, Sprim, X, sumPol);
-    return test(S,X);
+    return test(S, X);
 }
 
-void pcg(pcg128_t* S, unsigned long long* X, pcg128_t S0, int n){
-    struct pcg_state_128* rng = malloc(sizeof(struct pcg_state_128));
-    pcg_oneseq_128_srandom_r(rng, S0);
-    for(int i = 0 ; i < n ; i++){
-        S[i] = rng->state;
-        X[i] = pcg_output_xsl_rr_128_64(rng->state);
-        pcg_oneseq_128_step_r(rng);
+void pcg(unsigned long long* X, pcg128_t S0, int n){
+    struct pcg_state_128 rng;
+    pcg_oneseq_128_srandom_r(&rng, S0);
+    X[0] = pcg_output_xsl_rr_128_64(rng.state);
+    // S[0] = rng.state;
+    for(int i = 1 ; i < n ; i++){
+        pcg_oneseq_128_step_r(&rng);
+        // S[i] = rng.state;
+        X[i] = pcg_output_xsl_rr_128_64(rng.state);
     }
 }
-        
-
- 

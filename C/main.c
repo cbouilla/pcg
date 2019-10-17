@@ -10,11 +10,11 @@ int main(){
     init_var_globales();
         
     /********** Calculs/Tests plus ou moins à la con ***********/
-    pcg128_t vraiS[nbiter];
+    // pcg128_t vraiS[nbiter];
     unsigned long long X[nbiter]; //= {15511475948252377726llu, 6234043309952295463llu, 9845631557281214488llu};
     pcg128_t S0 = (((pcg128_t) 5995207026785010249) << k) + ((pcg128_t) 179350442155841024); //valeur aléatoire
-    pcg(vraiS, X, S0, nbiter);
-    printf("W0 : %llu, rot = %d, %d, %d \n", (unsigned long long) (vraiS[0]% (1<<known_low)), (int) (vraiS[0] >> (2*k - known_up)),(int) (vraiS[1] >> (2*k - known_up)),(int) (vraiS[2] >> (2*k - known_up)));
+    pcg(X, S0, nbiter);
+    // printf("W0 : %llu, rot = %d, %d, %d \n", (unsigned long long) (vraiS[0]% (1<<known_low)), (int) (vraiS[0] >> (2*k - known_up)),(int) (vraiS[1] >> (2*k - known_up)),(int) (vraiS[2] >> (2*k - known_up)));
     unsigned long long W0;
     
     FILE *f;
