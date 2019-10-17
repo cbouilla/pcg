@@ -76,16 +76,15 @@ void getSumPol(unsigned long long* sumPol,unsigned long long* sumPolY, pcg128_t*
     }
 }
 
-
-void pcg(unsigned long long* X, pcg128_t S0, int n){
+void pcg(pcg128_t *S, unsigned long long* X, pcg128_t S0, int n)
+{
     struct pcg_state_128 rng;
     pcg_oneseq_128_srandom_r(&rng, S0);
-    for(int i = 0 ; i < n-1 ; i++){
+    for (int i = 0 ; i < n ; i++) {
         X[i] = pcg_output_xsl_rr_128_64(rng.state);
-        // S[i] = rng.state;
+        S[i] = rng.state;
         pcg_oneseq_128_step_r(&rng);
     }
-    X[n - 1] = pcg_output_xsl_rr_128_64(rng.state);
 }
 
 int solve(pcg128_t* S, unsigned long long* X, const int* rot, const unsigned long long* sumPol, const unsigned long long* sumPolY)
@@ -103,7 +102,6 @@ int solve(pcg128_t* S, unsigned long long* X, const int* rot, const unsigned lon
         tmp1[i] = Yprim[i] << (k - known_low - known_up);
     }
     
-    // prodMatVecFFU(tmp2, invG, tmp1, nbiter);
      for (int i=0 ; i<nbiter ; i++){
         tmp2[i] = 0;
         for(int j=0 ; j<nbiter ; j++)
@@ -128,8 +126,8 @@ int solve(pcg128_t* S, unsigned long long* X, const int* rot, const unsigned lon
     }
 
     // success: set S this time
-    // S[0] = (((pcg128_t)(Smod ^ X[0])) << k) + ((pcg128_t) Smod);
-    // for (int i = 1 ; i < nbiter ; i++)
-    //     S[i] = S[i-1] * a + c ;
+    S[0] = (((pcg128_t)(Smod ^ X[0])) << k) + ((pcg128_t) Smod);
+    for (int i = 1 ; i < nbiter ; i++)
+        S[i] = S[i-1] * a + c ;
     return 1;
 }
