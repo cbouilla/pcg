@@ -21,10 +21,10 @@ int main(){
     f = fopen("result.txt","w");
     
     double t1 = wtime();
-    int done = 0;
+    unsigned long long done = 0;
     
-    #pragma omp parallel for
-    for(W0 = 0 ; W0 < (1<<known_low) ; W0++){//(1<<known_low)//W0=209818  
+    // #pragma omp parallel for
+    for(W0 = 209810; W0 < (1<<known_low) ; W0++){//(1<<known_low)//W0=209818  
         
         /*Variables privées*/
         pcg128_t S[nbiter];
@@ -37,6 +37,12 @@ int main(){
         getPolW(polW, W0);
         getSumPol(sumPol,sumPolY, polW);
         
+        if (omp_get_thread_num() == 0 && (done % 64) == 0) {
+            printf("\rW0 = %llx --- %.1f / s", done, done / (wtime() - t1));
+            fflush(stdout);
+        }
+
+
         for(int r = 0 ; r < 1<<(3*known_up) ; r++){
             /***** Modification de rot et unrotX *****/
             rot[0]=(rot[0] + 1) % k;
@@ -48,7 +54,7 @@ int main(){
             unrotate(urX, X, rot);
             
             /***** Résolution *****/
-            if(solve(S, urX, rot,sumPol,sumPolY)){
+            if(solve(S, urX, rot, sumPol, sumPolY)){
                 fprintf(f,"S :\n");
                 printf("S trouvé !!\n");
                 for(int i = 0 ; i < nbiter ; i++)
@@ -57,6 +63,8 @@ int main(){
                 fflush(f);
             }
         }
+        
+        #pragma omp atomic
         done++;;
     }
     fprintf(f,"temps total = %f\n", wtime() - t1);

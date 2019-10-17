@@ -1,2 +1,3 @@
 *.o
 C/main
+/C/result.txt
