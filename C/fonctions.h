@@ -1,6 +1,7 @@
 #include <stdint.h>
-#include <gmp.h>
 #include "pcg_oneseq.h"
+#include <omp.h>
+
 
 /***** Macro et Variables globales *****/
 #define k 64
@@ -8,6 +9,7 @@
 #define known_low 18
 #define nbiter 3
 
+int nb_thread;
 pcg128_t a;
 pcg128_t c;
 pcg128_t polC[nbiter];
@@ -27,9 +29,8 @@ void prodMatMatI(unsigned long long* res, unsigned long long* M1, unsigned long 
 
 
 ////////////////Fonctions pour la récupération de S//////////////
-void rotate(unsigned long long* X,int* rot);
-void unrotate(unsigned long long* X,int* rot);
-
+void rotate(unsigned long long* rX, unsigned long long* X,int* rot);
+void unrotate(unsigned long long* urX, unsigned long long* X, int* rot);
 void getPolW(pcg128_t *polW, unsigned long long W0);
 
 void getSumPol(unsigned long long* sumPol,unsigned long long* sumPolY, pcg128_t* polW);

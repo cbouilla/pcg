@@ -19,6 +19,9 @@ void init_var_globales(){
     //increment c OK !
     c = (((pcg128_t)6364136223846793005) << k) + 1442695040888963407;
     
+    //nombre de threads 
+    nb_thread = omp_get_max_threads();
+    
     //increment polynome polC OK !
     polC[0] = 0;
     pcg128_t powA =1;
@@ -66,16 +69,16 @@ void prodMatMatU(unsigned long long* res, unsigned long long* M1, unsigned long 
 
 
 
-void rotate(unsigned long long* X,int* rot){ //pas verifié, repris de pcg_random
+void rotate(unsigned long long* rX, unsigned long long* X,int* rot){ //pas verifié, repris de pcg_random
     for(int i = 0 ; i < nbiter ; i++)
-        X[i]= (X[i] >> rot[i]) | (X[i] << ((- rot[i]) & 63));
+        rX[i]= (X[i] >> rot[i]) | (X[i] << ((- rot[i]) & 63));
 }
 
-void unrotate(unsigned long long* X, int* rot){//pas verifié, repris de pcg_random
+void unrotate(unsigned long long* urX, unsigned long long* X, int* rot){//pas verifié, repris de pcg_random
     int rot2[nbiter];
     for( int i = 0 ; i < nbiter ; i++)
         rot2[i] = (k - rot[i]) % k;
-    rotate(X, rot2);
+    rotate(urX, X, rot2);
 }
 
 void getPolW(pcg128_t *polW, unsigned long long W0){ //OK !
