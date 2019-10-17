@@ -1,8 +1,7 @@
 #include "pcg_oneseq.h"
 
 
-void pcg_oneseq_128_srandom_r(struct pcg_state_128* rng,
-                                     pcg128_t initstate)
+void pcg_oneseq_128_srandom_r(struct pcg_state_128* rng, const pcg128_t initstate)
 {
     rng->state = 0U;
     pcg_oneseq_128_step_r(rng);

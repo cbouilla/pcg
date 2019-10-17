@@ -1,3 +1,4 @@
+#include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
@@ -44,29 +45,7 @@ double wtime()
 }
 
 
-
-////////////////Fonctions calcul matriciel//////////////
-
-//Matrice avce coeffs négatifs mais résult mod 2**64 (je sais pas si ça marche)
-static void prodMatVecU(unsigned long long* res, unsigned long long * M, unsigned long long* v, int n){
-    int i, j;
-    for(i=0 ; i<n ; i++){
-        res[i] = 0;
-        for(j=0 ; j<n ; j++)
-            res[i]+= M[i * n + j] * v[j];
-    }
-}
-
-static void prodMatVecFFU(float* res, float* M, unsigned long long* v, int n){
-    for (int i=0 ; i<n ; i++){
-        res[i] = 0;
-        for(int j=0 ; j<n ; j++)
-            res[i] += M[i * n + j] * v[j];
-    }
-}
-
 ////////////////Fonctions pour la récupération de S//////////////
-
 
 
 void rotate(unsigned long long* rX, unsigned long long* X,int* rot){ //pas verifié, repris de pcg_random
@@ -97,59 +76,22 @@ void getSumPol(unsigned long long* sumPol,unsigned long long* sumPolY, pcg128_t*
     }
 }
 
-static void getY(unsigned long long* Y, const unsigned long long* sumPol, const int* rot, const unsigned long long* X) { //OK !
-    for (int i = 0 ; i < nbiter ; i++)
-        Y[i] = (((sumPol[i] ^ X[i]) % (1 << known_low)) << known_up ) + (rot[i] ^ (X[i] >> (k - known_up)));
-    
-}
 
-static void getYprim(unsigned long long* Yprim, const unsigned long long* Y, const unsigned long long* sumPolY){//OK ! avec erreurs arrondi
-     //Utiliser sumPolY
-    for(int i = 0 ; i < nbiter ; i++){
-        Yprim[i] = Y[i] - sumPolY[i];
-        Yprim[i] = Yprim[i] % (1 << (known_low + known_up));
+void pcg(unsigned long long* X, pcg128_t S0, int n){
+    struct pcg_state_128 rng;
+    pcg_oneseq_128_srandom_r(&rng, S0);
+    for(int i = 0 ; i < n-1 ; i++){
+        X[i] = pcg_output_xsl_rr_128_64(rng.state);
+        // S[i] = rng.state;
+        pcg_oneseq_128_step_r(&rng);
     }
-}
-
-static void findSprim(unsigned long long* Sprim, const unsigned long long* Yprim)
-{ //OK !
-    unsigned long long tmp1[nbiter];
-    float tmp2[nbiter];
-
-    for(int i = 0 ; i < nbiter ; i++)
-        tmp1[i] = Yprim[i] << (k - known_low - known_up);
-    
-    prodMatVecFFU(tmp2, invG, tmp1, nbiter);
-    for(int i = 0 ; i < nbiter ; i++)
-        tmp1[i] = (unsigned long long) roundf(tmp2[i]);
-    prodMatVecU(Sprim, Greduite, tmp1, nbiter);
-}
- 
-static void findS(pcg128_t* S, const unsigned long long* Sprim, const unsigned long long* X, const unsigned long long* sumPol)
-{
-    unsigned long long Smod ;
-    for(int i = 0 ; i < nbiter ; i++){
-        Smod = (Sprim[i] << known_low) + sumPol[i];
-        S[i] = (((pcg128_t)(Smod ^ X[i])) << k) + ((pcg128_t) Smod);
-    }
-}
-
-int test(pcg128_t* S, unsigned long long* X){
-    pcg128_t Si;
-    Si = S[0];
-    for(int i = 1 ; i < nbiter ; i++){
-        Si = Si * a + c ; //mod 2^128 auto
-        if (Si != S[i])
-            return 0;
-    }
-    return 1;
+    X[n - 1] = pcg_output_xsl_rr_128_64(rng.state);
 }
 
 int solve(pcg128_t* S, unsigned long long* X, const int* rot, const unsigned long long* sumPol, const unsigned long long* sumPolY)
 {
     unsigned long long Y[nbiter];
     unsigned long long Yprim[nbiter];
-    unsigned long long Sprim[nbiter];
     unsigned long long tmp1[nbiter];
     unsigned long long tmp3[nbiter];
     float tmp2[nbiter];
@@ -160,32 +102,34 @@ int solve(pcg128_t* S, unsigned long long* X, const int* rot, const unsigned lon
         Yprim[i] = (Y[i] - sumPolY[i]) % (1 << (known_low + known_up));    
         tmp1[i] = Yprim[i] << (k - known_low - known_up);
     }
-
-    // findSprim(Sprim, Yprim);
     
-    prodMatVecFFU(tmp2, invG, tmp1, nbiter);
-    // for (int i=0 ; i<nbiter ; i++){
-    //     tmp2[i] = 0;
-    //     for(int j=0 ; j<nbiter ; j++)
-    //         tmp2[i] += invG[i * nbiter + j] * tmp1[j];
-    // }
+    // prodMatVecFFU(tmp2, invG, tmp1, nbiter);
+     for (int i=0 ; i<nbiter ; i++){
+        tmp2[i] = 0;
+        for(int j=0 ; j<nbiter ; j++)
+            tmp2[i] += invG[i * nbiter + j] * tmp1[j];
+    }
  
     for(int i = 0 ; i < nbiter ; i++)
         tmp3[i] = (unsigned long long) roundf(tmp2[i]);
-    prodMatVecU(Sprim, Greduite, tmp3, nbiter);
-    
-    findS(S, Sprim, X, sumPol);
-    return test(S, X);
-}
 
-void pcg(unsigned long long* X, pcg128_t S0, int n){
-    struct pcg_state_128 rng;
-    pcg_oneseq_128_srandom_r(&rng, S0);
-    X[0] = pcg_output_xsl_rr_128_64(rng.state);
-    // S[0] = rng.state;
-    for(int i = 1 ; i < n ; i++){
-        pcg_oneseq_128_step_r(&rng);
-        // S[i] = rng.state;
-        X[i] = pcg_output_xsl_rr_128_64(rng.state);
+    unsigned long long Sprim0 = 0;
+    for(int j=0 ; j<nbiter ; j++)
+        Sprim0 += Greduite[j] * tmp3[j];
+
+    unsigned long long Smod = (Sprim0 << known_low) + sumPol[0];
+    pcg128_t S0 = (((pcg128_t)(Smod ^ X[0])) << k) + ((pcg128_t) Smod);
+
+    for (int i = 1 ; i < nbiter ; i++){
+        S0 = S0 * a + c ; //mod 2^128 auto
+        unsigned long long XX = S0 ^ (S0 >> 64);
+        if (XX != X[i])
+            return 0;
     }
+
+    // success: set S this time
+    // S[0] = (((pcg128_t)(Smod ^ X[0])) << k) + ((pcg128_t) Smod);
+    // for (int i = 1 ; i < nbiter ; i++)
+    //     S[i] = S[i-1] * a + c ;
+    return 1;
 }

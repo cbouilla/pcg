@@ -17,13 +17,16 @@ int main(){
     // printf("W0 : %llu, rot = %d, %d, %d \n", (unsigned long long) (vraiS[0]% (1<<known_low)), (int) (vraiS[0] >> (2*k - known_up)),(int) (vraiS[1] >> (2*k - known_up)),(int) (vraiS[2] >> (2*k - known_up)));
     unsigned long long W0;
     
+    for (int i = 0; i < nbiter; i++)
+        printf("X[%d] = %016llx\n", i, X[i]);
+
     FILE *f;
     f = fopen("result.txt","w");
     
     double t1 = wtime();
     unsigned long long done = 0;
     
-    // #pragma omp parallel for
+    #pragma omp parallel for
     for(W0 = 209810; W0 < (1<<known_low) ; W0++){//(1<<known_low)//W0=209818  
         
         /*Variables privées*/
@@ -37,7 +40,7 @@ int main(){
         getPolW(polW, W0);
         getSumPol(sumPol,sumPolY, polW);
         
-        if (omp_get_thread_num() == 0 && (done % 64) == 0) {
+        if (omp_get_thread_num() == 0 && (done % 512) == 0) {
             printf("\rW0 = %llx --- %.1f / s", done, done / (wtime() - t1));
             fflush(stdout);
         }

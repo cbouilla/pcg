@@ -20,8 +20,7 @@ struct pcg_state_128 {
 };
 
 
-void pcg_oneseq_128_srandom_r(struct pcg_state_128* rng,
-                                     pcg128_t initstate);
+void pcg_oneseq_128_srandom_r(struct pcg_state_128* rng, const pcg128_t initstate);
 
 uint64_t pcg_oneseq_128_xsl_rr_64_random_r(struct pcg_state_128* rng);
 
