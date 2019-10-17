@@ -19,9 +19,9 @@ int main(){
     FILE *f;
     f = fopen("result.txt","w");
     
-    float temps;
-    clock_t t1, t2;
-    t1 = clock();
+    double t1 = wtime();
+    int done = 0;
+    
     #pragma omp parallel for
     for(W0 = 0 ; W0 < (1<<known_low) ; W0++){//(1<<known_low)//W0=209818  
         
@@ -35,14 +35,16 @@ int main(){
         
         if((W0 % (1<<10)) == 0){
             printf("num de th :%d\n",omp_get_thread_num());
-            printf("W0 : %llu\n", W0);
-            fprintf(f, "W0 : %llu\n", W0);
+            printf("W0 : %llu (%.1f / s)\n", W0, done / (wtime() - t1));
+            fprintf(f,"W0 : %llu (%.1f / s)\n", W0, done / (wtime() - t1));
             fflush(f);
         }
+        
         getPolW(polW, W0);
         getSumPol(sumPol,sumPolY, polW);
+        
         for(int r = 0 ; r < 1<<(3*known_up) ; r++){
-            //modif de rot :
+            /***** Modification de rot et unrotX *****/
             rot[0]=(rot[0] + 1) % k;
             int i = 0;
             while(rot[i] == 0 && i < nbiter){
@@ -51,20 +53,18 @@ int main(){
             }
             unrotate(urX, X, rot);
             
+            /***** Résolution *****/
             if(solve(S, urX, rot,sumPol,sumPolY)){
                 fprintf(f,"S :\n");
                 printf("S trouvé !!\n");
                 for(int i = 0 ; i < nbiter ; i++)
                     fprintf(f,"%016llx %016llx\n", (unsigned long long) (S[i]>>64), (unsigned long long) S[i]);
-                t2 = clock();
-                temps = (float)(t2-t1)/CLOCKS_PER_SEC;
-                fprintf(f,"temps pour trouver la solution = %f\n", temps);
+                fprintf(f,"temps pour trouver la solution = %f\n", wtime() - t1 );
                 fflush(f);
             }
         }
+        done++;;
     }
-    t2 = clock();
-    temps = (float)(t2-t1)/CLOCKS_PER_SEC;
-    fprintf(f,"temps total = %f\n", temps);
+    fprintf(f,"temps total = %f\n", wtime() - t1);
     return(0);
 }

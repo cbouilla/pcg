@@ -20,6 +20,7 @@ extern float invG[9];
 
 /***** Fonctions *****/
 void init_var_globales();
+double wtime();
 
 void prodMatVecUIU(unsigned long long* res, unsigned long long* M, unsigned long long* v, int n);
 

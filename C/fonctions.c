@@ -2,7 +2,10 @@
 #include <stdlib.h>
 #include <time.h>
 #include <math.h>
+#include <sys/time.h>
+
 #include "fonctions.h"
+
 
 unsigned long long Greduite[9] = {-1241281756092, -5001120657083,  8655886039732,
     3827459685972, -2117155768935,  3303731088004,
@@ -30,6 +33,16 @@ void init_var_globales(){
         powA *= a;
     }
 }
+
+
+//////////////////// chrono //////////////////
+double wtime()
+{
+    struct timeval ts;
+    gettimeofday(&ts, NULL);
+    return (double) ts.tv_sec + ts.tv_usec / 1e6;
+}
+
 
 
 ////////////////Fonctions calcul matriciel//////////////
