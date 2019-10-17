@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <time.h>
+
 int main(){
     
     /*  INITIALISATION DES PARAMETRES  */
@@ -32,13 +33,6 @@ int main(){
         int rot[nbiter];
         unsigned long long sumPol[nbiter];
         unsigned long long sumPolY[nbiter];
-        
-        if((W0 % (1<<10)) == 0){
-            printf("num de th :%d\n",omp_get_thread_num());
-            printf("W0 : %llu (%.1f / s)\n", W0, done / (wtime() - t1));
-            fprintf(f,"W0 : %llu (%.1f / s)\n", W0, done / (wtime() - t1));
-            fflush(f);
-        }
         
         getPolW(polW, W0);
         getSumPol(sumPol,sumPolY, polW);
