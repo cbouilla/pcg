@@ -116,18 +116,13 @@ int solve(pcg128_t* S, unsigned long long* X, const int* rot, const unsigned lon
         Sprim0 += Greduite[j] * tmp3[j];
 
     unsigned long long Smod = (Sprim0 << known_low) + sumPol[0];
-    pcg128_t S0 = (((pcg128_t)(Smod ^ X[0])) << k) + ((pcg128_t) Smod);
+    S[0] = (((pcg128_t)(Smod ^ X[0])) << k) + ((pcg128_t) Smod);
 
     for (int i = 1 ; i < nbiter ; i++){
-        S0 = S0 * a + c ; //mod 2^128 auto
-        unsigned long long XX = S0 ^ (S0 >> 64);
+        S[i] = S[i-1] * a + c ; //mod 2^128 auto
+        unsigned long long XX = S[i] ^ (S[i] >> 64);
         if (XX != X[i])
             return 0;
     }
-
-    // success: set S this time
-    S[0] = (((pcg128_t)(Smod ^ X[0])) << k) + ((pcg128_t) Smod);
-    for (int i = 1 ; i < nbiter ; i++)
-        S[i] = S[i-1] * a + c ;
     return 1;
 }

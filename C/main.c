@@ -42,8 +42,8 @@ int main(){
         getPolW(polW, W0);
         getSumPol(sumPol,sumPolY, polW);
         
-        if (omp_get_thread_num() == 0 && (done % 512) == 0) {
-            printf("\rW0 = %llx --- %.1f / s", done, done / (wtime() - t1));
+        if (omp_get_thread_num() == 0 && (W0 % 64) == 0) {
+            printf("\rW0 = %llx / %llx --- %.1f / s", done, 1ull<<known_low, done / (wtime() - t1));
             fflush(stdout);
         }
 
