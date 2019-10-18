@@ -125,16 +125,14 @@ void getYprim(unsigned long long* Yprim, unsigned long long* Y, unsigned long lo
 }
 
 void findSprim(unsigned long long* Sprim, unsigned long long* Yprim){ //OK !
-    unsigned long long* tmp1 = malloc(nbiter * sizeof(unsigned long long));
+    unsigned long long tmp1[nbiter];
     for(int i = 0 ; i < nbiter ; i++)
         tmp1[i] = Yprim[i] << (k - known_low - known_up);
-    float* tmp2 = malloc(nbiter * sizeof(float));
+    float tmp2[nbiter];
     prodMatVecFFU(tmp2, invG, tmp1, nbiter);
     for(int i = 0 ; i < nbiter ; i++)
-        tmp1[i] = (unsigned long long) roundf(tmp2[i]);
+        tmp1[i] = (unsigned long long) llroundf(tmp2[i]);
     prodMatVecU(Sprim, Greduite, tmp1, nbiter);
-    free(tmp1);
-    free(tmp2);
 }
  
 void findS(pcg128_t* S, unsigned long long* Sprim, unsigned long long* X, unsigned long long* sumPol){
