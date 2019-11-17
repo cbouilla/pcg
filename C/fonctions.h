@@ -30,6 +30,5 @@ void getPolW(pcg128_t *polW, unsigned long long W0);
 
 void getSumPol(unsigned long long* sumPol,unsigned long long* sumPolY, pcg128_t* polW);
 
-int solve(pcg128_t* S, unsigned long long* X, const int* rot, const unsigned long long* sumPol, const unsigned long long* sumPolY);
+int solve(pcg128_t* S, const unsigned long long* X, const int* rot, const unsigned long long* sumPol, const unsigned long long* sumPolY);
 
-void pcg(pcg128_t *S, unsigned long long* X, pcg128_t S0, int n);

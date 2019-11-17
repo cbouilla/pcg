@@ -8,13 +8,17 @@
 #include "fonctions.h"
 
 
-unsigned long long Greduite[9] = {-1241281756092, -5001120657083,  8655886039732,
-    3827459685972, -2117155768935,  3303731088004,
-    -728312298332,  5479732607037,  6319848582548};
+unsigned long long Greduite[9] = {
+    -1241281756092, -5001120657083,  8655886039732,
+     3827459685972, -2117155768935,  3303731088004,
+     -728312298332,  5479732607037,  6319848582548
+ };
 
-float invG[9] = {-9.25221813226351e-14,  2.32272588749499e-13,  5.30001389997814e-15,
+float invG[9] = {
+    -9.25221813226351e-14,  2.32272588749499e-13,  5.30001389997814e-15,
     -7.81560146462246e-14, -4.52719459143047e-15,  1.09411828555506e-13,
-    5.71040610630735e-14,  3.06929503514353e-14,  6.39750297008745e-14};
+     5.71040610630735e-14,  3.06929503514353e-14,  6.39750297008745e-14
+};
 
 void init_var_globales(){
     //multiplier a OK !
@@ -29,10 +33,13 @@ void init_var_globales(){
     //increment polynome polC OK !
     polC[0] = 0;
     pcg128_t powA =1;
-    for(int i = 1; i < nbiter ; i++){
+    for (int i = 1; i < nbiter ; i++){
         polC[i] = polC[i-1] + powA * c;
         powA *= a;
     }
+
+    for (int i = 0; i < 9; i++)
+        invG[i] *= 1ll << (k - known_low - known_up);
 }
 
 
@@ -76,22 +83,11 @@ void getSumPol(unsigned long long* sumPol,unsigned long long* sumPolY, pcg128_t*
     }
 }
 
-void pcg(pcg128_t *S, unsigned long long* X, pcg128_t S0, int n)
-{
-    struct pcg_state_128 rng;
-    pcg_oneseq_128_srandom_r(&rng, S0);
-    for (int i = 0 ; i < n ; i++) {
-        X[i] = pcg_output_xsl_rr_128_64(rng.state);
-        S[i] = rng.state;
-        pcg_oneseq_128_step_r(&rng);
-    }
-}
 
-int solve(pcg128_t* S, unsigned long long* X, const int* rot, const unsigned long long* sumPol, const unsigned long long* sumPolY)
+int solve(pcg128_t* S, const unsigned long long* X, const int* rot, const unsigned long long* sumPol, const unsigned long long* sumPolY)
 {
     unsigned long long Y[nbiter];
     unsigned long long Yprim[nbiter];
-    unsigned long long tmp1[nbiter];
     unsigned long long tmp3[nbiter];
     float tmp2[nbiter];
 
@@ -99,13 +95,12 @@ int solve(pcg128_t* S, unsigned long long* X, const int* rot, const unsigned lon
     for (int i = 0 ; i < nbiter ; i++) {
         Y[i] = (((sumPol[i] ^ X[i]) % (1 << known_low)) << known_up ) + (rot[i] ^ (X[i] >> (k - known_up)));
         Yprim[i] = (Y[i] - sumPolY[i]) % (1 << (known_low + known_up));    
-        tmp1[i] = Yprim[i] << (k - known_low - known_up);
     }
     
-     for (int i=0 ; i<nbiter ; i++){
+     for (int i=0 ; i<nbiter ; i++) {
         tmp2[i] = 0;
         for(int j=0 ; j<nbiter ; j++)
-            tmp2[i] += invG[i * nbiter + j] * tmp1[j];
+            tmp2[i] += invG[i * nbiter + j] * Yprim[j];
     }
  
     for(int i = 0 ; i < nbiter ; i++)
@@ -118,8 +113,8 @@ int solve(pcg128_t* S, unsigned long long* X, const int* rot, const unsigned lon
     unsigned long long Smod = (Sprim0 << known_low) + sumPol[0];
     S[0] = (((pcg128_t)(Smod ^ X[0])) << k) + ((pcg128_t) Smod);
 
-    for (int i = 1 ; i < nbiter ; i++){
-        S[i] = S[i-1] * a + c ; //mod 2^128 auto
+    for (int i = 1 ; i < nbiter ; i++) {
+        S[i] = S[i-1] * a + c;
         unsigned long long XX = S[i] ^ (S[i] >> 64);
         if (XX != X[i])
             return 0;

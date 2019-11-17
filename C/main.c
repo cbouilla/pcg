@@ -3,33 +3,24 @@
 #include <stdio.h>
 #include <time.h>
 
-int main(){
+int main()
+{
     
     /*  INITIALISATION DES PARAMETRES  */
     
     init_var_globales();
         
-    /********** Calculs/Tests plus ou moins à la con ***********/
-    pcg128_t vraiS[nbiter];
-    unsigned long long X[nbiter]; //= {15511475948252377726llu, 6234043309952295463llu, 9845631557281214488llu};
-    pcg128_t S0 = (((pcg128_t) 5995207026785010249) << k) + ((pcg128_t) 179350442155841024); //valeur aléatoire
-    pcg(vraiS, X, S0, nbiter);
-    printf("W0 : %llu, rot = %d, %d, %d \n", (unsigned long long) (vraiS[0]% (1<<known_low)), (int) (vraiS[0] >> (2*k - known_up)),(int) (vraiS[1] >> (2*k - known_up)),(int) (vraiS[2] >> (2*k - known_up)));
+    /********** INPUT ***********/
+    unsigned long long X[nbiter];
+    X[ 0] = 0x3c8673c55ead80bc;
+    X[ 1] = 0xfd27cfa6f84ef5f1;
+    X[ 2] = 0x68a098da45558d92;
 
-
-    unsigned long long W0;
-    
-    for (int i = 0; i < nbiter; i++)
-        printf("X[%d] = %016llx\n", i, X[i]);
-
-    FILE *f;
-    f = fopen("result.txt","w");
-    
     double t1 = wtime();
     unsigned long long done = 0;
     
     #pragma omp parallel for
-    for (W0 = 0; W0 < (1<<known_low) ; W0++){//(1<<known_low)//W0=209818  
+    for (unsigned long long W0 = 0; W0 < (1<<known_low) ; W0++){//(1<<known_low)//W0=209818  
         
         /*Variables privées*/
         pcg128_t S[nbiter];
@@ -40,7 +31,7 @@ int main(){
         unsigned long long sumPolY[nbiter];
         
         getPolW(polW, W0);
-        getSumPol(sumPol,sumPolY, polW);
+        getSumPol(sumPol, sumPolY, polW);
         
         if (omp_get_thread_num() == 0 && (W0 % 64) == 0) {
             printf("\rW0 = %llx / %llx --- %.1f / s", done, 1ull<<known_low, done / (wtime() - t1));
@@ -48,30 +39,29 @@ int main(){
         }
 
 
-        for(int r = 0 ; r < 1<<(3*known_up) ; r++){
+        for (int r = 0 ; r < 1<<(3*known_up) ; r++) {
             /***** Modification de rot et unrotX *****/
-            rot[0]=(rot[0] + 1) % k;
+            rot[0] = (rot[0] + 1) % k;
             int i = 0;
-            while(rot[i] == 0 && i < nbiter){
+            while (rot[i] == 0 && i < nbiter) {
                 i++;
-                rot[i]=(rot[i] + 1) %k;
+                rot[i] = (rot[i] + 1) %k;
             }
             unrotate(urX, X, rot);
             
             /***** Résolution *****/
-            if(solve(S, urX, rot, sumPol, sumPolY)){
-                fprintf(f,"S :\n");
-                printf("S trouvé !!\n");
-                for(int i = 0 ; i < nbiter ; i++)
-                    fprintf(f,"%016llx %016llx\n", (unsigned long long) (S[i]>>64), (unsigned long long) S[i]);
-                fprintf(f,"temps pour trouver la solution = %f\n", wtime() - t1 );
-                fflush(f);
+            if (solve(S, urX, rot, sumPol, sumPolY)) {
+                printf("\nInternal state found (%.1fs)\n", wtime() - t1);
+                struct pcg_state_128 rng;
+                rng.state = S[0];
+                for(int i = 1 ; i < 10 ; i++)
+                    printf("X[%2d] = %016" PRIx64 "\n", i, pcg_oneseq_128_xsl_rr_64_random_r(&rng));
             }
         }
         
         #pragma omp atomic
         done++;;
     }
-    fprintf(f,"temps total = %f\n", wtime() - t1);
-    return(0);
+    printf("Total time = %.1f\n", wtime() - t1);
+    return EXIT_SUCCESS;
 }
