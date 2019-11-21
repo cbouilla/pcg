@@ -66,16 +66,17 @@ int main(){
     printf("\n");
     
     /***** Vrai Test *****/
-    int rot2[10 * 64];
-    int nbrot[10];
+    int rot2[nboutput * 64];
+    int nbrot[nboutput];
     //FindRoti(roti,DS64[0], X[1], 1, Y[0], W0, WC);
-    if(FindRot(rot2, nbrot, DS64[0], X, Y[0], W0, WC, 10)){
+    if(FindRot(rot2, nbrot, DS64[0], X, Y[0], W0, WC, nboutput)){
             printf("rot :\n");
         for(int i = 0 ; i < 10 ; i++)
             printf("%d ",rot2[k * i]);
         printf("\n");
     }
     else printf("On a pas trouvé :'(\n");
-    
+    int rotDS[nboutput];
+    getrotDS(rotDS, rot2, DS64[0], W0, WC);
     return(0);
 }

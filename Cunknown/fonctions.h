@@ -40,11 +40,5 @@ void getDY(unsigned long long *DY, unsigned long long* Yprim);
 void FindDS64(unsigned long long* DS64,unsigned long long* uX,int* rot,unsigned long long W0,unsigned long long WC);
 int FindRoti(int *roti, unsigned long long DS640, unsigned long long X,int  i,unsigned long long Y0,unsigned long long W0,unsigned long long WC);
 int FindRot(int *rot, int* nbrot, unsigned long long DS640,unsigned long long* X,unsigned long long Y0,unsigned long long W0,unsigned long long WC,int n);
-
-//void getPolW(pcg128_t *polW, unsigned long long W0);
-
-//void getSumPol(unsigned long long* sumPol,unsigned long long* sumPolY, pcg128_t* polW);
-
-int solve(pcg128_t* S, unsigned long long* X, const int* rot, const unsigned long long* sumPol, const unsigned long long* sumPolY);
-
+void getrotDS(int* rotDS, int* rot, unsigned long long DS640, unsigned long long W0, unsigned long long WC);
 void pcg(pcg128_t *S, unsigned long long* X, pcg128_t S0, int n);

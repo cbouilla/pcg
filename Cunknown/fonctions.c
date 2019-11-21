@@ -188,6 +188,14 @@ int FindRot(int *rot, int* nbrot, unsigned long long DS640,unsigned long long* X
     }
     return 1;
 }
+
+void getrotDS(int* rotDS, int* rot, unsigned long long DS640, unsigned long long W0, unsigned long long WC){
+    unsigned long long WDS0 = W0 * a - W0 + WC % (1<<known_low);
+    for(int i = 0 ; i < nboutput ; i++){
+        rotDS[i] = rot[k * i] - (int) ((powA[i] * (DS640 - WDS0)) >> (2 * k - known_up));
+        printf("rotDS[%d] = %d\n", i, rotDS[i]);
+    }
+}
             
 void pcg(pcg128_t *S, unsigned long long* X, pcg128_t S0, int n)
 {
