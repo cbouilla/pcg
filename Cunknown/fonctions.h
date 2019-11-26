@@ -1,5 +1,6 @@
 #include <stdint.h>
 #include "pcg_oneseq.h"
+//#include "pcg_setseq.h"
 #include <omp.h>
 
 
@@ -8,7 +9,7 @@
 #define known_up 6
 #define known_low 11
 #define nbiter 5
-#define nboutput 30
+#define nboutput 31
 
 int nb_thread;
 pcg128_t a;
@@ -38,7 +39,15 @@ void getY(unsigned long long *Y, unsigned long long W0, unsigned long long WC, i
 void getYprim(unsigned long long *Yprim, unsigned long long *Y, unsigned long long W0, unsigned long long WC);
 void getDY(unsigned long long *DY, unsigned long long* Yprim);
 void FindDS64(unsigned long long* DS64,unsigned long long* uX,int* rot,unsigned long long W0,unsigned long long WC);
+
+void getDS64(pcg128_t* DS64, pcg128_t* S,unsigned long long W0,unsigned long long WC);
+void getDSmod(pcg128_t* DSmod, unsigned long long* DS64, unsigned long long W0, unsigned long long WC);
+
 int FindRoti(int *roti, unsigned long long DS640, unsigned long long X,int  i,unsigned long long Y0,unsigned long long W0,unsigned long long WC);
 int FindRot(int *rot, int* nbrot, unsigned long long DS640,unsigned long long* X,unsigned long long Y0,unsigned long long W0,unsigned long long WC,int n);
-void getrotDS(int* rotDS, int* rot, unsigned long long DS640, unsigned long long W0, unsigned long long WC);
-void pcg(pcg128_t *S, unsigned long long* X, pcg128_t S0, int n);
+
+void FindRotDS(int* rotDS, int* rot, unsigned long long DS640, unsigned long long W0, unsigned long long WC);
+void FindUpDS(unsigned long long* upDS, int* rotDS);
+void FindDS(pcg128_t* DS, unsigned long long* upDS, unsigned long long DS640, unsigned long long W0,unsigned long long WC);
+
+void pcg(pcg128_t *S, unsigned long long* X, pcg128_t S0, pcg128_t C, int n);

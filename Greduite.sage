@@ -2,7 +2,7 @@
 
 
 k = 64
-m = 2**k
+m = 2**(2 * k)
 a = 2549297995355413924 * 2**64 + 4865540595714422341
 
 def getA(n):
@@ -81,5 +81,5 @@ G = matrix([[1, 0,0,0,0],
      
 #GG = G.transpose().LLL()
 #invGG = GG.inverse().n()
-printFic(30)
+printFic(25)
 
