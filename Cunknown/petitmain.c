@@ -15,10 +15,11 @@ int main(){
     pcg128_t S0 = (((pcg128_t) 5995207026785010249) << k) + ((pcg128_t) 179350442155841024);
     pcg128_t vraiS[nboutput];
     unsigned long long X[nboutput];
-    pcg(vraiS, X, S0, c, nboutput);
-    printf("%016llx %016llx\n", (unsigned long long) (vraiS[0]>>64), (unsigned long long) vraiS[0]);
+    pcg128_t c = ((((pcg128_t) 6364136223846793005) << k) + 1442695040888963407) >> 1;
+    pcg(vraiS, X, S0, &c, nboutput);
+    printf("setseq : %016llx %016llx\n", (unsigned long long) (vraiS[0]>>64), (unsigned long long) vraiS[0]);
     
-    printf("%llu %llu\n", (unsigned long long) ((vraiS[1] - vraiS[0])>>64), (unsigned long long) (vraiS[1] - vraiS[0]));
+    //printf("%llu %llu\n", (unsigned long long) ((vraiS[1] - vraiS[0])>>64), (unsigned long long) (vraiS[1] - vraiS[0]));
     for(int i = 0 ; i < nboutput ; i++){
         rot[i] = (int) (vraiS[i] >> (2 * k - known_up));
     }
@@ -97,7 +98,7 @@ int main(){
     pcg128_t DS[nboutput - 1];
     FindUpDS(upDS, rotDS);
     FindDS(DS, upDS, DS64[0], W0, WC);
-    for(int i = 0 ; i < nboutput - 1 ; i++)
-        printf("%016llx %016llx \n", (unsigned long long) (DS[i]>>64), (unsigned long long) DS[i]);
+    /*for(int i = 0 ; i < nboutput - 1 ; i++)
+        printf("%016llx %016llx \n", (unsigned long long) (DS[i]>>64), (unsigned long long) DS[i]);*/
     return(0);
 }

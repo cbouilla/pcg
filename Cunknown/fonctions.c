@@ -89,10 +89,7 @@ float invG[16] =
 void init_var_globales(){
     //multiplier a OK !
     a = (((pcg128_t) 2549297995355413924) << k) + ((pcg128_t) 4865540595714422341);
-    
-    //increment c OK !
-    c = (((pcg128_t)6364136223846793005) << k) + 1442695040888963407;
-    
+
     //nombre de threads 
     nb_thread = omp_get_max_threads();
     
@@ -292,7 +289,7 @@ void FindDS(pcg128_t* DS, unsigned long long* upDS, unsigned long long DS640, un
 }
 
 
-void pcg(pcg128_t *S, unsigned long long* X, pcg128_t S0, pcg128_t C, int n)
+/*void pcgone(pcg128_t *S, unsigned long long* X, pcg128_t S0, int n) //a besoin de pcg_oneseq
 {
     struct pcg_state_128 rng;
     pcg_oneseq_128_srandom_r(&rng, S0);
@@ -301,14 +298,15 @@ void pcg(pcg128_t *S, unsigned long long* X, pcg128_t S0, pcg128_t C, int n)
         S[i] = rng.state;
         pcg_oneseq_128_step_r(&rng);
     }
-}            
-/*void pcg(pcg128_t *S, unsigned long long* X, pcg128_t S0, pcg128_t C, int n)
+}*/         
+void pcg(pcg128_t *S, unsigned long long* X, pcg128_t S0, pcg128_t* c, int n)
 {
     struct pcg_state_setseq_128 rng;
-    pcg_setseq_128_srandom_r(&rng, S0, C);
+    pcg_setseq_128_srandom_r(&rng, S0, *c);
     for (int i = 0 ; i < n ; i++) {
         X[i] = pcg_output_xsl_rr_128_64(rng.state);
         S[i] = rng.state;
         pcg_setseq_128_step_r(&rng);
     }
-}*/
+    *c = rng.inc;
+}

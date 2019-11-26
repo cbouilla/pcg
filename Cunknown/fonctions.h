@@ -1,6 +1,6 @@
 #include <stdint.h>
-#include "pcg_oneseq.h"
-//#include "pcg_setseq.h"
+//#include "pcg_oneseq.h"
+#include "pcg_setseq.h" //inclus dans pcg_oneseq
 #include <omp.h>
 
 
@@ -13,7 +13,6 @@
 
 int nb_thread;
 pcg128_t a;
-pcg128_t c;
 pcg128_t powA[nboutput];
 pcg128_t polA[nboutput];
 unsigned long long lowPowA[nboutput];
@@ -50,4 +49,5 @@ void FindRotDS(int* rotDS, int* rot, unsigned long long DS640, unsigned long lon
 void FindUpDS(unsigned long long* upDS, int* rotDS);
 void FindDS(pcg128_t* DS, unsigned long long* upDS, unsigned long long DS640, unsigned long long W0,unsigned long long WC);
 
-void pcg(pcg128_t *S, unsigned long long* X, pcg128_t S0, pcg128_t C, int n);
+void pcgone(pcg128_t *S, unsigned long long* X, pcg128_t S0, int n);
+void pcg(pcg128_t *S, unsigned long long* X, pcg128_t S0, pcg128_t* c, int n);
