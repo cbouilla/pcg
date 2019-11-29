@@ -38,7 +38,7 @@ def getG(n,mod):
         
 def getGreduite(n,mod):
     G = getG(n,mod)
-    return G.transpose().BKZ().transpose()
+    return G.transpose().LLL().transpose()
     
 def getInvG(Greduite):
     return Greduite.inverse().n()
