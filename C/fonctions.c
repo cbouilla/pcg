@@ -84,6 +84,7 @@ void getSumPol(unsigned long long* sumPol,unsigned long long* sumPolY, pcg128_t*
 }
 
 
+/* sumPol/sumPolY are constant over many iterations. X (unrotated) and rot vary each time. */
 int solve(pcg128_t* S, const unsigned long long* X, const int* rot, const unsigned long long* sumPol, const unsigned long long* sumPolY)
 {
     unsigned long long Y[nbiter];
