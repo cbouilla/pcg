@@ -1,6 +1,7 @@
 #include "fonctions.h"
 #include <stdlib.h>
 #include <stdio.h>
+#include "entropy.h"//version un peu modifiée pour ne PAS passer par pcg_variant.h parce que c'est déjà assez chiant comme ça !
 
 int main(){
     
@@ -9,96 +10,32 @@ int main(){
     init_var_globales();
         
     /********** Calculs/Tests plus ou moins à la con ***********/
+    pcg128_t seeds[2];
+    entropy_getbytes((void*)seeds, sizeof(seeds)); // proposé et utilisé dans le code de pcg
     
-    
-    int rot[nboutput];
-    pcg128_t S0 = (((pcg128_t) 5995207026785010249) << k) + ((pcg128_t) 179350442155841024);
-    pcg128_t vraiS[nboutput];
-    unsigned long long X[nboutput];
-    pcg128_t c = ((((pcg128_t) 6364136223846793005) << k) + 1442695040888963407) >> 1;
-    pcg(vraiS, X, S0, &c, nboutput);
-    printf("setseq : %016llx %016llx\n", (unsigned long long) (vraiS[0]>>64), (unsigned long long) vraiS[0]);
-    
-    //printf("%llu %llu\n", (unsigned long long) ((vraiS[1] - vraiS[0])>>64), (unsigned long long) (vraiS[1] - vraiS[0]));
-    for(int i = 0 ; i < nboutput ; i++){
-        rot[i] = (int) (vraiS[i] >> (2 * k - known_up));
-    }
-    
-    unsigned long long W0 = (unsigned long long) (vraiS[0] % (1<<known_low));
-    unsigned long long WC = (unsigned long long) (c % (1<<known_low));
-    
-    unsigned long long uX[nbiter];
-    unrotateX(uX, X, rot);
-    printf("uX\n");
-    for(int i = 0 ; i < nbiter ; i++)
-        printf("%llu ", uX[i]);
-    printf("\n");
-    /*FILE *f;
-    f = fopen("result.txt","w");
-    
-    fprintf(f,"W0 : %llu\n", W0);*/
-    unsigned long long Y[nbiter];
-    getY(Y, W0, WC, rot, uX);
-    printf("Y :\n");
-    for(int i = 0 ; i < nbiter ; i++)
-        printf("%llu ", Y[i]);
-    printf("\n");
-    
-    
-    /***** Tests de vérification des sous-fonctions *****/
-    unsigned long long Yprim[nbiter];
-    getYprim(Yprim, Y, W0, WC);
-    printf("Yprim :\n");
-    for(int i = 0 ; i < nbiter ; i++)
-        printf("%llu ", Yprim[i]);
-    printf("\n");
-    
-    unsigned long long DY[nbiter];
-    getDY(DY, Yprim);
-    printf("DY :\n");
-    for(int i = 0 ; i < nbiter - 1 ; i++)
-        printf("%llu ", DY[i]);
-    printf("\n");
-    
-    unsigned long long DS64[nbiter - 1];
-    FindDS64(DS64, uX, rot, W0, WC);
-    printf("DS64 :\n");
-    for(int i = 0 ; i < nbiter - 1 ; i++)
-        printf("%016llx ", DS64[i]);
-    printf("\n");
-    
-    pcg128_t vraiDS64[nboutput - 1];
-    getDS64(vraiDS64, vraiS, W0, WC);
-    printf("vraiDS64 :\n");
-    for(int i = 0 ; i < nbiter - 1 ; i++)
-        printf("%016llx\n", (unsigned long long) (vraiDS64[i]));
-    printf("\n");
-    
-    pcg128_t DSmod[nbiter - 1];
-    getDSmod(DSmod, DS64, W0, WC);
-    printf("DSmod :\n");
-    for(int i = 0 ; i < nbiter - 1 ; i++)
-        printf("%016llx %016llx \n", (unsigned long long) (DSmod[i]>>64), (unsigned long long) DSmod[i]);
-    printf("\n");
-    
-    /***** Vrai Test *****/
-    int rot2[nboutput * 64];
-    int nbrot[nboutput];
-    //FindRoti(roti,DS64[0], X[1], 1, Y[0], W0, WC);
-    if(FindRot(rot2, nbrot, DS64[0], X, Y[0], W0, WC, nboutput)){
-            printf("rot :\n");
-        for(int i = 0 ; i < nboutput ; i++)
-            printf("%d ",rot2[k * i]);
-        printf("\n");
-    }
-    else printf("On a pas trouvé :'(\n");
-    int rotDS[nboutput-1];
-    FindRotDS(rotDS, rot2, DS64[0], W0, WC);
-    unsigned long long upDS[nboutput - 1];
-    pcg128_t DS[nboutput - 1];
-    FindUpDS(upDS, rotDS);
-    FindDS(DS, upDS, DS64[0], W0, WC);
-    /*for(int i = 0 ; i < nboutput - 1 ; i++)
-        printf("%016llx %016llx \n", (unsigned long long) (DS[i]>>64), (unsigned long long) DS[i]);*/
+    testValidite();
+    //pcg128_t S0 = (((pcg128_t) 5995207026785010249) << k) + ((pcg128_t) 179350442155841024);
+    //pcg128_t c = ((((pcg128_t) 6364136223846793005) << k) + 1442695040888963407) >> 1;
+    //printVal(S0, c);
+    for(int i = 0 ; i < 1000 ; i++)
+        if(rand() > ((unsigned long long) 1) << 31)
+            printf("Hey !\n");
     return(0);
 }
+
++    // Seed the full-blown generator with external entropy
++    pcg128_t seeds[2];
++    
++    FILE *f = fopen("/dev/urandom", "r");
++    if (f == NULL) {
++        perror("Something went wrong when opening /dev/urandom");
++        exit(EXIT_FAILURE);
++    }
++    if (fread(seeds, sizeof(seeds), 1, f) != 1)  {
++        perror("Something went wrong when reading /dev/urandom");
++        exit(EXIT_FAILURE);
++    }
++
++    printf("Seed[0] : %016" PRIx64 " %016" PRIx64 "\n", (uint64_t) (seeds[0] >> 64), (uint64_t) seeds[0]);
++    printf("Seed[0] : %016" PRIx64 " %016" PRIx64 "\n\n", (uint64_t) (seeds[1] >> 64), (uint64_t) seeds[1]);
++

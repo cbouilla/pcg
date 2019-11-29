@@ -262,6 +262,51 @@ int FindRot(int *rot, int* nbrot, unsigned long long DS640,unsigned long long* X
     return 1;
 }
 
+int testRoti(unsigned long long DS640, unsigned long long Xi,int  i,unsigned long long Y0,unsigned long long W0,unsigned long long WC){
+    unsigned long long tmp = polA[i] * DS640;
+    tmp += W0 * ((unsigned long long) (powA[i] >> known_low) - 1) + WC * ((unsigned long long) (polA[i] >> known_low) - 1);
+    unsigned long long Yi1 = (Y0 + (tmp >> (k - known_low - known_up))) % (1<< (known_low + known_up)); //avec ou sans retenue OK!
+    unsigned long long Yi2 = Yi1 + 1;
+    unsigned long long Wi = (W0 * ((unsigned long long) powA[i]) + WC * ((unsigned long long) polA[i])) % (1<< known_low);
+    int test1, test2,test = 0;
+    for(int i = 0 ; i < k ; i++){
+        test1 = (((Xi ^ (Yi1 >> known_up)) % (1 << known_low)) == Wi) && ((i ^ (Xi >> (k - known_up))) == Yi1 % (1 << known_up));
+        test2 = (((Xi ^ (Yi2 >> known_up)) % (1 << known_low)) == Wi) && ((i ^ (Xi >> (k - known_up))) == Yi2 % (1 << known_up));
+        if (test1 || test2){
+            test = 1;
+        }
+        Xi = unrotate1(Xi);
+    }
+    return test;
+}
+    
+    
+    
+int testDS640(unsigned long long DS640,  unsigned long long* X, unsigned long long Y0, unsigned long long W0, unsigned long long WC, int n){
+    for(int i = nbiter ; i < n + nbiter ; i++){
+        unsigned long long Xi = X[i];
+        unsigned long long tmp = polA[i] * DS640; //ATTENTION cast pcg128_t
+        tmp += W0 * ((unsigned long long) (powA[i] >> known_low) - 1) + WC * ((unsigned long long) (polA[i] >> known_low) - 1);//ATTENTION cast pcg128_t
+        unsigned long long Yi1 = (Y0 + (tmp >> (k - known_low - known_up))) % (1<< (known_low + known_up)); //avec ou sans retenue OK!
+        unsigned long long Yi2 = Yi1 + 1;
+        unsigned long long Wi = (W0 * ((unsigned long long) powA[i]) + WC * ((unsigned long long) polA[i])) % (1<< known_low);//ATTENTION cast pcg128_t
+        int test1, test2,test = 0;
+        for(int i = 0 ; i < k ; i++){
+            test1 = (((Xi ^ (Yi1 >> known_up)) % (1 << known_low)) == Wi) && ((i ^ (Xi >> (k - known_up))) == Yi1 % (1 << known_up));
+            test2 = (((Xi ^ (Yi2 >> known_up)) % (1 << known_low)) == Wi) && ((i ^ (Xi >> (k - known_up))) == Yi2 % (1 << known_up));
+            if (test1 || test2){
+                test = 1;
+            }
+            Xi = unrotate1(Xi);
+        }
+        if(!test) {
+            printf("erreur a i = %d\n", i);
+            return 0;
+        }
+    }
+    return 1;
+    
+}
 
 void FindRotDS(int* rotDS, int* rot, unsigned long long DS640, unsigned long long W0, unsigned long long WC){//cohérent
     int tmp;
@@ -298,7 +343,11 @@ void FindDS(pcg128_t* DS, unsigned long long* upDS, unsigned long long DS640, un
         S[i] = rng.state;
         pcg_oneseq_128_step_r(&rng);
     }
-}*/         
+}*/  
+
+
+        
+
 void pcg(pcg128_t *S, unsigned long long* X, pcg128_t S0, pcg128_t* c, int n)
 {
     struct pcg_state_setseq_128 rng;
@@ -309,4 +358,165 @@ void pcg(pcg128_t *S, unsigned long long* X, pcg128_t S0, pcg128_t* c, int n)
         pcg_setseq_128_step_r(&rng);
     }
     *c = rng.inc;
+}
+
+int testValidite(){
+    int rot[nboutput];
+    pcg128_t S0 = (((pcg128_t) 5995207026785010249u) << k) + ((pcg128_t) 179350442155841024u);
+    pcg128_t vraiS[nboutput];
+    unsigned long long X[nboutput];
+    pcg128_t c = ((((pcg128_t) 6364136223846793005u) << k) + 1442695040888963407u) >> 1;
+    pcg(vraiS, X, S0, &c, nboutput);
+    if(vraiS[2] != (((pcg128_t) 1792771836637573954u) << k) + ((pcg128_t) 11139816115278170276u)){
+        printf("erreur sur pcg\n");
+        return 0;
+    }
+    for(int i = 0 ; i < nboutput ; i++){
+        rot[i] = (int) (vraiS[i] >> (2 * k - known_up));
+    }
+    
+    unsigned long long W0 = (unsigned long long) (vraiS[0] % (1<<known_low));
+    unsigned long long WC = (unsigned long long) (c % (1<<known_low));
+    
+    unsigned long long uX[nbiter];
+    unrotateX(uX, X, rot);
+    if(uX[0] != 15007519919903780682u){
+        printf("erreur sur unrotateX\n");
+        return 0;
+    }
+    unsigned long long Y[nbiter];
+    getY(Y, W0, WC, rot, uX);
+    if(Y[3] != 129714){
+        printf("erreur sur getY\n");
+        return 0;
+    }
+    unsigned long long Yprim[nbiter];
+    getYprim(Yprim, Y, W0, WC);
+    if(Yprim[1] != 93486){
+        printf("erreur sur getY\n");
+        return 0;
+    }
+    unsigned long long DY[nbiter-1];
+    getDY(DY, Yprim);
+    if(DY[0] != 14609){
+        printf("erreur sur getDY\n");
+        return 0;
+    }
+    unsigned long long DS64[nbiter - 1];
+    FindDS64(DS64, uX, rot, W0, WC);
+    if(DS64[0] != 2055999906439120392u){
+        printf("erreur sur FindDS64\n");
+        return 0;
+    }
+    int rot2[nboutput * 64];
+    int nbrot[nboutput];
+    if(!FindRot(rot2, nbrot, DS64[0], X, Y[0], W0, WC, nboutput)){
+        printf("erreur sur FindRot\n");
+        return 0;
+    }
+    for(int i = 0 ;i < nboutput ; i++){
+        int test = 0;
+        for(int j = 0 ; j < nbrot[i] ; j++)
+            if(rot2[i * k + j] == rot[i])
+                test = 1;
+        if(test == 0){
+            printf("erreur sur FindRot\n");
+            return 0;
+        }
+    }
+    return 1;
+}
+
+int testExactitude(){
+    return 0;
+    
+}
+
+void printVal(pcg128_t S0, pcg128_t c){
+    int rot[nboutput];
+    pcg128_t vraiS[nboutput];
+    unsigned long long X[nboutput];
+    pcg(vraiS, X, S0, &c, nboutput);
+    printf("setseq : %llu %llu\n", (unsigned long long) (vraiS[2]>>64), (unsigned long long) vraiS[2]);
+    
+    //printf("%llu %llu\n", (unsigned long long) ((vraiS[1] - vraiS[0])>>64), (unsigned long long) (vraiS[1] - vraiS[0]));
+    
+    //done
+    for(int i = 0 ; i < nboutput ; i++){
+        rot[i] = (int) (vraiS[i] >> (2 * k - known_up));
+    }
+    
+    unsigned long long W0 = (unsigned long long) (vraiS[0] % (1<<known_low));
+    unsigned long long WC = (unsigned long long) (c % (1<<known_low));
+    
+    unsigned long long uX[nbiter];
+    unrotateX(uX, X, rot);
+    printf("uX\n");
+    for(int i = 0 ; i < nbiter ; i++)
+        printf("%llu ", uX[i]);
+    printf("\n");
+    /*FILE *f;
+    f = fopen("result.txt","w");
+    
+    fprintf(f,"W0 : %llu\n", W0);*/
+    unsigned long long Y[nbiter];
+    getY(Y, W0, WC, rot, uX);
+    printf("Y :\n");
+    for(int i = 0 ; i < nbiter ; i++)
+        printf("%llu ", Y[i]);
+    printf("\n");
+    
+    
+    /***** Tests de vérification des sous-fonctions *****/
+    unsigned long long Yprim[nbiter];
+    getYprim(Yprim, Y, W0, WC);
+    printf("Yprim :\n");
+    for(int i = 0 ; i < nbiter ; i++)
+        printf("%llu ", Yprim[i]);
+    printf("\n");
+    
+    unsigned long long DY[nbiter];
+    getDY(DY, Yprim);
+    printf("DY :\n");
+    for(int i = 0 ; i < nbiter - 1 ; i++)
+        printf("%llu ", DY[i]);
+    printf("\n");
+    
+    unsigned long long DS64[nbiter - 1];
+    FindDS64(DS64, uX, rot, W0, WC);
+    printf("DS64 :\n");
+    for(int i = 0 ; i < nbiter - 1 ; i++)
+        printf("%llu ", DS64[i]);
+    printf("\n");
+    
+    
+    
+    printf("testDS640 : %d\n", testDS640(DS64[0], X, Y[0], W0, WC, 3)); 
+    
+    /*pcg128_t DSmod[nbiter - 1];
+    getDSmod(DSmod, DS64, W0, WC);
+    printf("DSmod :\n");
+    for(int i = 0 ; i < nbiter - 1 ; i++)
+        printf("%016llx %016llx \n", (unsigned long long) (DSmod[i]>>64), (unsigned long long) DSmod[i]);
+    printf("\n");
+    
+    **** Vrai Test ****
+    int rot2[nboutput * 64];
+    int nbrot[nboutput];
+    //FindRoti(roti,DS64[0], X[1], 1, Y[0], W0, WC);
+    if(FindRot(rot2, nbrot, DS64[0], X, Y[0], W0, WC, nboutput)){
+            printf("rot :\n");
+        for(int i = 0 ; i < nboutput ; i++)
+            printf("%d ",rot2[k * i]);
+        printf("\n");
+    }
+    else printf("On a pas trouvé :'(\n");
+    int rotDS[nboutput-1];
+    FindRotDS(rotDS, rot2, DS64[0], W0, WC);
+    unsigned long long upDS[nboutput - 1];
+    pcg128_t DS[nboutput - 1];
+    FindUpDS(upDS, rotDS);
+    FindDS(DS, upDS, DS64[0], W0, WC);
+    for(int i = 0 ; i < nboutput - 1 ; i++)
+        printf("%016llx %016llx \n", (unsigned long long) (DS[i]>>64), (unsigned long long) DS[i]);*/
 }
