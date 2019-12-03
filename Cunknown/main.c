@@ -26,7 +26,7 @@ int main(){
     
     //#pragma omp parallel for
     for (W0 = 5018; W0 < /*(1<<known_low)*/ 5019 ; W0++){//W0=5018 
-        for(WC = 335 ; WC < /*(1<<known_low)*/ 336 ; W0++){//WC = 335
+        for(WC = 335 ; WC < /*(1<<known_low)*/ 336 ; WC++){//WC = 335
             /*Variables privées*/
             unsigned long long uX[nbiter];
             int rot[nbiter];
@@ -67,9 +67,8 @@ int main(){
                 unrotateX(uX, X, rot);
                 
                 /***** Résolution *****/
-								getY(Y, W0, WC, rot, uX);
-								DS640 = FindDS640(&Y0, uX, rot, lowSumPol, sumPolY);
-                FindDS64(DS64, uX, rot, W0, WC);
+				getY(Y, W0, WC, rot, uX);
+                FindDS64(DS64, uX, rot, W0, WC, lowSumPol, sumPolY);
 								
                 if(DS64[0] == 7304601715607344736u){
                     printf("On a le bon !\n");

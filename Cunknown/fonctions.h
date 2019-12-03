@@ -37,9 +37,9 @@ unsigned long long unrotate1(unsigned long long Xi);
 void getY(unsigned long long *Y, unsigned long long W0, unsigned long long WC, int* rot, unsigned long long* uX);
 void getYprim(unsigned long long *Yprim, unsigned long long *Y, unsigned long long W0, unsigned long long WC);
 void getDY(unsigned long long *DY, unsigned long long* Yprim);
-void FindDS64(unsigned long long* DS64,unsigned long long* uX,int* rot,unsigned long long W0,unsigned long long WC);
+void FindDS64(unsigned long long* DS64, unsigned long long* uX,int* rot,unsigned long long W0,unsigned long long WC, unsigned long long* lowSumPol);
 
-unsigned long long FindDS640(unsigned long long* Y0, unsigned long long* uX,int* rot,unsigned long long *lowSumPol,unsigned long long* sumPolY);
+unsigned long long FindDS640(unsigned long long* Y, unsigned long long* uX, int* rot,unsigned long long *lowSumPol,unsigned long long* sumPolY);
 
 int testDS640(unsigned long long DS640,  unsigned long long* X, unsigned long long Y0,unsigned long long W0,unsigned long long WC, int n);
 

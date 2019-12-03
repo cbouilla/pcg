@@ -117,24 +117,30 @@ void getDY(unsigned long long *DY, unsigned long long* Yprim){
 }
 
 /* DS64 = différence sur S'[known_low:known_low+k], avec S' = S - composante en WC, W0 */
-void FindDS64(unsigned long long* DS64,unsigned long long* uX,int* rot,unsigned long long W0,unsigned long long WC){
-    unsigned long long Y[nbiter];
-    getY(Y, W0, WC, rot, uX);
+void FindDS64(unsigned long long* DS64, unsigned long long* uX,int* rot,unsigned long long W0,unsigned long long WC, unsigned long long* lowSumPol){
+    unsigned long long tmp[nbiter];
+    for(int i = 0 ; i < nbiter ; i++){//Y
+        tmp[i] = (((lowSumPol[i] % (1 << known_low)) ^ (uX[i] % (1 << known_low))) << known_up) + (rot[i] ^ (uX[i] >> (k - known_up)));
+    }
     
-    unsigned long long Yprim[nbiter];
-    getYprim(Yprim, Y, W0,WC);
-    
-    
-    unsigned long long tmp[nbiter-1];
-    getDY(tmp, Yprim);
-    
-    for(int i = 0 ; i < nbiter - 1 ; i++)
+    for(int i = 0 ; i < nbiter ; i++)//Yprim
+        tmp[i] = (unsigned long long) (tmp[i] - ((polA[i] * WC + powA[i] * W0) >> (k - known_up))) % (1<<(known_up + known_low));
+
+    for(int i = 0 ; i < nbiter - 1 ; i++){ //DY
+        tmp[i] = (tmp[i+1] - tmp[i]) % (1<<(known_low + known_up));
         tmp[i] = tmp[i] << (k - known_up - known_low);
+    }
+
     float u[nbiter-1];
     prodMatVecFFU(u, invG, tmp, nbiter-1);
     for(int i = 0 ; i < nbiter-1 ; i++)
         tmp[i] = (unsigned long long) llroundf(u[i]);
-    prodMatVecU(DS64, Greduite, tmp, nbiter-1);
+
+    *DS64 = 0;
+    for(int i = 0 ; i < nbiter-1 ; i++)
+        (*DS64) += Greduite[i] * tmp[i];
+
+    //prodMatVecU(DS64, Greduite, tmp, nbiter-1);
 }
 
 unsigned long long FindDS640(unsigned long long* Y0, unsigned long long* uX,int* rot,unsigned long long *lowSumPol,unsigned long long* sumPolY){
