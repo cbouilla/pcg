@@ -1,2 +1,4 @@
 *.o
 C/main
+/Cunknown/test
+/Cunknown/test_falsenegative
