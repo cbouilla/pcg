@@ -1,6 +1,5 @@
 #include <assert.h>
 #include <time.h>
-#include <math.h>
 #include <sys/time.h>
 
 #include "fonctions.h"
@@ -31,12 +30,6 @@ void init_var_globales(){
     for(int i = 1; i < nboutput ; i++){
         polA[i] = polA[i-1] + powA [i-1];
         powA[i] = powA[i-1] * a;
-    }
-    for(int i = 0; i < nboutput ; i++){
-        lowPolA[i] = polA[i];
-        lowPowA[i] = powA[i];
-        YZPowA[i] = powA[i] >> known_low;
-        YZPolA[i] = polA[i] >> known_low;
     }
 }
 
@@ -139,8 +132,27 @@ void FindDS64(unsigned long long* DS64,unsigned long long* uX,int* rot,unsigned 
         tmp[i] = (unsigned long long) llroundf(u[i]);
     prodMatVecU(DS64, Greduite, tmp, nbiter-1);
 }
-    
 
+unsigned long long FindDS640(unsigned long long* Y0, unsigned long long* uX,int* rot,unsigned long long *lowSumPol,unsigned long long* sumPolY){
+		unsigned long long tmp[nbiter];
+		unsigned long long DS640;
+	  for(int i = 0 ; i < nbiter ; i++)//Y
+				tmp[i] = ((lowSumPol[i] % (1 << known_low)) ^ (uX[i] % (1 << known_low))) + (rot[i] ^ (uX[i] >> (k - known_up)));
+		*Y0 = tmp[0];
+		for(int i = 0 ; i < nbiter ; i++)//Yprim
+				tmp[i] = (tmp[i] - sumPolY[i]) % (1 << (known_up + known_low));
+		for(int i = 0 ; i < nbiter - 1; i++)
+				tmp[i] = ((tmp[i+1] - tmp[i]) % (1 << (known_up + known_low))) << (k - known_up - known_low);
+
+		float u[nbiter - 1];
+		prodMatVecFFU(u, invG, tmp, nbiter-1);//a optimiser ?
+		for(int i = 0 ; i < nbiter-1 ; i++)
+				tmp[i] = (unsigned long long) llroundf(u[i]);
+		DS640 = 0;
+		for(int i = 0 ; i < nbiter-1 ; i++)
+				DS640 += Greduite[i] * tmp[i];
+		return DS640;
+}
     
 int testDS640(unsigned long long DS640,  unsigned long long* X, unsigned long long Y0, unsigned long long W0, unsigned long long WC, int n){
     for(int i = nbiter ; i < n + nbiter ; i++){
@@ -168,13 +180,13 @@ int testDS640(unsigned long long DS640,  unsigned long long* X, unsigned long lo
     
 }
 
-int testValid(FILE* f, int nbtest){
+int testValid(FILE* f, int n){
     int rot[nboutput];
     pcg128_t vraiS[nboutput];
     unsigned long long X[nboutput];
     pcg128_t seeds[2];
     int cpt = 0;
-    for(int i = 0 ; i < nbtest ; i++){
+    for(int i = 0 ; i < n ; i++){
         if (fread(seeds, sizeof(seeds), 1, f) != 1)  {
             perror("Something went wrong when reading /dev/urandom");
             exit(EXIT_FAILURE);
@@ -193,9 +205,20 @@ int testValid(FILE* f, int nbtest){
         unsigned long long Y[nbiter];//utilisé dans testDS640
         getY(Y, W0, WC, rot, uX);
         
-        unsigned long long DS64[nboutput];
-        FindDS64(DS64, uX, rot, W0, WC);
-        cpt += testDS640(DS64[0], X, Y[0], W0, WC, 3);
+        unsigned long long DS640;
+        unsigned long long lowSumPol[nbiter + nbtest];
+        unsigned long long sumPolY[nbiter];
+        unsigned long long sumPolTest[nbtest];
+        for(int i = 0 ; i < nbiter ; i++){
+            lowSumPol[i]  = (W0 * ((unsigned long long) powA[i]) + WC * ((unsigned long long) polA[i]));
+            sumPolY[i] = (polA[i] * WC + powA[i] * W0) >> (k - known_up);
+        }
+        for(int i = 0 ; i < nbtest ; i++){
+            lowSumPol[nbiter + i] = (W0 * ((unsigned long long) powA[i]) + WC * ((unsigned long long) polA[i]));
+            sumPolTest[i] = W0 * ((unsigned long long) (powA[i] >> known_low) - 1) + WC * ((unsigned long long) (polA[i] >> known_low) - 1);
+        }   
+        DS640 = FindDS640(Y, uX, rot, lowSumPol, sumPolY);
+        cpt += testDS640(DS640, X, Y[0], W0, WC, 3);
     }
     return cpt;
 }
@@ -223,12 +246,17 @@ int testFonctions(){//known_low = 11
         printf("erreur sur pcg\n");
         return 0;
     }
+    printf("rot = [");
     for(int i = 0 ; i < nboutput ; i++){
         rot[i] = (int) (vraiS[i] >> (2 * k - known_up));
+        printf("%d, ",rot[i]);
     }
+    printf("]\n");
     
     unsigned long long W0 = (unsigned long long) (vraiS[0] % (1<<known_low));
     unsigned long long WC = (unsigned long long) (c % (1<<known_low));
+    printf("W0 = %llu\n", W0);
+    printf("WC = %llu\n", WC);
     
     unsigned long long uX[nbiter];
     unrotateX(uX, X, rot);
@@ -236,6 +264,8 @@ int testFonctions(){//known_low = 11
         printf("erreur sur unrotateX\n");
         return 0;
     }
+    for(int i = 0 ; i < nbiter ; i++)
+        printf("uX[%d] =  %llu\n",i, uX[i]);
     unsigned long long Y[nbiter];
     getY(Y, W0, WC, rot, uX);
     if(Y[3] != 129714){
@@ -260,6 +290,25 @@ int testFonctions(){//known_low = 11
         printf("erreur sur FindDS64\n");
         return 0;
     }
+
+        /**** Polynômes en WC et W0 utilisés dans la résolution ****/
+    unsigned long long lowSumPol[nbiter + nbtest];
+    unsigned long long sumPolY[nbiter];
+    unsigned long long sumPolTest[nbtest];
+    for(int i = 0 ; i < nbiter ; i++){
+        lowSumPol[i]  = (W0 * ((unsigned long long) powA[i]) + WC * ((unsigned long long) polA[i]));
+        sumPolY[i] = (polA[i] * WC + powA[i] * W0) >> (k - known_up);
+    }
+    for(int i = 0 ; i < nbtest ; i++){
+        lowSumPol[nbiter + i] = (W0 * ((unsigned long long) powA[i]) + WC * ((unsigned long long) polA[i]));
+        sumPolTest[i] = W0 * ((unsigned long long) (powA[i] >> known_low) - 1) + WC * ((unsigned long long) (polA[i] >> known_low) - 1);
+    }
+    unsigned long long Y0;
+    if(FindDS640(&Y0, uX, rot, lowSumPol, sumPolY) == DS64[0]){
+    		printf("erreur sur FindDS640\n");
+        return 0;
+    }
+
     /*int rot2[nboutput * 64];
     int nbrot[nboutput];
     if(!FindRot(rot2, nbrot, DS64[0], X, Y[0], W0, WC, nboutput)){
@@ -294,6 +343,10 @@ void printVal(pcg128_t S0, pcg128_t c){
     for(int i = 0 ; i < nboutput ; i++){
         rot[i] = (int) (vraiS[i] >> (2 * k - known_up));
     }
+    printf("rot\n");
+    for(int i = 0 ; i < nbiter ; i++)
+        printf("%d ", rot[i]);
+    printf("\n");
     
     unsigned long long W0 = (unsigned long long) (vraiS[0] % (1<<known_low));
     unsigned long long WC = (unsigned long long) (c % (1<<known_low));
