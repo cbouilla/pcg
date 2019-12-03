@@ -24,11 +24,6 @@ int testValid (FILE* f, int n)
 
         unsigned long long W0 = (unsigned long long) (vraiS[0] % (1<<known_low));
         unsigned long long WC = (unsigned long long) (seeds[1] % (1<<known_low));
-        unsigned long long uX[nbiter];
-        unrotateX(uX, X, rot);
-        
-        unsigned long long Y[nbiter]; //utilisé dans testDS640
-        getY(Y, W0, WC, rot, uX);
         
         /**** Polynômes en WC et W0 utilisés dans la résolution ****/
         unsigned long long lowSumPol[nbiter + nbtest];
@@ -43,9 +38,16 @@ int testValid (FILE* f, int n)
             sumPolTest[i] = W0 * ((unsigned long long) (powA[i + nbiter] >> known_low) - 1) + WC * ((unsigned long long) (polA[i + nbiter] >> known_low) - 1);
         }
 
-        unsigned long long DS64[nboutput];
+        unsigned long long DS640;
+        unsigned long long Y0;
+        /*unsigned long long uX[nbiter];
+        unrotateX(uX, X, rot);
+        
+        unsigned long long Y[nbiter]; //utilisé dans testDS640
+        getY(Y, W0, WC, rot, uX);
         FindDS64(DS64, Y, uX, rot, lowSumPol, sumPolY);
-        cpt += testDS640(DS64[0], X, Y[0], sumPolTest, lowSumPol);
+        cpt += testDS640(DS64[0], X, Y[0], sumPolTest, lowSumPol);*/
+        cpt += solve(&DS640, &Y0, X, rot, lowSumPol, sumPolY, sumPolTest);
     }
     return cpt;
 }
@@ -63,18 +65,6 @@ int main()
         perror("Something went wrong when opening /dev/urandom");
         exit(EXIT_FAILURE);
     }
-    /*if (fread(seeds, sizeof(seeds), 1, f) != 1)  {
-        perror("Something went wrong when reading /dev/urandom");
-        exit(EXIT_FAILURE);
-    }
-
-    printf("Seed[0] : %016" PRIx64 " %016" PRIx64 "\n", (uint64_t) (seeds[0] >> 64), (uint64_t) seeds[0]);
-    printf("Seed[1] : %016" PRIx64 " %016" PRIx64 "\n\n", (uint64_t) (seeds[1] >> 64), (uint64_t) seeds[1]);
-    */
-    
-    //pcg128_t S0 = (((pcg128_t) 5995207026785010249) << k) + ((pcg128_t) 179350442155841024);
-    //pcg128_t c = ((((pcg128_t) 6364136223846793005) << k) + 1442695040888963407) >> 1;
-    //printVal(seeds[0], seeds[1]);
     
     printf("1..1\n");
     static const int nbtests = 1000000;

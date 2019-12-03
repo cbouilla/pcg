@@ -43,59 +43,8 @@ double wtime()
 }
 
 
-////////////////Fonctions calcul matriciel//////////////
-
-//Matrice avce coeffs négatifs mais résult mod 2**64 (je sais pas si ça marche)
-void prodMatVecU(unsigned long long* res, unsigned long long * M, unsigned long long* v, int n){
-    int i, j;
-    for(i=0 ; i<n ; i++){
-        res[i] = 0;
-        for(j=0 ; j<n ; j++)
-            res[i]+= M[i * n + j] * v[j];
-    }
-}
-
-void prodMatVecFFU(float* res, float* M, unsigned long long* v, int n){
-    int i, j;
-    for(i=0 ; i<n ; i++){
-        res[i] = 0;
-        for(j=0 ; j<n ; j++)
-            res[i]+= M[i * n + j] * v[j];
-    }
-}
-
-void prodMatMatU(unsigned long long* res, unsigned long long* M1, unsigned long long* M2, int n){//juste pour verif
-    int i, j, l;
-    for(i=0 ; i<n ; i++){
-        for(j=0 ; j<n ; j++){
-            res[i * + j] = 0;
-            for(l=0; l<n ; l++)
-                res[i * n + j]+= M1[i * n + l] * M2[l * n + j];
-        }
-    }
-}
-
-
-
-
 ////////////////Fonctions pour la récupération de S//////////////
 
-
-void rotateX(unsigned long long* rX, unsigned long long* X,int* rot){ //pas verifié, repris de pcg_random
-    for(int i = 0 ; i < nbiter ; i++)
-        rX[i]= (X[i] >> rot[i]) | (X[i] << ((- rot[i]) & (k-1)));
-}
-
-void unrotateX(unsigned long long* urX, unsigned long long* X, int* rot){//pas verifié, repris de pcg_random
-    int rot2[nbiter];
-    for( int i = 0 ; i < nbiter ; i++)
-        rot2[i] = (k - rot[i]) % k;
-    rotateX(urX, X, rot2);
-}
-
-unsigned long long unrotate1(unsigned long long Xi){
-    return (Xi >> (k-1)) | (Xi << 1);
-}
 
 /* Y = S[k-known_up:k+known_low] */
 void getY(unsigned long long *Y, unsigned long long W0, unsigned long long WC, int* rot, unsigned long long* uX){
@@ -117,12 +66,12 @@ void getDY(unsigned long long *DY, unsigned long long* Yprim){
 }
 
 /* DS64 = différence sur S'[known_low:known_low+k], avec S' = S - composante en WC, W0 */
-void FindDS64(unsigned long long* DS64, unsigned long long* Y, unsigned long long* uX,int* rot, unsigned long long* lowSumPol, unsigned long long* sumPolY){
+void FindDS64(unsigned long long* DS64, unsigned long long* Y0, unsigned long long* uX,int* rot, unsigned long long* lowSumPol, unsigned long long* sumPolY){
     unsigned long long tmp[nbiter];
     for(int i = 0 ; i < nbiter ; i++){//Y
         tmp[i] = (((lowSumPol[i] % (1 << known_low)) ^ (uX[i] % (1 << known_low))) << known_up) + (rot[i] ^ (uX[i] >> (k - known_up)));
     }
-    Y[0] = tmp[0];
+    Y0[0] = tmp[0];
     for(int i = 0 ; i < nbiter ; i++)//Yprim
         tmp[i] = (tmp[i] - sumPolY[i]) % (1<<(known_up + known_low));
 
@@ -143,26 +92,6 @@ void FindDS64(unsigned long long* DS64, unsigned long long* Y, unsigned long lon
     //prodMatVecU(DS64, Greduite, tmp, nbiter-1);
 }
 
-unsigned long long FindDS640(unsigned long long* Y0, unsigned long long* uX,int* rot,unsigned long long *lowSumPol,unsigned long long* sumPolY){
-		unsigned long long tmp[nbiter];
-		unsigned long long DS640;
-	  for(int i = 0 ; i < nbiter ; i++)//Y
-				tmp[i] = ((lowSumPol[i] % (1 << known_low)) ^ (uX[i] % (1 << known_low))) + (rot[i] ^ (uX[i] >> (k - known_up)));
-		*Y0 = tmp[0];
-		for(int i = 0 ; i < nbiter ; i++)//Yprim
-				tmp[i] = (tmp[i] - sumPolY[i]) % (1 << (known_up + known_low));
-		for(int i = 0 ; i < nbiter - 1; i++)
-				tmp[i] = ((tmp[i+1] - tmp[i]) % (1 << (known_up + known_low))) << (k - known_up - known_low);
-
-		float u[nbiter - 1];
-		prodMatVecFFU(u, invG, tmp, nbiter-1);//a optimiser ?
-		for(int i = 0 ; i < nbiter-1 ; i++)
-				tmp[i] = (unsigned long long) llroundf(u[i]);
-		DS640 = 0;
-		for(int i = 0 ; i < nbiter-1 ; i++)
-				DS640 += Greduite[i] * tmp[i];
-		return DS640;
-}
 
 /* vérifie si DS64 est cohérent avec les X_i */
 int testDS640(unsigned long long DS640,  unsigned long long* X, unsigned long long Y0, unsigned long long* sumPolTest, unsigned long long* lowSumPol){
@@ -191,18 +120,48 @@ int testDS640(unsigned long long DS640,  unsigned long long* X, unsigned long lo
     
 }
 
-/*int testDS640(unsigned long long DS640,  unsigned long long* X, unsigned long long Y0, unsigned long long W0, unsigned long long WC, int n){
-    for(int i = nbiter ; i < n + nbiter ; i++){
+
+int solve(unsigned long long* DS640, unsigned long long* Y0, unsigned long long* X, int* rot, unsigned long long* lowSumPol, unsigned long long* sumPolY, unsigned long long* sumPolTest){
+    unsigned long long uX[nbiter];
+    unrotateX(uX, X, rot);
+
+    unsigned long long tmp[nbiter];
+
+    /**** Recherche du DS640 ****/
+    for(int i = 0 ; i < nbiter ; i++){//Y
+        tmp[i] = (((lowSumPol[i] % (1 << known_low)) ^ (uX[i] % (1 << known_low))) << known_up) + (rot[i] ^ (uX[i] >> (k - known_up)));
+    }
+    *Y0 = tmp[0];
+    for(int i = 0 ; i < nbiter ; i++)//Yprim
+        tmp[i] = (tmp[i] - sumPolY[i]) % (1<<(known_up + known_low));
+
+    for(int i = 0 ; i < nbiter - 1 ; i++){ //DY
+        tmp[i] = (tmp[i+1] - tmp[i]) % (1<<(known_low + known_up));
+        tmp[i] = tmp[i] << (k - known_up - known_low);
+    }
+
+    float u[nbiter-1];
+    prodMatVecFFU(u, invG, tmp, nbiter-1);
+    for(int i = 0 ; i < nbiter-1 ; i++)
+        tmp[i] = (unsigned long long) llroundf(u[i]);
+
+    *DS640 = 0;
+    for(int i = 0 ; i < nbiter-1 ; i++)
+        (*DS640) += Greduite[i] * tmp[i];
+
+    /**** Confirmation du DS640 ****/
+    unsigned long long tmp2;
+    for(int i = nbiter ; i < nbtest + nbiter ; i++){
         unsigned long long Xi = X[i];
-        unsigned long long tmp = polA[i] * DS640; //ATTENTION cast pcg128_t
-        tmp += W0 * ((unsigned long long) (powA[i] >> known_low) - 1) + WC * ((unsigned long long) (polA[i] >> known_low) - 1);//ATTENTION cast pcg128_t
-        unsigned long long Yi1 = (Y0 + (tmp >> (k - known_low - known_up))) % (1<< (known_low + known_up)); //avec ou sans retenue OK!
+        tmp2 = polA[i] * (*DS640); //ATTENTION cast pcg128_t
+        tmp2 += sumPolTest[i - nbiter];
+        unsigned long long Yi1 = ((*Y0) + (tmp2 >> (k - known_low - known_up))) % (1<< (known_low + known_up)); //avec ou sans retenue OK!
         unsigned long long Yi2 = Yi1 + 1;
-        unsigned long long Wi = (W0 * ((unsigned long long) powA[i]) + WC * ((unsigned long long) polA[i])) % (1<< known_low);//ATTENTION cast pcg128_t
+        unsigned long long Wi = lowSumPol[i] % (1<< known_low);
         int test1, test2,test = 0;
-        for(int i = 0 ; i < k ; i++){
-            test1 = (((Xi ^ (Yi1 >> known_up)) % (1 << known_low)) == Wi) && ((i ^ (Xi >> (k - known_up))) == Yi1 % (1 << known_up));
-            test2 = (((Xi ^ (Yi2 >> known_up)) % (1 << known_low)) == Wi) && ((i ^ (Xi >> (k - known_up))) == Yi2 % (1 << known_up));
+        for(int j = 0 ; j < k ; j++){
+            test1 = (((Xi ^ (Yi1 >> known_up)) % (1 << known_low)) == Wi) && ((j ^ (Xi >> (k - known_up))) == Yi1 % (1 << known_up));
+            test2 = (((Xi ^ (Yi2 >> known_up)) % (1 << known_low)) == Wi) && ((j ^ (Xi >> (k - known_up))) == Yi2 % (1 << known_up));
             if (test1 || test2){
                 test = 1;
             }
@@ -214,8 +173,7 @@ int testDS640(unsigned long long DS640,  unsigned long long* X, unsigned long lo
         }
     }
     return 1;
-    
-}*/
+}
 
 
 void pcg(pcg128_t *S, unsigned long long* X, pcg128_t S0, pcg128_t* c, int n)
