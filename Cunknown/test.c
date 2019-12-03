@@ -3,41 +3,6 @@
 
 #include "fonctions.h"
 
-
-int testValid (FILE* f, int n) 
-{
-    int rot[nboutput];
-    pcg128_t vraiS[nboutput];
-    unsigned long long X[nboutput];
-    pcg128_t seeds[2];
-    int cpt = 0;
-    for(int i = 0 ; i < n ; i++){
-        if (fread(seeds, sizeof(seeds), 1, f) != 1)  {
-            perror("Something went wrong when reading /dev/urandom");
-            exit(EXIT_FAILURE);
-        }
-        
-        pcg(vraiS, X, seeds[0], seeds+1, nboutput);
-        
-        for(int i = 0 ; i < nboutput ; i++){
-            rot[i] = (int) (vraiS[i] >> (2 * k - known_up));
-        }
-        unsigned long long W0 = (unsigned long long) (vraiS[0] % (1<<known_low));
-        unsigned long long WC = (unsigned long long) (seeds[1] % (1<<known_low));
-        unsigned long long uX[nbiter];
-        unrotateX(uX, X, rot);
-        
-        unsigned long long Y[nbiter];//utilisé dans testDS640
-        getY(Y, W0, WC, rot, uX);
-        
-        unsigned long long DS64[nboutput];
-        FindDS64(DS64, uX, rot, W0, WC);
-        cpt += testDS640(DS64[0], X, Y[0], W0, WC, 3);
-    }
-    return cpt;
-}
-
-
 int testFonctions()
 {
     assert(known_low == 11);
