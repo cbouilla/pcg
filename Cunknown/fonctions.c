@@ -17,7 +17,8 @@ float invG[16] =
  2.19171469167945e-16, -2.21708502251561e-15, -1.23181629826941e-15, -2.45886210697988e-15};
 
 
-void init_var_globales(){
+void init_var_globales()
+{
     //multiplier a OK !
     a = (((pcg128_t) 2549297995355413924) << k) + ((pcg128_t) 4865540595714422341);
 
@@ -46,22 +47,26 @@ double wtime()
 
 
 
-int solve(unsigned long long* DS640, unsigned long long* Y0, unsigned long long* X, int* rot, unsigned long long* lowSumPol, unsigned long long* sumPolY, unsigned long long* sumPolTest){
+int solve(unsigned long long* DS640, unsigned long long* Y0, unsigned long long* X, int* rot, unsigned long long* lowSumPol, unsigned long long* sumPolY, unsigned long long* sumPolTest)
+{
     unsigned long long uX[nbiter];
     unrotateX(uX, X, rot);
 
     unsigned long long tmp[nbiter];
 
     /**** Recherche du DS640 ****/
-    for(int i = 0 ; i < nbiter ; i++){//Y
+
+
+    for (int i = 0; i < nbiter; i++) { //Y
         tmp[i] = (((lowSumPol[i] % (1 << known_low)) ^ (uX[i] % (1 << known_low))) << known_up) + (rot[i] ^ (uX[i] >> (k - known_up)));
     }
     *Y0 = tmp[0];
-    for(int i = 0 ; i < nbiter ; i++)//Yprim
-        tmp[i] = (tmp[i] - sumPolY[i]) % (1<<(known_up + known_low));
+    
+    for (int i = 0; i < nbiter; i++)    //Yprim
+        tmp[i] = (tmp[i] - sumPolY[i]) % (1 << (known_up + known_low));
 
-    for(int i = 0 ; i < nbiter - 1 ; i++){ //DY
-        tmp[i] = (tmp[i+1] - tmp[i]) % (1<<(known_low + known_up));
+    for(int i = 0; i < nbiter - 1; i++) { //DY
+        tmp[i] = (tmp[i+1] - tmp[i]) % (1 << (known_low + known_up));
         tmp[i] = tmp[i] << (k - known_up - known_low);
     }
 
@@ -76,23 +81,21 @@ int solve(unsigned long long* DS640, unsigned long long* Y0, unsigned long long*
 
     /**** Confirmation du DS640 ****/
     unsigned long long tmp2;
-    for(int i = nbiter ; i < nbtest + nbiter ; i++){
+    for (int i = nbiter ; i < nbtest + nbiter ; i++){
         unsigned long long Xi = X[i];
         tmp2 = polA[i] * (*DS640); //ATTENTION cast pcg128_t
         tmp2 += sumPolTest[i - nbiter];
-        unsigned long long Yi1 = ((*Y0) + (tmp2 >> (k - known_low - known_up))) % (1<< (known_low + known_up)); //avec ou sans retenue OK!
+        unsigned long long Yi1 = ((*Y0) + (tmp2 >> (k - known_low - known_up))) % (1 << (known_low + known_up)); //avec ou sans retenue OK!
         unsigned long long Yi2 = Yi1 + 1;
-        unsigned long long Wi = lowSumPol[i] % (1<< known_low);
-        int test1, test2,test = 0;
+        unsigned long long Wi = lowSumPol[i] % (1 << known_low);
+        int test = 0;
         for(int j = 0 ; j < k ; j++){
-            test1 = (((Xi ^ (Yi1 >> known_up)) % (1 << known_low)) == Wi) && ((j ^ (Xi >> (k - known_up))) == Yi1 % (1 << known_up));
-            test2 = (((Xi ^ (Yi2 >> known_up)) % (1 << known_low)) == Wi) && ((j ^ (Xi >> (k - known_up))) == Yi2 % (1 << known_up));
-            if (test1 || test2){
-                test = 1;
-            }
+            int test1 = (((Xi ^ (Yi1 >> known_up)) % (1 << known_low)) == Wi) && ((j ^ (Xi >> (k - known_up))) == Yi1 % (1 << known_up));
+            int test2 = (((Xi ^ (Yi2 >> known_up)) % (1 << known_low)) == Wi) && ((j ^ (Xi >> (k - known_up))) == Yi2 % (1 << known_up));
+            test |= test1 | test2;
             Xi = unrotate1(Xi);
         }
-        if(!test) {
+        if (!test) {
             //printf("erreur a i = %d\n", i);
             return 0;
         }
