@@ -8,7 +8,7 @@
 /***** Macro et Variables globales *****/
 #define k 64
 #define known_up 6
-#define known_low 13
+#define known_low 11
 #define nbiter 5
 #define nboutput 31
 

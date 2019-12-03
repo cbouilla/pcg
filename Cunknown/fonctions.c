@@ -104,22 +104,26 @@ unsigned long long unrotate1(unsigned long long Xi){
     return (Xi >> (k-1)) | (Xi << 1);
 }
 
+/* Y = S[k-known_up:k+known_low] */
 void getY(unsigned long long *Y, unsigned long long W0, unsigned long long WC, int* rot, unsigned long long* uX){
     for(int i = 0 ; i < nbiter ; i++){
         Y[i] = ((((unsigned long long) ((polA[i] * WC + powA[i] * W0) % (1 << known_low))) ^ (uX[i] % (1 << known_low))) << known_up) + (rot[i] ^ (uX[i] >> (k - known_up)));
     }
 }
 
+/* Y' = Y - composante en WC et en W0 */
 void getYprim(unsigned long long *Yprim, unsigned long long *Y, unsigned long long W0, unsigned long long WC){
     for(int i = 0 ; i < nbiter ; i++)
         Yprim[i] = (unsigned long long) (Y[i] - ((polA[i] * WC + powA[i] * W0) >> (k - known_up))) % (1<<(known_up + known_low));
 }
 
+/* DY = différence sur les Y' */
 void getDY(unsigned long long *DY, unsigned long long* Yprim){
     for(int i = 0 ; i < nbiter - 1 ; i++)
         DY[i] = (Yprim[i+1] - Yprim[i]) % (1<<(known_low + known_up));
 }
 
+/* DS64 = différence sur S'[known_low:known_low+k], avec S' = S - composante en WC, W0 */
 void FindDS64(unsigned long long* DS64,unsigned long long* uX,int* rot,unsigned long long W0,unsigned long long WC){
     unsigned long long Y[nbiter];
     getY(Y, W0, WC, rot, uX);
@@ -141,7 +145,7 @@ void FindDS64(unsigned long long* DS64,unsigned long long* uX,int* rot,unsigned 
 }
     
 
-    
+/* vérifie si DS64 est cohérent avec les X_i */
 int testDS640(unsigned long long DS640,  unsigned long long* X, unsigned long long Y0, unsigned long long W0, unsigned long long WC, int n){
     for(int i = nbiter ; i < n + nbiter ; i++){
         unsigned long long Xi = X[i];
