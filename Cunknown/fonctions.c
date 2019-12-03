@@ -117,14 +117,14 @@ void getDY(unsigned long long *DY, unsigned long long* Yprim){
 }
 
 /* DS64 = différence sur S'[known_low:known_low+k], avec S' = S - composante en WC, W0 */
-void FindDS64(unsigned long long* DS64, unsigned long long* uX,int* rot,unsigned long long W0,unsigned long long WC, unsigned long long* lowSumPol){
+void FindDS64(unsigned long long* DS64, unsigned long long* uX,int* rot, unsigned long long* lowSumPol, unsigned long long* sumPolY){
     unsigned long long tmp[nbiter];
     for(int i = 0 ; i < nbiter ; i++){//Y
         tmp[i] = (((lowSumPol[i] % (1 << known_low)) ^ (uX[i] % (1 << known_low))) << known_up) + (rot[i] ^ (uX[i] >> (k - known_up)));
     }
     
     for(int i = 0 ; i < nbiter ; i++)//Yprim
-        tmp[i] = (unsigned long long) (tmp[i] - ((polA[i] * WC + powA[i] * W0) >> (k - known_up))) % (1<<(known_up + known_low));
+        tmp[i] = (tmp[i] - sumPolY[i]) % (1<<(known_up + known_low));
 
     for(int i = 0 ; i < nbiter - 1 ; i++){ //DY
         tmp[i] = (tmp[i+1] - tmp[i]) % (1<<(known_low + known_up));

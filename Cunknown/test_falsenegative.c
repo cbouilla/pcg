@@ -32,11 +32,11 @@ int testValid (FILE* f, int n)
         
         /**** Polynômes en WC et W0 utilisés dans la résolution ****/
         unsigned long long lowSumPol[nbiter + nbtest];
-        //unsigned long long sumPolY[nbiter];
+        unsigned long long sumPolY[nbiter];
         //unsigned long long sumPolTest[nbtest];
         for(int i = 0 ; i < nbiter ; i++){
             lowSumPol[i]  = (W0 * ((unsigned long long) powA[i]) + WC * ((unsigned long long) polA[i]));
-            //sumPolY[i] = (polA[i] * WC + powA[i] * W0) >> (k - known_up);
+            sumPolY[i] = (polA[i] * WC + powA[i] * W0) >> (k - known_up);
         }
         for(int i = 0 ; i < nbtest ; i++){
             lowSumPol[nbiter + i] = (W0 * ((unsigned long long) powA[i]) + WC * ((unsigned long long) polA[i]));
@@ -44,7 +44,7 @@ int testValid (FILE* f, int n)
         }
 
         unsigned long long DS64[nboutput];
-        FindDS64(DS64, uX, rot, W0, WC, lowSumPol);
+        FindDS64(DS64, uX, rot, lowSumPol, sumPolY);
         cpt += testDS640(DS64[0], X, Y[0], W0, WC, 3);
     }
     return cpt;
