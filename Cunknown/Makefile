@@ -8,10 +8,9 @@ fonctions.o: fonctions.h
 main.o: fonctions.h pcg_oneseq.h
 test.o: fonctions.h pcg_oneseq.h
 main: fonctions.o pcg_oneseq.o main.o
-test: fonctions.o pcg_oneseq.o test.o
+test: fonctions.o pcg_oneseq.o test.o fonctions_bonus.o
 test_falsenegative.o: fonctions.h pcg_oneseq.h
 test_falsenegative: fonctions.o pcg_oneseq.o test_falsenegative.o
-
 .PHONY: clean check
 
 clean:

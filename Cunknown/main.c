@@ -23,7 +23,7 @@ int main(){
     //unsigned long long done = 0;
     unsigned long long W0 = 5018, WC = 335;
     
-    //#pragma omp parallel for
+    #pragma omp parallel for
     for (W0 = 5018; W0 < /*(1<<known_low)*/ 5019 ; W0++){//W0=5018 
         for(WC = 335 ; WC < /*(1<<known_low)*/ 336 ; WC++){//WC = 335
 
