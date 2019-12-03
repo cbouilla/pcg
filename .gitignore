@@ -1,3 +1,5 @@
 *.o
-C/main
+/C/main
 /C/result.txt
+/Cunknown/test
+/Cunknown/test_falsenegative
