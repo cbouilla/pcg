@@ -117,12 +117,12 @@ void getDY(unsigned long long *DY, unsigned long long* Yprim){
 }
 
 /* DS64 = différence sur S'[known_low:known_low+k], avec S' = S - composante en WC, W0 */
-void FindDS64(unsigned long long* DS64, unsigned long long* uX,int* rot, unsigned long long* lowSumPol, unsigned long long* sumPolY){
+void FindDS64(unsigned long long* DS64, unsigned long long* Y, unsigned long long* uX,int* rot, unsigned long long* lowSumPol, unsigned long long* sumPolY){
     unsigned long long tmp[nbiter];
     for(int i = 0 ; i < nbiter ; i++){//Y
         tmp[i] = (((lowSumPol[i] % (1 << known_low)) ^ (uX[i] % (1 << known_low))) << known_up) + (rot[i] ^ (uX[i] >> (k - known_up)));
     }
-    
+    Y[0] = tmp[0];
     for(int i = 0 ; i < nbiter ; i++)//Yprim
         tmp[i] = (tmp[i] - sumPolY[i]) % (1<<(known_up + known_low));
 
@@ -165,7 +165,33 @@ unsigned long long FindDS640(unsigned long long* Y0, unsigned long long* uX,int*
 }
 
 /* vérifie si DS64 est cohérent avec les X_i */
-int testDS640(unsigned long long DS640,  unsigned long long* X, unsigned long long Y0, unsigned long long W0, unsigned long long WC, int n){
+int testDS640(unsigned long long DS640,  unsigned long long* X, unsigned long long Y0, unsigned long long* sumPolTest, unsigned long long* lowSumPol){
+    for(int i = nbiter ; i < nbtest + nbiter ; i++){
+        unsigned long long Xi = X[i];
+        unsigned long long tmp = polA[i] * DS640; //ATTENTION cast pcg128_t
+        tmp += sumPolTest[i - nbiter];//ATTENTION cast pcg128_t
+        unsigned long long Yi1 = (Y0 + (tmp >> (k - known_low - known_up))) % (1<< (known_low + known_up)); //avec ou sans retenue OK!
+        unsigned long long Yi2 = Yi1 + 1;
+        unsigned long long Wi = lowSumPol[i] % (1<< known_low);//ATTENTION cast pcg128_t
+        int test1, test2,test = 0;
+        for(int j = 0 ; j < k ; j++){
+            test1 = (((Xi ^ (Yi1 >> known_up)) % (1 << known_low)) == Wi) && ((j ^ (Xi >> (k - known_up))) == Yi1 % (1 << known_up));
+            test2 = (((Xi ^ (Yi2 >> known_up)) % (1 << known_low)) == Wi) && ((j ^ (Xi >> (k - known_up))) == Yi2 % (1 << known_up));
+            if (test1 || test2){
+                test = 1;
+            }
+            Xi = unrotate1(Xi);
+        }
+        if(!test) {
+            //printf("erreur a i = %d\n", i);
+            return 0;
+        }
+    }
+    return 1;
+    
+}
+
+/*int testDS640(unsigned long long DS640,  unsigned long long* X, unsigned long long Y0, unsigned long long W0, unsigned long long WC, int n){
     for(int i = nbiter ; i < n + nbiter ; i++){
         unsigned long long Xi = X[i];
         unsigned long long tmp = polA[i] * DS640; //ATTENTION cast pcg128_t
@@ -189,7 +215,7 @@ int testDS640(unsigned long long DS640,  unsigned long long* X, unsigned long lo
     }
     return 1;
     
-}
+}*/
 
 
 void pcg(pcg128_t *S, unsigned long long* X, pcg128_t S0, pcg128_t* c, int n)

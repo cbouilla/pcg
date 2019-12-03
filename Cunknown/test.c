@@ -76,13 +76,14 @@ int testFonctions()
         sumPolY[i] = (polA[i] * WC + powA[i] * W0) >> (k - known_up);
     }
     for(int i = 0 ; i < nbtest ; i++){
-        lowSumPol[nbiter + i] = (W0 * ((unsigned long long) powA[i]) + WC * ((unsigned long long) polA[i]));
-        //sumPolTest[i] = W0 * ((unsigned long long) (powA[i] >> known_low) - 1) + WC * ((unsigned long long) (polA[i] >> known_low) - 1);
+        lowSumPol[nbiter + i] = (W0 * ((unsigned long long) powA[i + nbiter]) + WC * ((unsigned long long) polA[i + nbiter]));
+        //sumPolTest[i] = W0 * ((unsigned long long) (powA[i + nbiter] >> known_low) - 1) + WC * ((unsigned long long) (polA[i + nbiter] >> known_low) - 1);
     }
+    
 
     /* test FindDS64 */
     unsigned long long DS64[nbiter - 1];
-    FindDS64(DS64, uX, rot, lowSumPol, sumPolY);
+    FindDS64(DS64, Y, uX, rot, lowSumPol, sumPolY);
     if(DS64[0] != 2055999906439120392u){
         printf("not ok 5 - erreur sur FindDS64\n");
     }  else {
@@ -164,24 +165,24 @@ void printVal(pcg128_t S0, pcg128_t c){
     /**** Polynômes en WC et W0 utilisés dans la résolution ****/
     unsigned long long lowSumPol[nbiter + nbtest];
     unsigned long long sumPolY[nbiter];
-    //unsigned long long sumPolTest[nbtest];
+    unsigned long long sumPolTest[nbtest];
     for(int i = 0 ; i < nbiter ; i++){
         lowSumPol[i]  = (W0 * ((unsigned long long) powA[i]) + WC * ((unsigned long long) polA[i]));
         sumPolY[i] = (polA[i] * WC + powA[i] * W0) >> (k - known_up);
     }
     for(int i = 0 ; i < nbtest ; i++){
-        lowSumPol[nbiter + i] = (W0 * ((unsigned long long) powA[i]) + WC * ((unsigned long long) polA[i]));
-        //sumPolTest[i] = W0 * ((unsigned long long) (powA[i] >> known_low) - 1) + WC * ((unsigned long long) (polA[i] >> known_low) - 1);
+        lowSumPol[nbiter + i] = (W0 * ((unsigned long long) powA[i + nbiter]) + WC * ((unsigned long long) polA[i + nbiter]));
+        sumPolTest[i] = W0 * ((unsigned long long) (powA[i + nbiter] >> known_low) - 1) + WC * ((unsigned long long) (polA[i + nbiter] >> known_low) - 1);
     }
     
     unsigned long long DS64[nbiter - 1];
-    FindDS64(DS64, uX, rot, lowSumPol,sumPolY);
+    FindDS64(DS64, Y, uX, rot, lowSumPol,sumPolY);
     printf("DS64 :\n");
     for(int i = 0 ; i < nbiter - 1 ; i++)
         printf("%llu ", DS64[i]);
     printf("\n");
     
-    printf("testDS640 : %d\n", testDS640(DS64[0], X, Y[0], W0, WC, 3)); 
+    printf("testDS640 : %d\n", testDS640(DS64[0], X, Y[0], sumPolTest, lowSumPol)); 
     
 }
 
