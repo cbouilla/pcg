@@ -51,7 +51,7 @@ int testValid (FILE* f, int n)
         unsigned long long tabX[k * nbtest];
         for (int i = 0; i < nbtest; i++)
             for (int j = 0; j < k; j++)
-            tabX[i * k + j] = unrotate(X[i + nbiter], j);
+                tabX[i * k + j] = unrotate(X[i + nbiter], j);
 
         cpt += solve(&DS640, &Y0, X, tabX, rot, lowSumPol, sumPolY, sumPolTest);
     }

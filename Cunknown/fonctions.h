@@ -9,7 +9,7 @@
 /***** Macro et Variables globales *****/
 #define k 64
 #define known_up 6
-#define known_low 13
+#define known_low 11
 #define nbiter 5
 #define nboutput 31
 #define nbtest 3
@@ -55,6 +55,7 @@ static inline unsigned long long unrotate(unsigned long long Xi, int i)
     return (Xi >> (k-i)) | (Xi << i);
 }
 
+void getGoodY(char* goodY, unsigned long long* tabX, unsigned long long lowSumPoli, int i);
 
 void getY(unsigned long long *Y, unsigned long long W0, unsigned long long WC, int* rot, unsigned long long* uX);
 void getYprim(unsigned long long *Yprim, unsigned long long *Y, unsigned long long W0, unsigned long long WC);

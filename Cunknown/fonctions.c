@@ -43,7 +43,17 @@ double wtime()
     return (double) ts.tv_sec + ts.tv_usec / 1e6;
 }
 
-
+void getGoodY(char* goodY, unsigned long long* tabX, unsigned long long lowSumPoli, int i){
+    unsigned long long y;
+    unsigned long long Wi = lowSumPoli % (1 << known_low);
+    for(y = 0 ; y < (1<< (known_low + known_up)) ; y++){
+        for(int j = 0 ; j < k ; j++){
+            unsigned long long Xij = tabX[i*k + j]; //unrotate(X[i], j);
+            unsigned long long goodYi = (((Xij % (1 << known_low)) ^ Wi) << known_up) ^ (j ^ (Xij >> (k - known_up)));
+            goodY[y] |= (goodYi == y)  | (goodYi == y + 1);
+        }
+    }
+}
 
 
 

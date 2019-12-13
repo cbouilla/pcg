@@ -24,7 +24,7 @@ int testFonctions()
     unsigned long long W0 = (unsigned long long) (vraiS[0] % (1<<known_low));
     unsigned long long WC = (unsigned long long) (c % (1<<known_low));
  
-    printf("1..5\n");
+    printf("1..7\n");
     printf("# nbiter = %d\n", nbiter);
     printf("# known_low = %d\n", known_low);
 
@@ -70,14 +70,14 @@ int testFonctions()
     /**** Polynômes en WC et W0 utilisés dans la résolution ****/
     unsigned long long lowSumPol[nbiter + nbtest];
     unsigned long long sumPolY[nbiter];
-    //unsigned long long sumPolTest[nbtest];
+    unsigned long long sumPolTest[nbtest];
     for(int i = 0 ; i < nbiter ; i++){
         lowSumPol[i]  = (W0 * ((unsigned long long) powA[i]) + WC * ((unsigned long long) polA[i]));
         sumPolY[i] = (polA[i] * WC + powA[i] * W0) >> (k - known_up);
     }
     for(int i = 0 ; i < nbtest ; i++){
         lowSumPol[nbiter + i] = (W0 * ((unsigned long long) powA[i + nbiter]) + WC * ((unsigned long long) polA[i + nbiter]));
-        //sumPolTest[i] = W0 * ((unsigned long long) (powA[i + nbiter] >> known_low) - 1) + WC * ((unsigned long long) (polA[i + nbiter] >> known_low) - 1);
+        sumPolTest[i] = W0 * ((unsigned long long) (powA[i + nbiter] >> known_low) - 1) + WC * ((unsigned long long) (polA[i + nbiter] >> known_low) - 1);
     }
     
 
@@ -105,6 +105,30 @@ int testFonctions()
             return 0;
         }
     }*/
+
+    unsigned long long tabX[k * nbtest];
+        for (int i = 0; i < nbtest; i++)
+            for (int j = 0; j < k; j++)
+                tabX[i * k + j] = unrotate(X[i + nbiter], j);
+
+    char* goodY = malloc((1<<(known_low + known_up)) * sizeof(char));
+    getGoodY(goodY, tabX, lowSumPol[nbiter], 0);
+
+    unsigned long long uXnbiter = unrotate(X[nbiter], rot[nbiter]);
+    unsigned long long Ynbiter = ((((unsigned long long) ((polA[nbiter] * WC + powA[nbiter] * W0) % (1 << known_low))) ^ (uXnbiter % (1 << known_low))) << known_up) + (rot[nbiter] ^ (uXnbiter >> (k - known_up)));
+    
+    if(!goodY[Ynbiter]){
+        printf("not ok 6 - erreur sur getGoodY\n");
+    }  else {
+        printf("ok 6 - getGoodY\n");
+    }
+    unsigned long long DS640, Y0;
+    if(!solve(&DS640, &Y0, X, tabX, rot, lowSumPol, sumPolY, sumPolTest)){
+        printf("not ok 7 - erreur sur solve\n");
+    }  else {
+        printf("ok 7 - solve\n");
+    }
+
     return 1;
 }
 
