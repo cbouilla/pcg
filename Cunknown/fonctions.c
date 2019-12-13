@@ -47,7 +47,7 @@ double wtime()
 
 
 
-int solve(unsigned long long* DS640, unsigned long long* Y0, unsigned long long* X, int* rot, unsigned long long* lowSumPol, unsigned long long* sumPolY, unsigned long long* sumPolTest)
+int solve(unsigned long long* DS640, unsigned long long* Y0, unsigned long long* X, unsigned long long* tabX, int* rot, unsigned long long* lowSumPol, unsigned long long* sumPolY, unsigned long long* sumPolTest)
 {
     unsigned long long uX[nbiter];
     unrotateX(uX, X, rot);
@@ -79,21 +79,22 @@ int solve(unsigned long long* DS640, unsigned long long* Y0, unsigned long long*
     for(int i = 0 ; i < nbiter-1 ; i++)
         (*DS640) += Greduite[i] * tmp[i];
 
+    (void) tabX;
+
     /**** Confirmation du DS640 ****/
     unsigned long long tmp2;
-    for (int i = nbiter ; i < nbtest + nbiter ; i++){
-        unsigned long long Xi = X[i];
-        tmp2 = polA[i] * (*DS640); //ATTENTION cast pcg128_t
-        tmp2 += sumPolTest[i - nbiter];
+    for (int i = 0 ; i < nbtest ; i++){
+//        unsigned long long Xi = X[i];
+        tmp2 = polA[i + nbiter] * (*DS640); //ATTENTION cast pcg128_t
+        tmp2 += sumPolTest[i];
         unsigned long long Yi1 = ((*Y0) + (tmp2 >> (k - known_low - known_up))) % (1 << (known_low + known_up)); //avec ou sans retenue OK!
-        unsigned long long Yi2 = Yi1 + 1;
-        unsigned long long Wi = lowSumPol[i] % (1 << known_low);
+        unsigned long long Yi2 = (Yi1 + 1) % (1 << (known_low + known_up));
+        unsigned long long Wi = lowSumPol[i + nbiter] % (1 << known_low);
         int test = 0;
         for(int j = 0 ; j < k ; j++){
-            int test1 = (((Xi ^ (Yi1 >> known_up)) % (1 << known_low)) == Wi) && ((j ^ (Xi >> (k - known_up))) == Yi1 % (1 << known_up));
-            int test2 = (((Xi ^ (Yi2 >> known_up)) % (1 << known_low)) == Wi) && ((j ^ (Xi >> (k - known_up))) == Yi2 % (1 << known_up));
-            test |= test1 | test2;
-            Xi = unrotate1(Xi);
+            unsigned long long Xij = tabX[i*k + j]; //unrotate(X[i], j);
+            unsigned long long goodYi = (((Xij % (1 << known_low)) ^ Wi) << known_up) ^ (j ^ (Xij >> (k - known_up)));
+            test |= (goodYi == Yi1)  | (goodYi == Yi2);
         }
         if (!test) {
             //printf("erreur a i = %d\n", i);
