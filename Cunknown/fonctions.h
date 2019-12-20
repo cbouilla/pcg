@@ -26,7 +26,7 @@ extern double invG[16];
 void init_var_globales();
 double wtime();
 
-static inline void prodMatVecFFU(float* res, float* M, unsigned long long* v, int n){
+static inline void prodMatVecFFU(double* res, double* M, unsigned long long* v, int n){
     int i, j;
     for(i=0 ; i<n ; i++){
         res[i] = 0;

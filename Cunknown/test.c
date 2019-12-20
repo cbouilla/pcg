@@ -107,34 +107,35 @@ int testFonctions()
     }*/
 
     unsigned long long tabX[k * nbtest];
-        for (int i = 0; i < nbtest; i++)
-            for (int j = 0; j < k; j++)
-                tabX[i * k + j] = unrotate(X[i + nbiter], j);
+    for (int i = 0; i < nbtest; i++)
+        for (int j = 0; j < k; j++)
+            tabX[i * k + j] = unrotate(X[i + nbiter], j);
 
 
     /*test getGoodY*/
-    
     char* goodY = setupGoodY();
     getGoodY(goodY, tabX, lowSumPol, 1);
 
     unsigned long long tabTmp[k * nbiter];
     getTabTmp(tabTmp, X, lowSumPol, sumPolY);
 
-    unsigned long long uXnbiter1 = unrotate(X[nbiter + 1], rot[nbiter + 1]);
-    unsigned long long Ynbiter1 = ((((unsigned long long) ((polA[nbiter + 1] * WC + powA[nbiter + 1] * W0) % (1 << known_low))) ^ (uXnbiter1 % (1 << known_low))) << known_up) + (rot[nbiter + 1] ^ (uXnbiter1 >> (k - known_up)));
-    if(!goodY[Ynbiter1 + (1<<(known_low + known_up))]){
-        printf("not ok 6 - erreur sur getGoodY\n");
-    }  else {
-        printf("ok 6 - getGoodY\n");
-    }
+    // unsigned long long uXnbiter1 = unrotate(X[nbiter + 1], rot[nbiter + 1]);
+    // unsigned long long Ynbiter1 = ((((unsigned long long) ((polA[nbiter + 1] * WC + powA[nbiter + 1] * W0) % (1 << known_low))) ^ (uXnbiter1 % (1 << known_low))) << known_up) + (rot[nbiter + 1] ^ (uXnbiter1 >> (k - known_up)));
+    // if (!checkY(goodY, 1, Ynbiter1)) {
+    // //if(!goodY[Ynbiter1 + (1<<(known_low + known_up))]){
+    //     printf("not ok 6 - erreur sur getGoodY\n");
+    // }  else {
+    //     printf("ok 6 - getGoodY\n");
+    // }
     unsigned long long DS640, Y0;
     if(!solve_isgood(goodY, rot, tabTmp, sumPolY, sumPolTest)){
-        printf("not ok 7 - erreur sur solve\n");
+        printf("not ok 6 - erreur sur solve_isgood\n");
     }  else {
-        printf("ok 7 - solve\n");
+        printf("ok 6 - solve_isgood\n");
     }
 
     solve(&DS640, &Y0, goodY, rot, tabTmp, sumPolY, sumPolTest);
+    printf("ok 7 - solve");
 
     return 1;
 }
