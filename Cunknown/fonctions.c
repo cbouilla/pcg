@@ -110,6 +110,14 @@ static inline bool confirm(unsigned long long Y0, unsigned long long DS640, cons
     return 1;
 }
 
+static inline long long crazy_round(double x)
+{
+    union { double d; long long l; } magic; 
+    magic.d = x + 6755399441055744.0; 
+    magic.l <<= 13; 
+    magic.l >>= 13;
+    return magic.l;
+}
 
 bool solve_isgood(const char* goodY, const int* rot, const unsigned long long* tabTmp, const unsigned long long* sumPolY, const unsigned long long* sumPolTest)
 {
@@ -133,7 +141,7 @@ bool solve_isgood(const char* goodY, const int* rot, const unsigned long long* t
 
     unsigned long long DS640 = 0;
     for(int i = 0 ; i < nbiter-1 ; i++) {
-    	DS640 += Greduite[i] * ((long long) round(u[i]));
+        DS640 += Greduite[i] * crazy_round(u[i]);
     }
   
  	return confirm(Y0, DS640, sumPolTest, goodY);
@@ -163,8 +171,9 @@ void solve(unsigned long long* DS640, unsigned long long* Y0, char* goodY, int* 
     }
 
     *DS640 = 0;
-    for(int i = 0 ; i < nbiter-1 ; i++)
-    	(*DS640) += Greduite[i] * llround(u[i]);
+    for(int i = 0 ; i < nbiter-1 ; i++) {
+    	(*DS640) += Greduite[i] * crazy_round(u[i]);
+    }
   
     assert(confirm(*Y0, *DS640, sumPolTest, goodY));
 }
