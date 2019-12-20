@@ -68,7 +68,7 @@ unsigned long long FindDS640(unsigned long long* Y, unsigned long long* uX, int*
 
 int testDS640(unsigned long long DS640,  unsigned long long* X, unsigned long long Y0, unsigned long long* sumPolTest, unsigned long long* lowSumPol);
 
-int solve(unsigned long long* DS640, unsigned long long* Y0, char* goodY, unsigned long long* X, unsigned long long* tabX, int* rot, unsigned long long* lowSumPol, unsigned long long* sumPolY, unsigned long long* sumPolTest);
+int solve(unsigned long long* DS640, unsigned long long* Y0, char* goodY, unsigned long long* X, int* rot, unsigned long long* lowSumPol, unsigned long long* sumPolY, unsigned long long* sumPolTest);
 
 int testValid(FILE* f, int n);
 //void pcgone(pcg128_t *S, unsigned long long* X, pcg128_t S0, int n);

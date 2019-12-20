@@ -55,7 +55,7 @@ int testValid (FILE* f, int n)
                 tabX[i * k + j] = unrotate(X[i + nbiter], j);
 
         getGoodY(goodY, tabX, lowSumPol, 1);
-        cpt += solve(&DS640, &Y0, goodY, X, tabX, rot, lowSumPol, sumPolY, sumPolTest);
+        cpt += solve(&DS640, &Y0, goodY, X, rot, lowSumPol, sumPolY, sumPolTest);
         getGoodY(goodY, tabX, lowSumPol, 0);
     }
     return cpt;

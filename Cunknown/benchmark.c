@@ -53,6 +53,7 @@ int main() {
     for(int i = 0 ; i < nbiter ; i++)
             rot[i] = 0;
 
+    printf("Taille de GoodY = %d Ko\n", nbtest * (1 << (known_low + known_up)) / 1024 / 8);
     printf("Début du benchmark (%llu iterations)\n", WORK_FACTOR);
     double t1 = wtime();
 
@@ -68,7 +69,7 @@ int main() {
             rot[i] = (rot[i] + 1) % k;
         }
         
-        if (solve(&DS640, &Y0, goodY, X, tabX, rot, lowSumPol, sumPolY, sumPolTest)) {
+        if (solve(&DS640, &Y0, goodY, X, rot, lowSumPol, sumPolY, sumPolTest)) {
             printf("candidat DS64 trouvé !!\n");
             printf("%llu\n", DS640);
             printf("temps pour trouver la solution = %f\n", wtime() - t1);
@@ -78,5 +79,7 @@ int main() {
     double t = wtime() - t1;
     printf("Durée benchmark = %.2fs\n", t);
     printf("Attaque complète = %.2fMh\n", t / WORK_FACTOR * (1ull << (nbiter * known_up + 2*known_low - 1)) / 3600 / 1e6);
+    
+    
     exit(0);
 }

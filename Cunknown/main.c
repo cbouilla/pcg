@@ -66,7 +66,7 @@ int main(){
                     rot[i]=(rot[i] + 1) %k;
                 }
                 
-                if(solve(&DS640, &Y0, goodY, X, tabX, rot, lowSumPol, sumPolY, sumPolTest)){
+                if(solve(&DS640, &Y0, goodY, X, rot, lowSumPol, sumPolY, sumPolTest)){
                     printf("candidat DS64 trouvé !!\n");
                     printf("%llu\n", DS640);
                     printf("temps pour trouver la solution = %f\n", wtime() - t1 );

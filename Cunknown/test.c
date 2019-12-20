@@ -125,7 +125,7 @@ int testFonctions()
         printf("ok 6 - getGoodY\n");
     }
     unsigned long long DS640, Y0;
-    if(!solve(&DS640, &Y0, goodY, X, tabX, rot, lowSumPol, sumPolY, sumPolTest)){
+    if(!solve(&DS640, &Y0, goodY, X, rot, lowSumPol, sumPolY, sumPolTest)){
         printf("not ok 7 - erreur sur solve\n");
     }  else {
         printf("ok 7 - solve\n");
