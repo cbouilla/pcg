@@ -9,7 +9,7 @@
 /***** Macro et Variables globales *****/
 #define k 64
 #define known_up 6
-#define known_low 13
+#define known_low 11
 #define nbiter 5
 #define nboutput 31
 #define nbtest 3
@@ -20,7 +20,7 @@ pcg128_t powA[nboutput];
 pcg128_t polA[nboutput];
 
 extern unsigned long long Greduite[16];
-extern float invG[16];
+extern double invG[16];
 
 /***** Fonctions *****/
 void init_var_globales();

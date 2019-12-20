@@ -10,7 +10,7 @@ unsigned long long Greduite[16] =
    7937589136904, -214303762177807, -268280113597118,  -98716819647784,
   93078431381544,   -1707551230219,  149382085707466, -134620659538888}; 
 
-float invG[16] =
+double invG[16] =
 {-2.04279952328856e-15, -2.93791683689260e-15,  6.74861642263602e-16,  2.61840245666112e-15,
 -1.98886046520741e-15,  1.10621147658696e-15, -2.12731308263381e-15, -2.30132753131773e-15,
  1.44762674070265e-15, -1.54769860122306e-16, -1.55490854567009e-15,  2.82055195172104e-15,
@@ -133,12 +133,13 @@ int solve_isgood(const char* goodY, const int* rot, const unsigned long long* ta
     for (int i=0 ; i<nbiter-1 ; i++) {
         u[i] = 0.0;
         for (int j=0 ; j<nbiter-1 ; j++)
-            u[i]+= invG[i * (nbiter-1) + j] * tmp3[j];
+            u[i] += invG[i * (nbiter-1) + j] * tmp3[j];
     }
 
     unsigned long long DS640 = 0;
-    for(int i = 0 ; i < nbiter-1 ; i++)
+    for(int i = 0 ; i < nbiter-1 ; i++) {
     	DS640 += Greduite[i] * llround(u[i]);
+    }
   
   
  	return confirm(Y0, DS640, sumPolTest, goodY);
