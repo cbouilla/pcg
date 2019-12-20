@@ -1,4 +1,5 @@
 #include <stdint.h>
+#include <stdbool.h>
 //#include "pcg_oneseq.h"
 #include "pcg_setseq.h" //inclus dans pcg_oneseq
 #include <omp.h>
@@ -71,7 +72,7 @@ int testDS640(unsigned long long DS640,  unsigned long long* X, unsigned long lo
 
 void solve(unsigned long long* DS640, unsigned long long* Y0, char* goodY, int* rot, unsigned long long* tabTmp, unsigned long long* sumPolY, unsigned long long* sumPolTest);
 
-int solve_isgood(const char* goodY, const int* rot, const unsigned long long* tabTmp, const unsigned long long* sumPolY, const unsigned long long* sumPolTest);
+bool solve_isgood(const char* goodY, const int* rot, const unsigned long long* tabTmp, const unsigned long long* sumPolY, const unsigned long long* sumPolTest);
 
 int testValid(FILE* f, int n);
 //void pcgone(pcg128_t *S, unsigned long long* X, pcg128_t S0, int n);
