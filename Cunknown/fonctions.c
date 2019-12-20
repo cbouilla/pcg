@@ -125,7 +125,7 @@ int solve_isgood(const char* goodY, const int* rot, const unsigned long long* ta
     
     unsigned long long Y0 = tmp[0] + sumPolY[0];
     
-    unsigned long long tmp3[nbiter - 1];
+    double tmp3[nbiter - 1];
     for(int i = 0; i < nbiter - 1; i++)  //DY
         tmp3[i] = (tmp[i+1] - tmp[i]) % (1 << (known_low + known_up));
     
@@ -140,7 +140,6 @@ int solve_isgood(const char* goodY, const int* rot, const unsigned long long* ta
     for(int i = 0 ; i < nbiter-1 ; i++) {
     	DS640 += Greduite[i] * llround(u[i]);
     }
-  
   
  	return confirm(Y0, DS640, sumPolTest, goodY);
 }
