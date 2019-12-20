@@ -32,6 +32,8 @@ void init_var_globales()
         polA[i] = polA[i-1] + powA [i-1];
         powA[i] = powA[i-1] * a;
     }
+    for (int i = 0; i < 16; i++)
+    	invG[i] *= 1ull << (k - known_up - known_low);
 }
 
 
@@ -76,7 +78,20 @@ void getGoodY(char* goodY, unsigned long long* tabX, unsigned long long* lowSumP
 	}
 }
 
-static inline int checkY(char* goodY, int i, unsigned long long Y)
+
+void getTabTmp(unsigned long long* tabTmp, unsigned long long* X, unsigned long long* lowSumPol, unsigned long long* sumPolY)
+{
+	for(int i = 0 ; i < k ; i++){
+		for(int j = 0 ; j < nbiter ; j++){
+    	unsigned long long uX = unrotate(X[j], i);
+			tabTmp[i * nbiter + j] = (((lowSumPol[j] % (1 << known_low)) ^ (uX % (1 << known_low))) << known_up) 
+               + (i ^ (uX >> (k - known_up))) - sumPolY[j];
+            
+		}
+	}
+}
+
+static inline int checkY(const char* goodY, int i, unsigned long long Y)
 {
 	int idx = Y + i * (1 << (known_up + known_low));
 	// idx = idx / 4;
@@ -85,50 +100,78 @@ static inline int checkY(char* goodY, int i, unsigned long long Y)
 	return (goodY[j] >> l) & 1;
 }
 
-long long stats[nbtest] = {};
-
-int solve(unsigned long long* DS640, unsigned long long* Y0, char* goodY, unsigned long long* X, int* rot, unsigned long long* lowSumPol, unsigned long long* sumPolY, unsigned long long* sumPolTest)
+static inline int confirm(unsigned long long Y0, unsigned long long DS640, const unsigned long long* sumPolTest, const char* goodY)
 {
-    unsigned long long uX[nbiter];
-    unrotateX(uX, X, rot);
-
-    unsigned long long tmp[nbiter];
-
-    /**** Recherche du DS640 ****/
-
-    for (int i = 0; i < nbiter; i++) { //Y
-        tmp[i] = (((lowSumPol[i] % (1 << known_low)) ^ (uX[i] % (1 << known_low))) << known_up) + (rot[i] ^ (uX[i] >> (k - known_up)));
-    }
-    *Y0 = tmp[0];
-    
-    for (int i = 0; i < nbiter; i++)    //Yprim
-        tmp[i] = (tmp[i] - sumPolY[i]) % (1 << (known_up + known_low));
-
-    for(int i = 0; i < nbiter - 1; i++) { //DY
-        tmp[i] = (tmp[i+1] - tmp[i]) % (1 << (known_low + known_up));
-        tmp[i] = tmp[i] << (k - known_up - known_low);
-    }
-
-    float u[nbiter-1];
-    prodMatVecFFU(u, invG, tmp, nbiter-1);
-    for(int i = 0 ; i < nbiter-1 ; i++)
-        tmp[i] = (unsigned long long) llroundf(u[i]);
-
-    *DS640 = 0;
-    for(int i = 0 ; i < nbiter-1 ; i++)
-        (*DS640) += Greduite[i] * tmp[i];
-
-    /**** Confirmation du DS640 ****/
+	/**** Confirmation du DS640 ****/
     for (int i = 0 ; i < nbtest ; i++) {
-        unsigned long long tmp2 = polA[i + nbiter] * (*DS640); //ATTENTION cast pcg128_t
-        tmp2 += sumPolTest[i];
-        unsigned long long Yi1 = ((*Y0) + (tmp2 >> (k - known_low - known_up))) % (1 << (known_low + known_up)); //avec ou sans retenue OK!
+        unsigned long long tmp2 = ((unsigned long long) polA[i + nbiter]) * DS640 + sumPolTest[i]; //ATTENTION cast pcg128_t
+        unsigned long long Yi1 = (Y0 + (tmp2 >> (k - known_low - known_up))) % (1 << (known_low + known_up)); //avec ou sans retenue OK!
         if (!(checkY(goodY, i, Yi1))) {
-            stats[i]++;
             return 0;
         }
     }
     return 1;
+}
+
+
+int solve_isgood(const char* goodY, const int* rot, const unsigned long long* tabTmp, const unsigned long long* sumPolY, const unsigned long long* sumPolTest)
+{
+    unsigned long long tmp[nbiter];
+
+    /**** Recherche du DS640 ****/
+
+    for (int i = 0; i < nbiter; i++) //Y
+        tmp[i] = tabTmp[i + nbiter * rot[i]];  
+    
+    unsigned long long Y0 = tmp[0] + sumPolY[0];
+    
+    unsigned long long tmp3[nbiter - 1];
+    for(int i = 0; i < nbiter - 1; i++)  //DY
+        tmp3[i] = (tmp[i+1] - tmp[i]) % (1 << (known_low + known_up));
+    
+    double u[nbiter-1];
+    for (int i=0 ; i<nbiter-1 ; i++) {
+        u[i] = 0.0;
+        for (int j=0 ; j<nbiter-1 ; j++)
+            u[i]+= invG[i * (nbiter-1) + j] * tmp3[j];
+    }
+
+    unsigned long long DS640 = 0;
+    for(int i = 0 ; i < nbiter-1 ; i++)
+    	DS640 += Greduite[i] * llround(u[i]);
+  
+  
+ 	return confirm(Y0, DS640, sumPolTest, goodY);
+}
+
+
+void solve(unsigned long long* DS640, unsigned long long* Y0, char* goodY, int* rot, unsigned long long* tabTmp, unsigned long long* sumPolY, unsigned long long* sumPolTest)
+{
+    unsigned long long tmp[nbiter];
+
+    /**** Recherche du DS640 ****/
+
+    for (int i = 0; i < nbiter; i++) //Y
+        tmp[i] = tabTmp[i + nbiter * rot[i]];  
+    
+    *Y0 = (tmp[0] + sumPolY[0]) % (1 << (known_low + known_up));
+    
+    unsigned long long tmp3[nbiter - 1];
+    for(int i = 0; i < nbiter - 1; i++)  //DY
+        tmp3[i] = (tmp[i+1] - tmp[i]) % (1 << (known_low + known_up));
+    
+    double u[nbiter-1];
+    for (int i=0 ; i<nbiter-1 ; i++) {
+        u[i] = 0.0;
+        for (int j=0 ; j<nbiter-1 ; j++)
+            u[i]+= invG[i * (nbiter-1) + j] * tmp3[j];
+    }
+
+    *DS640 = 0;
+    for(int i = 0 ; i < nbiter-1 ; i++)
+    	(*DS640) += Greduite[i] * llround(u[i]);
+  
+    assert(confirm(*Y0, *DS640, sumPolTest, goodY));
 }
 
 

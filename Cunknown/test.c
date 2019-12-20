@@ -117,6 +117,9 @@ int testFonctions()
     char* goodY = setupGoodY();
     getGoodY(goodY, tabX, lowSumPol, 1);
 
+    unsigned long long tabTmp[k * nbiter];
+    getTabTmp(tabTmp, X, lowSumPol, sumPolY);
+
     unsigned long long uXnbiter1 = unrotate(X[nbiter + 1], rot[nbiter + 1]);
     unsigned long long Ynbiter1 = ((((unsigned long long) ((polA[nbiter + 1] * WC + powA[nbiter + 1] * W0) % (1 << known_low))) ^ (uXnbiter1 % (1 << known_low))) << known_up) + (rot[nbiter + 1] ^ (uXnbiter1 >> (k - known_up)));
     if(!goodY[Ynbiter1 + (1<<(known_low + known_up))]){
@@ -125,11 +128,13 @@ int testFonctions()
         printf("ok 6 - getGoodY\n");
     }
     unsigned long long DS640, Y0;
-    if(!solve(&DS640, &Y0, goodY, X, rot, lowSumPol, sumPolY, sumPolTest)){
+    if(!solve_isgood(goodY, rot, tabTmp, sumPolY, sumPolTest)){
         printf("not ok 7 - erreur sur solve\n");
     }  else {
         printf("ok 7 - solve\n");
     }
+
+    solve(&DS640, &Y0, goodY, rot, tabTmp, sumPolY, sumPolTest);
 
     return 1;
 }

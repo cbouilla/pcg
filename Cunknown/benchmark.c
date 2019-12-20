@@ -4,7 +4,7 @@
 
 #include "fonctions.h"
 
-#define WORK_FACTOR (1ull << 25)
+#define WORK_FACTOR (1ull << 27)
 
 int main() {
     
@@ -48,7 +48,10 @@ int main() {
 
     char* goodY = setupGoodY();
     getGoodY(goodY, tabX, lowSumPol, 1);
-
+    
+    unsigned long long tabTmp[k * nbiter];
+    getTabTmp(tabTmp, X, lowSumPol, sumPolY);
+    
     int rot[nbiter];
     for(int i = 0 ; i < nbiter ; i++)
             rot[i] = 0;
@@ -58,9 +61,7 @@ int main() {
     double t1 = wtime();
 
     for (unsigned long long r = 0 ;r < WORK_FACTOR; r++) {
-        unsigned long long DS640;
-        unsigned long long Y0;
-    
+        
         /***** Modification de rot et unrotX *****/
         rot[0] = (rot[0] + 1) % k;
         int i = 0;
@@ -69,9 +70,8 @@ int main() {
             rot[i] = (rot[i] + 1) % k;
         }
         
-        if (solve(&DS640, &Y0, goodY, X, rot, lowSumPol, sumPolY, sumPolTest)) {
+        if (solve_isgood(goodY, rot, tabTmp, sumPolY, sumPolTest)) {
             printf("candidat DS64 trouvé !!\n");
-            printf("%llu\n", DS640);
             printf("temps pour trouver la solution = %f\n", wtime() - t1);
         }
     }

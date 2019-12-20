@@ -48,6 +48,8 @@ int main(){
             }
     		getGoodY(goodY, tabX, lowSumPol, 1);
 
+    		unsigned long long tabTmp[k * nbiter];
+        	getTabTmp(tabTmp, X, lowSumPol, sumPolY);    
             /*Variables privées*/
             int rot[nbiter];
             for(int i = 0 ; i < nbiter ; i++)
@@ -66,7 +68,8 @@ int main(){
                     rot[i]=(rot[i] + 1) %k;
                 }
                 
-                if(solve(&DS640, &Y0, goodY, X, rot, lowSumPol, sumPolY, sumPolTest)){
+                if (solve_isgood(goodY, rot, tabTmp, sumPolY, sumPolTest)) {
+                	solve(&DS640, &Y0, goodY, rot, tabTmp, sumPolY, sumPolTest);
                     printf("candidat DS64 trouvé !!\n");
                     printf("%llu\n", DS640);
                     printf("temps pour trouver la solution = %f\n", wtime() - t1 );
