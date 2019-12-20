@@ -10,6 +10,7 @@ int main() {
     
     /*  INITIALISATION DES PARAMETRES  */
     
+    printf("known_low = %d\n", known_low);
     init_var_globales();
         
     /********** Calculs/Tests plus ou moins à la con ***********/
@@ -19,8 +20,6 @@ int main() {
     pcg128_t vraiS[nboutput];
     unsigned long long X[nboutput];
     
-    //printVal(S0, c);
-    
     pcg(vraiS, X, S0, &c, nboutput);
     
     unsigned long long tabX[k * nbtest];
@@ -28,7 +27,6 @@ int main() {
             for (int j = 0; j < k; j++)
                 tabX[i * k + j] = unrotate(X[i + nbiter], j);
 
-    //unsigned long long done = 0;
     unsigned long long W0 = 5018, WC = 335;
     
     /**** Polynômes en WC et W0 utilisés dans la résolution ****/
@@ -56,7 +54,7 @@ int main() {
     for(int i = 0 ; i < nbiter ; i++)
             rot[i] = 0;
 
-    printf("Taille de GoodY = %d Ko\n", nbtest * (1 << (known_low + known_up)) / 1024 / 8);
+    printf("Taille de GoodY = %d Ko\n", (1 << (known_low + known_up)) / 1024 / 8);
     printf("Début du benchmark (%llu iterations)\n", WORK_FACTOR);
     double t1 = wtime();
 
@@ -78,8 +76,9 @@ int main() {
 
     double t = wtime() - t1;
     printf("Durée benchmark = %.2fs\n", t);
-    printf("Attaque complète = %.2fMh\n", t / WORK_FACTOR * (1ull << (nbiter * known_up + 2*known_low - 1)) / 3600 / 1e6);
-    
+    printf("Concrètement = %d tasks of size %.1f h-CPU\n", 1 << known_low, 
+        t / WORK_FACTOR * (1ull << (nbiter * known_up + known_low - 1)) / 3600);
+    printf("Attaque complète = %.0fK h-CPU\n", t / WORK_FACTOR * (1ull << (nbiter * known_up + 2*known_low - 1)) / 3600 / 1e3);
     
     exit(0);
 }
