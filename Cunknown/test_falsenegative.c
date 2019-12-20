@@ -10,6 +10,7 @@ int testValid (FILE* f, int n)
     unsigned long long X[nboutput];
     pcg128_t seeds[2];
     int cpt = 0;
+    char* goodY = setupGoodY();
 
     for (int i = 0 ; i < n ; i++) {
         if (fread(seeds, sizeof(seeds), 1, f) != 1)  {
@@ -53,7 +54,9 @@ int testValid (FILE* f, int n)
             for (int j = 0; j < k; j++)
                 tabX[i * k + j] = unrotate(X[i + nbiter], j);
 
-        cpt += solve(&DS640, &Y0, X, tabX, rot, lowSumPol, sumPolY, sumPolTest);
+        getGoodY(goodY, tabX, lowSumPol, 1);
+        cpt += solve(&DS640, &Y0, goodY, X, tabX, rot, lowSumPol, sumPolY, sumPolTest);
+        getGoodY(goodY, tabX, lowSumPol, 0);
     }
     return cpt;
 }

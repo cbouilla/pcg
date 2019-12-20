@@ -20,9 +20,16 @@ int main(){
     
     pcg(vraiS, X, S0, &c, nboutput);
     double t1 = wtime();
+
+    unsigned long long tabX[k * nbtest];
+        for (int i = 0; i < nbtest; i++)
+            for (int j = 0; j < k; j++)
+                tabX[i * k + j] = unrotate(X[i + nbiter], j);
+
     //unsigned long long done = 0;
     unsigned long long W0 = 5018, WC = 335;
     
+    char* goodY = setupGoodY();
     #pragma omp parallel for
     for (W0 = 5018; W0 < /*(1<<known_low)*/ 5019 ; W0++){//W0=5018 
         for(WC = 335 ; WC < /*(1<<known_low)*/ 336 ; WC++){//WC = 335
@@ -39,6 +46,7 @@ int main(){
                 lowSumPol[nbiter + i] = (W0 * ((unsigned long long) powA[i + nbiter]) + WC * ((unsigned long long) polA[i + nbiter]));
                 sumPolTest[i] = W0 * ((unsigned long long) (powA[i + nbiter] >> known_low) - 1) + WC * ((unsigned long long) (polA[i + nbiter] >> known_low) - 1);
             }
+    		getGoodY(goodY, tabX, lowSumPol, 1);
 
             /*Variables privées*/
             int rot[nbiter];
@@ -58,7 +66,7 @@ int main(){
                     rot[i]=(rot[i] + 1) %k;
                 }
                 
-                if(solve(&DS640, &Y0, X, rot, lowSumPol, sumPolY, sumPolTest)){
+                if(solve(&DS640, &Y0, goodY, X, tabX, rot, lowSumPol, sumPolY, sumPolTest)){
                     printf("candidat DS64 trouvé !!\n");
                     printf("%llu\n", DS640);
                     printf("temps pour trouver la solution = %f\n", wtime() - t1 );
@@ -68,7 +76,7 @@ int main(){
                     printf("DS640 = %llu\n", DS640);
                 }*/
             }
-            
+            getGoodY(goodY, tabX, lowSumPol, 0);
             //#pragma omp atomic
            // done++;;
         }

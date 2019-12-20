@@ -43,21 +43,30 @@ double wtime()
     return (double) ts.tv_sec + ts.tv_usec / 1e6;
 }
 
-void getGoodY(char* goodY, unsigned long long* tabX, unsigned long long lowSumPoli, int i){
-    unsigned long long y;
-    unsigned long long Wi = lowSumPoli % (1 << known_low);
-    for(y = 0 ; y < (1<< (known_low + known_up)) ; y++){
-        for(int j = 0 ; j < k ; j++){
-            unsigned long long Xij = tabX[i*k + j]; //unrotate(X[i], j);
-            unsigned long long goodYi = (((Xij % (1 << known_low)) ^ Wi) << known_up) ^ (j ^ (Xij >> (k - known_up)));
-            goodY[y] |= (goodYi == y)  | (goodYi == y + 1);
-        }
-    }
+char * setupGoodY()
+{
+	char* goodY = malloc((1<<(known_low + known_up)) * sizeof(char) * nbtest);
+	for (unsigned long long y = 0 ; y < nbtest * (1<< (known_low + known_up)) ; y++)
+	    goodY[y] = 0;
+	return goodY;
+}
+
+void getGoodY(char* goodY, unsigned long long* tabX, unsigned long long* lowSumPol, int v)
+{
+	for (int i = 0 ; i < nbtest ; i++){
+		unsigned long long Wi = lowSumPol[nbiter + i] % (1 << known_low);
+	    for (int j = 0 ; j < k ; j++){
+	        unsigned long long Xij = tabX[i*k + j]; //unrotate(X[i], j);
+	        unsigned long long goodYi1 = (((Xij % (1 << known_low)) ^ Wi) << known_up) ^ (j ^ (Xij >> (k - known_up)));
+	        // unsigned long long goodYi2 = (goodYi1 + 1) % (1 << (known_low));
+	        goodY[goodYi1 + i * (1<<(known_low + known_up))] = v;
+	        //goodY[(goodYi +  + i * (1<<(known_low + known_up))] = v;
+	    }
+	}
 }
 
 
-
-int solve(unsigned long long* DS640, unsigned long long* Y0, unsigned long long* X, unsigned long long* tabX, int* rot, unsigned long long* lowSumPol, unsigned long long* sumPolY, unsigned long long* sumPolTest)
+int solve(unsigned long long* DS640, unsigned long long* Y0, char* goodY, unsigned long long* X, unsigned long long* tabX, int* rot, unsigned long long* lowSumPol, unsigned long long* sumPolY, unsigned long long* sumPolTest)
 {
     unsigned long long uX[nbiter];
     unrotateX(uX, X, rot);
@@ -99,14 +108,7 @@ int solve(unsigned long long* DS640, unsigned long long* Y0, unsigned long long*
         tmp2 += sumPolTest[i];
         unsigned long long Yi1 = ((*Y0) + (tmp2 >> (k - known_low - known_up))) % (1 << (known_low + known_up)); //avec ou sans retenue OK!
         unsigned long long Yi2 = (Yi1 + 1) % (1 << (known_low + known_up));
-        unsigned long long Wi = lowSumPol[i + nbiter] % (1 << known_low);
-        int test = 0;
-        for(int j = 0 ; j < k ; j++){
-            unsigned long long Xij = tabX[i*k + j]; //unrotate(X[i], j);
-            unsigned long long goodYi = (((Xij % (1 << known_low)) ^ Wi) << known_up) ^ (j ^ (Xij >> (k - known_up)));
-            test |= (goodYi == Yi1)  | (goodYi == Yi2);
-        }
-        if (!test) {
+        if (!(goodY[Yi1 + i * (1<<(known_up + known_low))] || goodY[Yi2 + i * (1<<(known_up + known_low))])) {
             //printf("erreur a i = %d\n", i);
             return 0;
         }

@@ -9,7 +9,7 @@
 /***** Macro et Variables globales *****/
 #define k 64
 #define known_up 6
-#define known_low 11
+#define known_low 13
 #define nbiter 5
 #define nboutput 31
 #define nbtest 3
@@ -55,7 +55,9 @@ static inline unsigned long long unrotate(unsigned long long Xi, int i)
     return (Xi >> (k-i)) | (Xi << i);
 }
 
-void getGoodY(char* goodY, unsigned long long* tabX, unsigned long long lowSumPoli, int i);
+char* setupGoodY();
+void getGoodY(char* goodY, unsigned long long* tabX, unsigned long long* lowSumPol, int v);
+
 
 void getY(unsigned long long *Y, unsigned long long W0, unsigned long long WC, int* rot, unsigned long long* uX);
 void getYprim(unsigned long long *Yprim, unsigned long long *Y, unsigned long long W0, unsigned long long WC);
@@ -66,7 +68,7 @@ unsigned long long FindDS640(unsigned long long* Y, unsigned long long* uX, int*
 
 int testDS640(unsigned long long DS640,  unsigned long long* X, unsigned long long Y0, unsigned long long* sumPolTest, unsigned long long* lowSumPol);
 
-int solve(unsigned long long* DS640, unsigned long long* Y0, unsigned long long* X, unsigned long long* tabX, int* rot, unsigned long long* lowSumPol, unsigned long long* sumPolY, unsigned long long* sumPolTest);
+int solve(unsigned long long* DS640, unsigned long long* Y0, char* goodY, unsigned long long* X, unsigned long long* tabX, int* rot, unsigned long long* lowSumPol, unsigned long long* sumPolY, unsigned long long* sumPolTest);
 
 int testValid(FILE* f, int n);
 //void pcgone(pcg128_t *S, unsigned long long* X, pcg128_t S0, int n);

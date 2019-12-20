@@ -111,19 +111,21 @@ int testFonctions()
             for (int j = 0; j < k; j++)
                 tabX[i * k + j] = unrotate(X[i + nbiter], j);
 
-    char* goodY = malloc((1<<(known_low + known_up)) * sizeof(char));
-    getGoodY(goodY, tabX, lowSumPol[nbiter], 0);
 
-    unsigned long long uXnbiter = unrotate(X[nbiter], rot[nbiter]);
-    unsigned long long Ynbiter = ((((unsigned long long) ((polA[nbiter] * WC + powA[nbiter] * W0) % (1 << known_low))) ^ (uXnbiter % (1 << known_low))) << known_up) + (rot[nbiter] ^ (uXnbiter >> (k - known_up)));
+    /*test getGoodY*/
     
-    if(!goodY[Ynbiter]){
+    char* goodY = setupGoodY();
+    getGoodY(goodY, tabX, lowSumPol, 1);
+
+    unsigned long long uXnbiter1 = unrotate(X[nbiter + 1], rot[nbiter + 1]);
+    unsigned long long Ynbiter1 = ((((unsigned long long) ((polA[nbiter + 1] * WC + powA[nbiter + 1] * W0) % (1 << known_low))) ^ (uXnbiter1 % (1 << known_low))) << known_up) + (rot[nbiter + 1] ^ (uXnbiter1 >> (k - known_up)));
+    if(!goodY[Ynbiter1 + (1<<(known_low + known_up))]){
         printf("not ok 6 - erreur sur getGoodY\n");
     }  else {
         printf("ok 6 - getGoodY\n");
     }
     unsigned long long DS640, Y0;
-    if(!solve(&DS640, &Y0, X, tabX, rot, lowSumPol, sumPolY, sumPolTest)){
+    if(!solve(&DS640, &Y0, goodY, X, tabX, rot, lowSumPol, sumPolY, sumPolTest)){
         printf("not ok 7 - erreur sur solve\n");
     }  else {
         printf("ok 7 - solve\n");
