@@ -76,6 +76,7 @@ int main() {
 
     double t = wtime() - t1;
     printf("Durée benchmark = %.2fs\n", t);
+    printf("Itérations/s = %.1fM/s\n", WORK_FACTOR / t / 1e6);
     printf("Concrètement = %d tasks of size %.1f h-CPU\n", 1 << known_low, 
         t / WORK_FACTOR * (1ull << (nbiter * known_up + known_low - 1)) / 3600);
     printf("Attaque complète = %.0fK h-CPU\n", t / WORK_FACTOR * (1ull << (nbiter * known_up + 2*known_low - 1)) / 3600 / 1e3);
