@@ -16,15 +16,8 @@ int main(){
     pcg128_t vraiS[nboutput];
     unsigned long long X[nboutput];
     
-    //printVal(S0, c);
-    
     pcg(vraiS, X, S0, &c, nboutput);
     double t1 = wtime();
-
-    unsigned long long tabX[k * nbtest];
-        for (int i = 0; i < nbtest; i++)
-            for (int j = 0; j < k; j++)
-                tabX[i * k + j] = unrotate(X[i + nbiter], j);
 
     //unsigned long long done = 0;
     unsigned long long W0 = 5018, WC = 335;
@@ -46,7 +39,7 @@ int main(){
                 lowSumPol[nbiter + i] = (W0 * ((unsigned long long) powA[i + nbiter]) + WC * ((unsigned long long) polA[i + nbiter]));
                 sumPolTest[i] = W0 * ((unsigned long long) (powA[i + nbiter] >> known_low) - 1) + WC * ((unsigned long long) (polA[i + nbiter] >> known_low) - 1);
             }
-    		getGoodY(goodY, tabX, lowSumPol, 1);
+    		getGoodY(goodY, X, lowSumPol, 1);
 
     		unsigned long long tabTmp[k * nbiter];
         	getTabTmp(tabTmp, X, lowSumPol, sumPolY);    
@@ -79,7 +72,7 @@ int main(){
                     printf("DS640 = %llu\n", DS640);
                 }*/
             }
-            getGoodY(goodY, tabX, lowSumPol, 0);
+            getGoodY(goodY, X, lowSumPol, 0);
             //#pragma omp atomic
            // done++;;
         }

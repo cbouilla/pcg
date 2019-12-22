@@ -4,10 +4,12 @@
 
 #include "fonctions.h"
 
-unsigned long long Greduite[16] =
 pcg128_t a;
 pcg128_t powA[nboutput];
 pcg128_t polA[nboutput];
+
+
+u64 Greduite[16] =
 {-186304953996472, -216211368070119,  110964501361298,  131252974561432,
 -126056243766680,   99587582169277,   -5646098666150, -233919070109448,
    7937589136904, -214303762177807, -268280113597118,  -98716819647784,
@@ -64,12 +66,12 @@ static inline void setbit(char *goodY, int i, unsigned long long Y, int v)
 		goodY[j] &= ~(1 << l);
 }
 
-void getGoodY(char* goodY, unsigned long long* tabX, unsigned long long* lowSumPol, int v)
+void getGoodY(char* goodY, u64* X, u64* lowSumPol, int v)
 {
 	for (int i = 0 ; i < nbtest ; i++){
 		unsigned long long Wi = lowSumPol[nbiter + i] % (1 << known_low);
 	    for (int j = 0 ; j < k ; j++){
-	        unsigned long long Xij = tabX[i*k + j]; //unrotate(X[i], j);
+	        unsigned long long Xij = unrotate(X[i + nbiter], j);
 	        unsigned long long goodYi1 = (((Xij % (1 << known_low)) ^ Wi) << known_up) ^ (j ^ (Xij >> (k - known_up)));
 	        unsigned long long goodYi2 = (goodYi1 - 1) % (1 << (known_low + known_up));
 	        setbit(goodY, i, goodYi1, v);

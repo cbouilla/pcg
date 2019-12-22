@@ -49,20 +49,15 @@ int testValid (FILE* f, int n)
         FindDS64(DS64, Y, uX, rot, lowSumPol, sumPolY);
         cpt += testDS640(DS64[0], X, Y[0], sumPolTest, lowSumPol);*/
 
-        unsigned long long tabX[k * nbtest];
-        for (int i = 0; i < nbtest; i++)
-            for (int j = 0; j < k; j++)
-                tabX[i * k + j] = unrotate(X[i + nbiter], j);
-
         unsigned long long tabTmp[k * nbiter];
         getTabTmp(tabTmp, X, lowSumPol, sumPolY);    
 
-        getGoodY(goodY, tabX, lowSumPol, 1);
+        getGoodY(goodY, X, lowSumPol, 1);
         int a = solve_isgood(goodY, rot, tabTmp, sumPolY, sumPolTest); 
         cpt += a;
         if (a)
             solve(&DS640, &Y0, goodY, rot, tabTmp, sumPolY, sumPolTest);
-        getGoodY(goodY, tabX, lowSumPol, 0);
+        getGoodY(goodY, X, lowSumPol, 0);
     }
     return cpt;
 }

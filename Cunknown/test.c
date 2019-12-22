@@ -106,15 +106,9 @@ int testFonctions()
         }
     }*/
 
-    unsigned long long tabX[k * nbtest];
-    for (int i = 0; i < nbtest; i++)
-        for (int j = 0; j < k; j++)
-            tabX[i * k + j] = unrotate(X[i + nbiter], j);
-
-
     /*test getGoodY*/
     char* goodY = setupGoodY();
-    getGoodY(goodY, tabX, lowSumPol, 1);
+    getGoodY(goodY, X, lowSumPol, 1);
 
     unsigned long long tabTmp[k * nbiter];
     getTabTmp(tabTmp, X, lowSumPol, sumPolY);

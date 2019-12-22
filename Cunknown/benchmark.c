@@ -22,11 +22,6 @@ int main() {
     
     pcg(vraiS, X, S0, &c, nboutput);
     
-    unsigned long long tabX[k * nbtest];
-        for (int i = 0; i < nbtest; i++)
-            for (int j = 0; j < k; j++)
-                tabX[i * k + j] = unrotate(X[i + nbiter], j);
-
     unsigned long long W0 = 5018, WC = 335;
     
     /**** Polynômes en WC et W0 utilisés dans la résolution ****/
@@ -45,7 +40,7 @@ int main() {
 
 
     char* goodY = setupGoodY();
-    getGoodY(goodY, tabX, lowSumPol, 1);
+    getGoodY(goodY, X, lowSumPol, 1);
     
     unsigned long long tabTmp[k * nbiter];
     getTabTmp(tabTmp, X, lowSumPol, sumPolY);
