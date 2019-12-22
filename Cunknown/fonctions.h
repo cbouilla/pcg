@@ -7,6 +7,9 @@
 #include <stdlib.h>
 #include <math.h>
 
+typedef long long          i64;
+typedef unsigned long long u64;
+
 /***** Macro et Variables globales *****/
 #define k 64
 #define known_up 6
@@ -15,13 +18,12 @@
 #define nboutput 31
 #define nbtest 3
 
-int nb_thread;
-pcg128_t a;
-pcg128_t powA[nboutput];
-pcg128_t polA[nboutput];
+extern pcg128_t a;
+extern pcg128_t powA[nboutput];
+extern pcg128_t polA[nboutput];
 
-extern unsigned long long Greduite[16];
-extern double invG[16];
+extern unsigned long long Greduite[16] __attribute__((aligned(32)));
+extern double invG[16] __attribute__((aligned(32)));
 
 /***** Fonctions *****/
 void init_var_globales();

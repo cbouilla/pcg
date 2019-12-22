@@ -5,6 +5,9 @@
 #include "fonctions.h"
 
 unsigned long long Greduite[16] =
+pcg128_t a;
+pcg128_t powA[nboutput];
+pcg128_t polA[nboutput];
 {-186304953996472, -216211368070119,  110964501361298,  131252974561432,
 -126056243766680,   99587582169277,   -5646098666150, -233919070109448,
    7937589136904, -214303762177807, -268280113597118,  -98716819647784,
@@ -22,9 +25,6 @@ void init_var_globales()
     //multiplier a OK !
     a = (((pcg128_t) 2549297995355413924) << k) + ((pcg128_t) 4865540595714422341);
 
-    //nombre de threads 
-    nb_thread = omp_get_max_threads();
-    
     //increment polynome polC OK !
     polA[0] = 0;
     powA[0] = 1;
@@ -53,9 +53,9 @@ char * setupGoodY()
 	return goodY;
 }
 
-static inline void setbit(char *goodY, int idx, int v)
+static inline void setbit(char *goodY, int i, unsigned long long Y, int v)
 {
-	// idx = idx / 4;
+    int idx = Y + i * (1 << (known_up + known_low));
 	int j = idx / 8;
 	int l = idx % 8;
 	if (v == 1)
@@ -72,8 +72,8 @@ void getGoodY(char* goodY, unsigned long long* tabX, unsigned long long* lowSumP
 	        unsigned long long Xij = tabX[i*k + j]; //unrotate(X[i], j);
 	        unsigned long long goodYi1 = (((Xij % (1 << known_low)) ^ Wi) << known_up) ^ (j ^ (Xij >> (k - known_up)));
 	        unsigned long long goodYi2 = (goodYi1 - 1) % (1 << (known_low + known_up));
-	        setbit(goodY, goodYi1 + i * (1<<(known_low + known_up)), v);
-	        setbit(goodY, goodYi2 + i * (1<<(known_low + known_up)), v);
+	        setbit(goodY, i, goodYi1, v);
+	        setbit(goodY, i, goodYi2, v);
 	    }
 	}
 }
