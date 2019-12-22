@@ -119,6 +119,16 @@ static inline long long crazy_round(double x)
     return magic.l;
 }
 
+static inline long long light_crazy_round(double x)
+{
+    union { double d; long long l; } magic; 
+    magic.d = x;
+    magic.l <<= 13; 
+    magic.l >>= 13;
+    return magic.l;
+}
+
+
 bool solve_isgood(const char* goodY, const int* rot, const unsigned long long* tabTmp, const unsigned long long* sumPolY, const unsigned long long* sumPolTest)
 {
     /**** Recherche du DS640 ****/
@@ -137,11 +147,12 @@ bool solve_isgood(const char* goodY, const int* rot, const unsigned long long* t
         u[i] = 0.0;
         for (int j=0 ; j<nbiter-1 ; j++)
             u[i] += invG[i * (nbiter-1) + j] * tmp3[j];
+        u[i] += 6755399441055744.0;
     }
 
     unsigned long long DS640 = 0;
     for(int i = 0 ; i < nbiter-1 ; i++) {
-        DS640 += Greduite[i] * crazy_round(u[i]);
+        DS640 += Greduite[i] * light_crazy_round(u[i]);
     }
   
  	return confirm(Y0, DS640, sumPolTest, goodY);
