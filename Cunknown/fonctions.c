@@ -50,12 +50,12 @@ double wtime()
 char * setupGoodY()
 {
 	char* goodY = malloc((1<<(known_low + known_up)) * sizeof(char) * nbtest / 8);
-	for (unsigned long long y = 0 ; y < nbtest * (1<< (known_low + known_up)) / 8 ; y++)
+	for (u64 y = 0 ; y < nbtest * (1<< (known_low + known_up)) / 8 ; y++)
 	    goodY[y] = 0;
 	return goodY;
 }
 
-static inline void setbit(char *goodY, int i, unsigned long long Y, int v)
+static inline void setbit(char *goodY, int i, u64 Y, int v)
 {
     int idx = Y + i * (1 << (known_up + known_low));
 	int j = idx / 8;
@@ -69,11 +69,11 @@ static inline void setbit(char *goodY, int i, unsigned long long Y, int v)
 void getGoodY(char* goodY, u64* X, u64* lowSumPol, int v)
 {
 	for (int i = 0 ; i < nbtest ; i++){
-		unsigned long long Wi = lowSumPol[nbiter + i] % (1 << known_low);
+		u64 Wi = lowSumPol[nbiter + i] % (1 << known_low);
 	    for (int j = 0 ; j < k ; j++){
-	        unsigned long long Xij = unrotate(X[i + nbiter], j);
-	        unsigned long long goodYi1 = (((Xij % (1 << known_low)) ^ Wi) << known_up) ^ (j ^ (Xij >> (k - known_up)));
-	        unsigned long long goodYi2 = (goodYi1 - 1) % (1 << (known_low + known_up));
+	        u64 Xij = unrotate(X[i + nbiter], j);
+	        u64 goodYi1 = (((Xij % (1 << known_low)) ^ Wi) << known_up) ^ (j ^ (Xij >> (k - known_up)));
+	        u64 goodYi2 = (goodYi1 - 1) % (1 << (known_low + known_up));
 	        setbit(goodY, i, goodYi1, v);
 	        setbit(goodY, i, goodYi2, v);
 	    }
@@ -81,17 +81,17 @@ void getGoodY(char* goodY, u64* X, u64* lowSumPol, int v)
 }
 
 
-void getTabTmp(unsigned long long* tabTmp, unsigned long long* X, unsigned long long* lowSumPol, unsigned long long* sumPolY)
+void getTabTmp(u64* tabTmp, u64* X, u64* lowSumPol, u64* sumPolY)
 {
-	for (int i = 0 ; i < k ; i++){
-		for (int j = 0 ; j < nbiter ; j++){
-    	    unsigned long long uX = unrotate(X[j], i);
+	for (int i = 0 ; i < k ; i++) {
+		for (int j = 0 ; j < nbiter ; j++) {
+    	    u64 uX = unrotate(X[j], i);
 			tabTmp[i * nbiter + j] = (((lowSumPol[j] % (1 << known_low)) ^ (uX % (1 << known_low))) << known_up) + (i ^ (uX >> (k - known_up))) - sumPolY[j];
 		}
 	}
 }
 
-static inline int checkY(const char* goodY, int i, unsigned long long Y)
+static inline int checkY(const char* goodY, int i, u64 Y)
 {
 	int idx = Y + i * (1 << (known_up + known_low));
 	// idx = idx / 4;
@@ -100,12 +100,12 @@ static inline int checkY(const char* goodY, int i, unsigned long long Y)
 	return (goodY[j] >> l) & 1;
 }
 
-static inline bool confirm(unsigned long long Y0, unsigned long long DS640, const unsigned long long* sumPolTest, const char* goodY)
+static inline bool confirm(u64 Y0, u64 DS640, const u64* sumPolTest, const char* goodY)
 {
 	/**** Confirmation du DS640 ****/
     for (int i = 0 ; i < nbtest ; i++) {
-        unsigned long long tmp2 = ((unsigned long long) polA[i + nbiter]) * DS640 + sumPolTest[i]; //ATTENTION cast pcg128_t
-        unsigned long long Yi1 = (Y0 + (tmp2 >> (k - known_low - known_up))) % (1 << (known_low + known_up)); //avec ou sans retenue OK!
+        u64 tmp2 = ((u64) polA[i + nbiter]) * DS640 + sumPolTest[i]; //ATTENTION cast pcg128_t
+        u64 Yi1 = (Y0 + (tmp2 >> (k - known_low - known_up))) % (1 << (known_low + known_up)); //avec ou sans retenue OK!
         if (!(checkY(goodY, i, Yi1)))
             return 0;
     }
@@ -131,14 +131,14 @@ static inline long long light_crazy_round(double x)
 }
 
 
-bool solve_isgood(const char* goodY, const int* rot, const unsigned long long* tabTmp, const unsigned long long* sumPolY, const unsigned long long* sumPolTest)
+bool solve_isgood(const char* goodY, const int* rot, const u64* tabTmp, const u64* sumPolY, const u64* sumPolTest)
 {
     /**** Recherche du DS640 ****/
-    unsigned long long tmp[nbiter];
+    u64 tmp[nbiter];
     for (int i = 0; i < nbiter; i++) //Y
         tmp[i] = tabTmp[i + nbiter * rot[i]];  
     
-    unsigned long long Y0 = tmp[0] + sumPolY[0];
+    u64 Y0 = tmp[0] + sumPolY[0];
     
     double tmp3[nbiter - 1];
     for (int i = 0; i < nbiter - 1; i++)  //DY
@@ -152,7 +152,7 @@ bool solve_isgood(const char* goodY, const int* rot, const unsigned long long* t
         u[i] += 6755399441055744.0;
     }
 
-    unsigned long long DS640 = 0;
+    u64 DS640 = 0;
     for(int i = 0 ; i < nbiter-1 ; i++) {
         DS640 += Greduite[i] * light_crazy_round(u[i]);
     }
@@ -161,9 +161,9 @@ bool solve_isgood(const char* goodY, const int* rot, const unsigned long long* t
 }
 
 
-void solve(unsigned long long* DS640, unsigned long long* Y0, char* goodY, int* rot, unsigned long long* tabTmp, unsigned long long* sumPolY, unsigned long long* sumPolTest)
+void solve(u64* DS640, u64* Y0, char* goodY, int* rot, u64* tabTmp, u64* sumPolY, u64* sumPolTest)
 {
-    unsigned long long tmp[nbiter];
+    u64 tmp[nbiter];
 
     /**** Recherche du DS640 ****/
 
@@ -172,7 +172,7 @@ void solve(unsigned long long* DS640, unsigned long long* Y0, char* goodY, int* 
     
     *Y0 = (tmp[0] + sumPolY[0]) % (1 << (known_low + known_up));
     
-    unsigned long long tmp3[nbiter - 1];
+    u64 tmp3[nbiter - 1];
     for(int i = 0; i < nbiter - 1; i++)  //DY
         tmp3[i] = (tmp[i+1] - tmp[i]) % (1 << (known_low + known_up));
     
@@ -192,7 +192,7 @@ void solve(unsigned long long* DS640, unsigned long long* Y0, char* goodY, int* 
 }
 
 
-void pcg(pcg128_t *S, unsigned long long* X, pcg128_t S0, pcg128_t* c, int n)
+void pcg(pcg128_t *S, u64* X, pcg128_t S0, pcg128_t* c, int n)
 {
     struct pcg_state_setseq_128 rng;
     pcg_setseq_128_srandom_r(&rng, S0, *c);
