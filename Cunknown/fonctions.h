@@ -25,8 +25,19 @@ extern pcg128_t polA[nboutput];
 extern u64 Greduite[16];
 extern double invG[16];
 
+struct task_t {
+    u64 lowSumPol[nbiter + nbtest];
+    u64 sumPolY[nbiter];
+    u64 sumPolTest[nbtest];
+    u64 tabTmp[k * nbiter];
+    int rot[nbiter];
+    char *goodY;
+};
+
 /***** Fonctions *****/
 void init_var_globales();
+void init_task(struct task_t *t);
+void prepare_task(const u64 *X, u64 W0, u64 WC, struct task_t *t);
 double wtime();
 
 static inline void prodMatVecFFU(double* res, double* M, u64* v, int n){
@@ -60,8 +71,8 @@ static inline u64 unrotate(u64 Xi, int i)
 }
 
 char* setupGoodY();
-void getGoodY(char* goodY, u64* tabX, u64* lowSumPol, int v);
-void getTabTmp(u64* tabTmp, u64* X, u64* lowSumPol, u64* sumPolY);
+void getGoodY(char* goodY, const u64* X, const u64* lowSumPol, int v);
+void getTabTmp(u64* tabTmp, const u64* X, const u64* lowSumPol, const u64* sumPolY);
 
 void getY(u64 *Y, u64 W0, u64 WC, int* rot, u64* uX);
 void getYprim(u64 *Yprim, u64 *Y, u64 W0, u64 WC);

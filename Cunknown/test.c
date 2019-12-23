@@ -7,30 +7,34 @@ int testFonctions()
 {
     assert(known_low == 11);
 
-    int rot[nboutput];
-    pcg128_t S0 = (((pcg128_t) 5995207026785010249u) << k) + ((pcg128_t) 179350442155841024u);
-    pcg128_t vraiS[nboutput];
     u64 X[nboutput];
+    pcg128_t vraiS[nboutput];
+
+    pcg128_t S0 = (((pcg128_t) 5995207026785010249u) << k) + ((pcg128_t) 179350442155841024u);
     pcg128_t c = ((((pcg128_t) 6364136223846793005u) << k) + 1442695040888963407u) >> 1;
     pcg(vraiS, X, S0, &c, nboutput);
-    if(vraiS[2] != (((pcg128_t) 1792771836637573954u) << k) + ((pcg128_t) 11139816115278170276u)){
+    
+    if (vraiS[2] != (((pcg128_t) 1792771836637573954u) << k) + ((pcg128_t) 11139816115278170276u)) {
         printf("erreur sur pcg\n");
         return 0;
-    }
-    for(int i = 0 ; i < nboutput ; i++){
-        rot[i] = (int) (vraiS[i] >> (2 * k - known_up));
     }
     
     u64 W0 = (u64) (vraiS[0] % (1<<known_low));
     u64 WC = (u64) (c % (1<<known_low));
- 
+
+    struct task_t task;
+    init_task(&task);
+    prepare_task(X, W0, WC, &task);
+    for (int i = 0 ; i < nbiter ; i++)
+        task.rot[i] = (int) (vraiS[i] >> (2 * k - known_up));
+
     printf("1..7\n");
     printf("# nbiter = %d\n", nbiter);
     printf("# known_low = %d\n", known_low);
 
     /* test unrotate */
     u64 uX[nbiter];
-    unrotateX(uX, X, rot);
+    unrotateX(uX, X, task.rot);
     if (uX[0] != 15007519919903780682u) {
         printf("not ok 1 - erreur sur unrotateX\n");
     } else {
@@ -42,7 +46,7 @@ int testFonctions()
     printf("# W0 = %llu\n", W0);
     printf("# Wc = %llu\n", WC);
 
-    getY(Y, W0, WC, rot, uX);
+    getY(Y, W0, WC, task.rot, uX);
     if(Y[3] != 129714){
         printf("not ok 2 - erreur sur getY. Y[3] == %llu / attendu : 129714\n", Y[3]);
     } else {
@@ -67,24 +71,10 @@ int testFonctions()
         printf("ok 4 - getDY\n");
     }
 
-    /**** Polynômes en WC et W0 utilisés dans la résolution ****/
-    u64 lowSumPol[nbiter + nbtest];
-    u64 sumPolY[nbiter];
-    u64 sumPolTest[nbtest];
-    for(int i = 0 ; i < nbiter ; i++){
-        lowSumPol[i]  = (W0 * ((u64) powA[i]) + WC * ((u64) polA[i]));
-        sumPolY[i] = (polA[i] * WC + powA[i] * W0) >> (k - known_up);
-    }
-    for(int i = 0 ; i < nbtest ; i++){
-        lowSumPol[nbiter + i] = (W0 * ((u64) powA[i + nbiter]) + WC * ((u64) polA[i + nbiter]));
-        sumPolTest[i] = W0 * ((u64) (powA[i + nbiter] >> known_low) - 1) + WC * ((u64) (polA[i + nbiter] >> known_low) - 1);
-    }
-    
-
     /* test FindDS64 */
     u64 DS64[nbiter - 1];
-    FindDS64(DS64, Y, uX, rot, lowSumPol, sumPolY);
-    if(DS64[0] != 2055999906439120392u){
+    FindDS64(DS64, Y, uX, task.rot, task.lowSumPol, task.sumPolY);
+    if (DS64[0] != 2055999906439120392u) {
         printf("not ok 5 - erreur sur FindDS64\n");
     }  else {
         printf("ok 5 - FindDS64\n");
@@ -107,12 +97,7 @@ int testFonctions()
     }*/
 
     /*test getGoodY*/
-    char* goodY = setupGoodY();
-    getGoodY(goodY, X, lowSumPol, 1);
-
-    u64 tabTmp[k * nbiter];
-    getTabTmp(tabTmp, X, lowSumPol, sumPolY);
-
+    
     // u64 uXnbiter1 = unrotate(X[nbiter + 1], rot[nbiter + 1]);
     // u64 Ynbiter1 = ((((u64) ((polA[nbiter + 1] * WC + powA[nbiter + 1] * W0) % (1 << known_low))) ^ (uXnbiter1 % (1 << known_low))) << known_up) + (rot[nbiter + 1] ^ (uXnbiter1 >> (k - known_up)));
     // if (!checkY(goodY, 1, Ynbiter1)) {
@@ -121,14 +106,15 @@ int testFonctions()
     // }  else {
     //     printf("ok 6 - getGoodY\n");
     // }
-    u64 DS640, Y0;
-    if(!solve_isgood(goodY, rot, tabTmp, sumPolY, sumPolTest)){
+    
+    if (!solve_isgood(task.goodY, task.rot, task.tabTmp, task.sumPolY, task.sumPolTest)) {
         printf("not ok 6 - erreur sur solve_isgood\n");
     }  else {
         printf("ok 6 - solve_isgood\n");
     }
 
-    solve(&DS640, &Y0, goodY, rot, tabTmp, sumPolY, sumPolTest);
+    u64 DS640, Y0;
+    solve(&DS640, &Y0, task.goodY, task.rot, task.tabTmp, task.sumPolY, task.sumPolTest);
     printf("ok 7 - solve");
 
     return 1;
@@ -136,7 +122,7 @@ int testFonctions()
 
 
 
-void printVal(pcg128_t S0, pcg128_t c){
+void printVal(pcg128_t S0, pcg128_t c) {
     int rot[nboutput];
     pcg128_t vraiS[nboutput];
     u64 X[nboutput];

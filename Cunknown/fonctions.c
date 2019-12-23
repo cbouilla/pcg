@@ -66,7 +66,7 @@ static inline void setbit(char *goodY, int i, u64 Y, int v)
 		goodY[j] &= ~(1 << l);
 }
 
-void getGoodY(char* goodY, u64* X, u64* lowSumPol, int v)
+void getGoodY(char* goodY, const u64* X, const u64* lowSumPol, int v)
 {
 	for (int i = 0 ; i < nbtest ; i++){
 		u64 Wi = lowSumPol[nbiter + i] % (1 << known_low);
@@ -81,7 +81,7 @@ void getGoodY(char* goodY, u64* X, u64* lowSumPol, int v)
 }
 
 
-void getTabTmp(u64* tabTmp, u64* X, u64* lowSumPol, u64* sumPolY)
+void getTabTmp(u64* tabTmp, const u64* X, const u64* lowSumPol, const u64* sumPolY)
 {
 	for (int i = 0 ; i < k ; i++) {
 		for (int j = 0 ; j < nbiter ; j++) {
@@ -204,3 +204,24 @@ void pcg(pcg128_t *S, u64* X, pcg128_t S0, pcg128_t* c, int n)
     *c = rng.inc;
 }
 
+void init_task(struct task_t *t)
+{
+    t->goodY = setupGoodY();
+}
+
+
+void prepare_task(const u64 *X, u64 W0, u64 WC, struct task_t *t)
+{
+    for (int i = 0 ; i < nbiter ; i++) {
+        t->lowSumPol[i]  = (W0 * ((u64) powA[i]) + WC * ((u64) polA[i]));
+        t->sumPolY[i] = (polA[i] * WC + powA[i] * W0) >> (k - known_up);
+    }
+    for (int i = 0 ; i < nbtest ; i++) {
+        t->lowSumPol[nbiter + i] = (W0 * ((u64) powA[i + nbiter]) + WC * ((u64) polA[i + nbiter]));
+        t->sumPolTest[i] = W0 * ((u64) (powA[i + nbiter] >> known_low) - 1) + WC * ((u64) (polA[i + nbiter] >> known_low) - 1);
+    }
+    getGoodY(t->goodY, X, t->lowSumPol, 1);
+    getTabTmp(t->tabTmp, X, t->lowSumPol, t->sumPolY);
+    for (int i = 0 ; i < nbiter ; i++)
+        t->rot[i] = 0;
+}
