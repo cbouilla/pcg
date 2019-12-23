@@ -31,7 +31,6 @@ int testValid (FILE* f, int n)
         
         /**** Polynômes en WC et W0 utilisés dans la résolution ****/
         
-
         int a = solve_isgood(task.goodY, task.rot, task.tabTmp, task.sumPolY, task.sumPolTest); 
         cpt += a;
         if (a) {
@@ -41,7 +40,7 @@ int testValid (FILE* f, int n)
         }
         
         /* reset goodY */
-        getGoodY(task.goodY, X, task.lowSumPol, 0);
+        finish_task(X, &task);
     }
     return cpt;
 }

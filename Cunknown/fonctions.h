@@ -38,6 +38,7 @@ struct task_t {
 void init_var_globales();
 void init_task(struct task_t *t);
 void prepare_task(const u64 *X, u64 W0, u64 WC, struct task_t *t);
+void finish_task(const u64 *X, struct task_t *t);
 double wtime();
 
 static inline void prodMatVecFFU(double* res, double* M, u64* v, int n){

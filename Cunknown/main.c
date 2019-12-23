@@ -50,7 +50,7 @@ int main()
                     printf("DS640 = %llu\n", DS640);
                 }*/
             }
-            getGoodY(task.goodY, X, task.lowSumPol, 0);
+            finish_task(X, &task);
         }
     }
     printf("temps total = %f\n", wtime() - t1);
