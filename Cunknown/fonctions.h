@@ -16,7 +16,7 @@ typedef unsigned long long u64;
 #define known_low 11
 #define nbiter 5
 #define nboutput 31
-#define nbtest 3
+#define nbtest 4
 
 extern pcg128_t a;
 extern pcg128_t powA[nboutput];
