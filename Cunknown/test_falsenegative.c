@@ -65,7 +65,7 @@ int main()
     ok |= (known_low == 12) && (successes > 0.99*nbtests);
     ok |= (known_low == 13) && (successes == nbtests);
     if (ok)
-        printf("ok 1 - %d tests OK\n", nbtests);
+        printf("ok 1 - %d tests OK\n", successes);
     else
         printf("not ok 1 - #success = %d / %d\n", successes, nbtests);
     

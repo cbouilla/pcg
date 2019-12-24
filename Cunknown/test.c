@@ -3,6 +3,13 @@
 
 #include "fonctions.h"
 
+static inline void unrotateX(u64* urX, const u64* X, const int* rot)
+{
+    for(int i = 0 ; i < nbiter ; i++)
+        urX[i]= (X[i] >> ((- rot[i]) & (k-1))) | (X[i] << rot[i]);
+}
+
+
 int testFonctions()
 {
     assert(known_low == 11);

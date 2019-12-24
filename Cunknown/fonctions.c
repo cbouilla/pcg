@@ -38,13 +38,17 @@ void init_var_globales()
     	invG[i] *= 1ull << (k - known_up - known_low);
 }
 
-
 //////////////////// chrono //////////////////
 double wtime()
 {
     struct timeval ts;
     gettimeofday(&ts, NULL);
     return (double) ts.tv_sec + ts.tv_usec / 1e6;
+}
+
+static inline u64 unrotate(u64 Xi, int i)
+{
+    return (Xi >> (k-i)) | (Xi << i);
 }
 
 char * setupGoodY()
@@ -90,13 +94,13 @@ static inline int checkY(const char* goodY, int i, u64 Y)
 	return (goodY[j] >> l) & 1;
 }
 
-static inline bool confirm(u64 Y0, u64 DS640, const u64* sumPolTest, const char* goodY)
+static inline bool confirm(u64 Y0, u64 DS640, const struct task_t *task)
 {
 	/**** Confirmation du DS640 ****/
     for (int i = 0 ; i < nbtest ; i++) {
-        u64 tmp2 = ((u64) polA[i + nbiter]) * DS640 + sumPolTest[i]; //ATTENTION cast pcg128_t
+        u64 tmp2 = ((u64) polA[i + nbiter]) * DS640 + task->sumPolTest[i]; //ATTENTION cast pcg128_t
         u64 Yi1 = (Y0 + (tmp2 >> (k - known_low - known_up))) % (1 << (known_low + known_up)); //avec ou sans retenue OK!
-        if (!(checkY(goodY, i, Yi1)))
+        if (!(checkY(task->goodY, i, Yi1)))
             return 0;
     }
     return 1;
@@ -147,7 +151,7 @@ bool solve_isgood(const struct task_t *task)
         DS640 += Greduite[i] * light_crazy_round(u[i]);
     }
   
- 	return confirm(Y0, DS640, task->sumPolTest, task->goodY);
+ 	return confirm(Y0, DS640, task);
 }
 
 
@@ -178,7 +182,7 @@ void solve(const struct task_t *task, u64* DS640, u64* Y0)
     	(*DS640) += Greduite[i] * crazy_round(u[i]);
     }
   
-    assert(confirm(*Y0, *DS640, task->sumPolTest, task->goodY));
+    assert(confirm(*Y0, *DS640, task));
 }
 
 
@@ -200,7 +204,6 @@ void init_task(struct task_t *t)
     for (u64 y = 0 ; y < nbtest * (1<< (known_low + known_up)) / 8 ; y++)
         t->goodY[y] = 0;
 }
-
 
 void prepare_task(const u64 *X, u64 W0, u64 WC, struct task_t *t)
 {
