@@ -40,6 +40,8 @@ void init_task(struct task_t *t);
 void prepare_task(const u64 *X, u64 W0, u64 WC, struct task_t *t);
 void finish_task(const u64 *X, struct task_t *t);
 double wtime();
+bool solve_isgood(const struct task_t *task);
+void solve(const struct task_t *task, u64* DS640, u64* Y0);
 
 static inline void prodMatVecFFU(double* res, double* M, u64* v, int n){
     int i, j;
@@ -71,22 +73,17 @@ static inline u64 unrotate(u64 Xi, int i)
     return (Xi >> (k-i)) | (Xi << i);
 }
 
-char* setupGoodY();
-void getGoodY(char* goodY, const u64* X, const u64* lowSumPol, int v);
-void getTabTmp(u64* tabTmp, const u64* X, const u64* lowSumPol, const u64* sumPolY);
 
 void getY(u64 *Y, u64 W0, u64 WC, int* rot, u64* uX);
 void getYprim(u64 *Yprim, u64 *Y, u64 W0, u64 WC);
 void getDY(u64 *DY, u64* Yprim);
 void FindDS64(u64* DS64, u64 *Y0, u64* uX,int* rot, u64* lowSumPol, u64* sumPolY);
-
 u64 FindDS640(u64* Y, u64* uX, int* rot,u64 *lowSumPol,u64* sumPolY);
-
 int testDS640(u64 DS640,  u64* X, u64 Y0, u64* sumPolTest, u64* lowSumPol);
 
-void solve(u64* DS640, u64* Y0, char* goodY, int* rot, u64* tabTmp, u64* sumPolY, u64* sumPolTest);
 
-bool solve_isgood(const char* goodY, const int* rot, const u64* tabTmp, const u64* sumPolY, const u64* sumPolTest);
+
+
 
 int testValid(FILE* f, int n);
 //void pcgone(pcg128_t *S, u64* X, pcg128_t S0, int n);

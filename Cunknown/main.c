@@ -37,10 +37,10 @@ int main()
                     task.rot[i] = (task.rot[i] + 1) %k;
                 }
                 
-                if (solve_isgood(task.goodY, task.rot, task.tabTmp, task.sumPolY, task.sumPolTest)) {
+                if (solve_isgood(&task)) {
                     u64 DS640;
                     u64 Y0;
-                	solve(&DS640, &Y0, task.goodY, task.rot, task.tabTmp, task.sumPolY, task.sumPolTest);
+                	solve(&task, &DS640, &Y0);
                     printf("candidat DS64 trouvé !!\n");
                     printf("%llu\n", DS640);
                     printf("temps pour trouver la solution = %f\n", wtime() - t1 );

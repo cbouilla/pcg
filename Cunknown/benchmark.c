@@ -40,7 +40,7 @@ int main()
             task.rot[i] = (task.rot[i] + 1) % k;
         }
         
-        if (solve_isgood(task.goodY, task.rot, task.tabTmp, task.sumPolY, task.sumPolTest)) {
+        if (solve_isgood(&task)) {
             printf("candidat DS64 trouvé !!\n");
             printf("temps pour trouver la solution = %f\n", wtime() - t1);
         }

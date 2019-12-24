@@ -29,14 +29,13 @@ int testValid (FILE* f, int n)
         for(int i = 0; i < nbiter; i++)
             task.rot[i] = (int) (vraiS[i] >> (2 * k - known_up));
         
-        /**** Polynômes en WC et W0 utilisés dans la résolution ****/
-        
-        int a = solve_isgood(task.goodY, task.rot, task.tabTmp, task.sumPolY, task.sumPolTest); 
+        /* check */
+        int a = solve_isgood(&task); 
         cpt += a;
         if (a) {
             u64 DS640;
             u64 Y0;
-            solve(&DS640, &Y0, task.goodY, task.rot, task.tabTmp, task.sumPolY, task.sumPolTest);
+            solve(&task, &DS640, &Y0);
         }
         
         /* reset goodY */

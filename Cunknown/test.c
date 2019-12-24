@@ -107,14 +107,14 @@ int testFonctions()
     //     printf("ok 6 - getGoodY\n");
     // }
     
-    if (!solve_isgood(task.goodY, task.rot, task.tabTmp, task.sumPolY, task.sumPolTest)) {
+    if (!solve_isgood(&task)) {
         printf("not ok 6 - erreur sur solve_isgood\n");
     }  else {
         printf("ok 6 - solve_isgood\n");
     }
 
     u64 DS640, Y0;
-    solve(&DS640, &Y0, task.goodY, task.rot, task.tabTmp, task.sumPolY, task.sumPolTest);
+    solve(&task, &DS640, &Y0);
     printf("ok 7 - solve");
 
     return 1;

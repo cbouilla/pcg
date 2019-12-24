@@ -121,46 +121,46 @@ static inline long long light_crazy_round(double x)
 }
 
 
-bool solve_isgood(const char* goodY, const int* rot, const u64* tabTmp, const u64* sumPolY, const u64* sumPolTest)
+bool solve_isgood(const struct task_t *task)
 {
     /**** Recherche du DS640 ****/
     u64 tmp[nbiter];
     for (int i = 0; i < nbiter; i++) //Y
-        tmp[i] = tabTmp[i + nbiter * rot[i]];  
+        tmp[i] = task->tabTmp[i + nbiter * task->rot[i]];  
     
-    u64 Y0 = tmp[0] + sumPolY[0];
+    u64 Y0 = tmp[0] + task->sumPolY[0];
     
     double tmp3[nbiter - 1];
     for (int i = 0; i < nbiter - 1; i++)  //DY
         tmp3[i] = (tmp[i+1] - tmp[i]) % (1 << (known_low + known_up));
     
     double u[nbiter-1];
-    for (int i=0 ; i<nbiter-1 ; i++) {
+    for (int i = 0; i < nbiter - 1; i++) {
         u[i] = 0.0;
-        for (int j=0 ; j<nbiter-1 ; j++)
+        for (int j = 0; j<nbiter - 1; j++)
             u[i] += invG[i * (nbiter-1) + j] * tmp3[j];
         u[i] += 6755399441055744.0;
     }
 
     u64 DS640 = 0;
-    for(int i = 0 ; i < nbiter-1 ; i++) {
+    for (int i = 0; i < nbiter-1; i++) {
         DS640 += Greduite[i] * light_crazy_round(u[i]);
     }
   
- 	return confirm(Y0, DS640, sumPolTest, goodY);
+ 	return confirm(Y0, DS640, task->sumPolTest, task->goodY);
 }
 
 
-void solve(u64* DS640, u64* Y0, char* goodY, int* rot, u64* tabTmp, u64* sumPolY, u64* sumPolTest)
+void solve(const struct task_t *task, u64* DS640, u64* Y0)
 {
     u64 tmp[nbiter];
 
     /**** Recherche du DS640 ****/
 
     for (int i = 0; i < nbiter; i++) //Y
-        tmp[i] = tabTmp[i + nbiter * rot[i]];  
+        tmp[i] = task->tabTmp[i + nbiter * task->rot[i]];  
     
-    *Y0 = (tmp[0] + sumPolY[0]) % (1 << (known_low + known_up));
+    *Y0 = (tmp[0] + task->sumPolY[0]) % (1 << (known_low + known_up));
     
     u64 tmp3[nbiter - 1];
     for(int i = 0; i < nbiter - 1; i++)  //DY
@@ -178,7 +178,7 @@ void solve(u64* DS640, u64* Y0, char* goodY, int* rot, u64* tabTmp, u64* sumPolY
     	(*DS640) += Greduite[i] * crazy_round(u[i]);
     }
   
-    assert(confirm(*Y0, *DS640, sumPolTest, goodY));
+    assert(confirm(*Y0, *DS640, task->sumPolTest, task->goodY));
 }
 
 
