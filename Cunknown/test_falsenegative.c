@@ -62,10 +62,13 @@ int main()
     printf("1..1\n");
     static const int nbtests = 1000000;
     int successes = testValid(f, nbtests);
-    if (successes != nbtests)
-        printf("not ok 1 - #success = %d / %d\n", successes, nbtests);
+    bool ok = (known_low == 11) && (successes > 0.635*nbtests);
+    ok |= (known_low == 12) && (successes > 0.99*nbtests);
+    ok |= (known_low == 13) && (successes == nbtests);
+    if (ok)
+        printf("ok 1 - %d tests OK\n", nbtests);
     else
-        printf("ok 1 - all %d tests OK\n", nbtests);
-
+        printf("not ok 1 - #success = %d / %d\n", successes, nbtests);
+    
     exit(0);
 }
