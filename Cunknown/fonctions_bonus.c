@@ -2,6 +2,20 @@
 
 ////////////////Fonctions pour la récupération de S//////////////
 
+static inline void prodMatVecFFU(double* res, double* M, u64* v, int n){
+    int i, j;
+    for(i=0 ; i<n ; i++){
+        res[i] = 0;
+        for(j=0 ; j<n ; j++)
+            res[i]+= M[i * n + j] * v[j];
+    }
+}
+
+static inline u64 unrotate1(u64 Xi)
+{
+    return (Xi >> (k-1)) | (Xi << 1);
+}
+
 
 /* Y = S[k-known_up:k+known_low] */
 void getY(unsigned long long *Y, unsigned long long W0, unsigned long long WC, int* rot, unsigned long long* uX)
