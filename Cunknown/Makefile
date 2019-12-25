@@ -10,6 +10,9 @@ LDLIBS = -lm
 
 all: main benchmark test test_falsenegative benchmark_omp
 
+main.o: CC=mpicc
+main: CC=mpicc	
+
 fonctions.o: fonctions.h
 fonctions_bonus.o: fonctions.h
 main.o: fonctions.h pcg_setseq.h

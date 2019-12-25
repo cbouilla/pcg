@@ -1,0 +1,34 @@
+Sur ppti-gpu-1 (44 coeurs skylake 6152 (2017) @ 2.1Ghz) :
+
+vs jean-zay : cascade lake 6248 (2019) @ 2.5Ghz
+
+known_low = 11
+==============
+
+Avec ICC
+
+88 tâches en même temps --> 40.3s (2341 Msolve/s, 26.7 Msolve/s/thread)
+44 tâches en même temps --> 26.9s (1753 Msolve/s, 39.8M Msolve/s/thread)
+22 tâches en même temps --> 20.1s (1175 Msolve/s, 53.4 Msolve/s/thread)
+1 tâches en même temps --> 17.8s (60.5 Msolve/s/thread)
+
+et maintenant, on teste la parallélisation à l'intérieur des tâches
+
+88 threads --> 10.9s, 1574.0M/s, 17.9M/s/thread
+44 threads --> 20.53s, 836.7M/s, 19.0M/s/thread
+22 threads --> 32.88s, 522.5M/s, 23.8M/s/thread
+11 threads --> 58.52s, 293.6M/s, 26.7M/s/thread
+
+c'est moins bien !
+
+2048^2 / 80 tâches de 33.6s == 52 428 "jobs" de 33.6s --> 20000 h*CPU sur jz
+
+known_low = 12
+==============
+
+80000 h*CPU sur jz
+
+known_low = 13
+==============
+
+320000 h*CPU sur jz
