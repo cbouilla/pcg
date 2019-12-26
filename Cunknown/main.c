@@ -212,13 +212,17 @@ int main(int argc, char **argv)
     /*  INITIALISATION DES PARAMETRES  */
     init_var_globales();
         
-    /********** prepare test input ***********/
-    u64 X[nboutput];
-    pcg128_t S0 = (((pcg128_t) 5995207026785010249u) << k) + ((pcg128_t) 179350442155841024u);
-    pcg128_t c = ((((pcg128_t) 6364136223846793005u) << k) + 1442695040888963407u) >> 1;
-    pcg128_t vraiS[nboutput];
-    pcg(vraiS, X, S0, &c, nboutput);
-    
+    u64 X[9];
+    X[0] = 0x47a42ee112e8afb9;
+    X[1] = 0xf5e7948dbc0c7e26;
+    X[2] = 0x91724bdca45a78a4;
+    X[3] = 0x1be0e7e5b398b248;
+    X[4] = 0x6f8b727451e185a8;
+    X[5] = 0x976d59bba78ef4e2;
+    X[6] = 0xc588c4c6c9052cba;
+    X[7] = 0x9cc0fc58615e1b87;
+    X[8] = 0xec7c5d6ee9992147;
+
     u64 range_start, range_end, done;
     restart(X, &range_start, &range_end, &done);
 
@@ -234,7 +238,9 @@ int main(int argc, char **argv)
     }
     
     /* DEBUG */
-    range_start = (5018 << (known_low - 1)) + (335 - 1) / 2;
+    // W_0 = 7984
+    // W_c = 7673
+    range_start = (7984 << (known_low - 1)) + (7673 - 1) / 2;
 
     while (range_start < range_end) {
         #pragma omp parallel

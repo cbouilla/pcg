@@ -13,10 +13,10 @@ typedef unsigned long long u64;
 /***** Macro et Variables globales *****/
 #define k 64
 #define known_up 6
-#define known_low 11
+#define known_low 13
 #define nbiter 5
-#define nboutput 31
 #define nbtest 4
+#define nboutput (nbiter + nbtest)
 
 extern pcg128_t a;
 extern pcg128_t powA[nboutput];
