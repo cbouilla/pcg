@@ -162,6 +162,25 @@ void checkpoint(const u64 *X, u64 done)
 }
 
 
+void result_found(const u64 *X, u64 W0, u64 WC, u64 r)
+{
+    /* we print it just in case something goes wrong... */
+    printf("solution found : W_0 = %04llx / W_c = %04llx / r = %08llx\n", W0, WC, r);
+    
+    u64 c = (W0 << (known_low - 1)) + WC;
+    char filename[255];
+    sprintf(filename, "solution-%08llx.txt", c);
+    FILE *f = fopen(filename, "a");
+    if (f == NULL)
+        err(1, "cannot open solution file");
+    for (int i = 0; i < nbiter; i++)
+        fprintf(f, "X[%d] = %llx\n", i, X[i]);
+    fprintf(f, "W_0 = %04llx / W_c = %04llx / r = %08llx\n", W0, WC, r);
+    fprintf(f, "==============================================\n");
+    fclose(f);
+}
+
+
 void do_task(u64 current, struct task_t *task, const u64 *X)
 {
     u64 W0 = current >> (known_low - 1);
@@ -176,14 +195,8 @@ void do_task(u64 current, struct task_t *task, const u64 *X)
             i++;
             task->rot[i] = (task->rot[i] + 1) % k;
         }
-            
-        if (solve_isgood(task)) {
-            u64 DS640;
-            u64 Y0;
-            solve(task, &DS640, &Y0);
-
-            printf("thread %d, candidat DS64 trouvé !! %lld\n", omp_get_thread_num(), DS640);
-        }
+        if (solve_isgood(task))
+            result_found(X, W0, WC, r);
     }
     finish_task(X, task);
 }
@@ -219,6 +232,9 @@ int main(int argc, char **argv)
         int tid = omp_get_thread_num();
         init_task(&task[tid]);
     }
+    
+    /* DEBUG */
+    range_start = (5018 << (known_low - 1)) + (335 - 1) / 2;
 
     while (range_start < range_end) {
         #pragma omp parallel
@@ -232,11 +248,6 @@ int main(int argc, char **argv)
         done += T;
         checkpoint(X, done);
     }
-
-    /*if(DS640 == 7304601715607344736u){
-        printf("On a le bon !\n");
-        printf("DS640 = %llu\n", DS640);
-    }*/
 
     printf("temps total = %f\n", wtime() - t1);
     MPI_Finalize();
