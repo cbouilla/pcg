@@ -106,6 +106,7 @@ static inline bool confirm(u64 Y0, u64 DS640, const struct task_t *task)
     return 1;
 }
 
+/* cf. https://stackoverflow.com/questions/17035464/a-fast-method-to-round-a-double-to-a-32-bit-int-explained#comment61972557_17035583 */
 static inline long long crazy_round(double x)
 {
     union { double d; long long l; } magic; 

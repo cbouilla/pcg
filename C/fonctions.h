@@ -14,9 +14,8 @@ pcg128_t a;
 pcg128_t c;
 pcg128_t polC[nbiter];
 
-extern unsigned long long Greduite[9];
-
-extern float invG[9];
+// extern unsigned long long Greduite[9];
+// extern double invG[9];
 
 /***** Fonctions *****/
 void init_var_globales();

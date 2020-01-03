@@ -14,7 +14,7 @@ unsigned long long Greduite[9] = {
      -728312298332,  5479732607037,  6319848582548
  };
 
-float invG[9] = {
+double invG[9] = {
     -9.25221813226351e-14,  2.32272588749499e-13,  5.30001389997814e-15,
     -7.81560146462246e-14, -4.52719459143047e-15,  1.09411828555506e-13,
      5.71040610630735e-14,  3.06929503514353e-14,  6.39750297008745e-14
@@ -84,28 +84,48 @@ void getSumPol(unsigned long long* sumPol,unsigned long long* sumPolY, pcg128_t*
 }
 
 
+/* cf. https://stackoverflow.com/questions/17035464/a-fast-method-to-round-a-double-to-a-32-bit-int-explained#comment61972557_17035583 */
+static inline long long crazy_round(double x)
+{
+    union { double d; long long l; } magic; 
+    magic.d = x + 6755399441055744.0; 
+    magic.l <<= 13; 
+    magic.l >>= 13;
+    return magic.l;
+}
+
+static inline long long light_crazy_round(double x)
+{
+    union { double d; long long l; } magic; 
+    magic.d = x;
+    magic.l <<= 13; 
+    magic.l >>= 13;
+    return magic.l;
+}
+
+
 /* sumPol/sumPolY are constant over many iterations. X (unrotated) and rot vary each time. */
 int solve(pcg128_t* S, const unsigned long long* X, const int* rot, const unsigned long long* sumPol, const unsigned long long* sumPolY)
 {
     unsigned long long Y[nbiter];
-    unsigned long long Yprim[nbiter];
+    double Yprim[nbiter];
     unsigned long long tmp3[nbiter];
-    float tmp2[nbiter];
-
-
+    
     for (int i = 0 ; i < nbiter ; i++) {
         Y[i] = (((sumPol[i] ^ X[i]) % (1 << known_low)) << known_up ) + (rot[i] ^ (X[i] >> (k - known_up)));
         Yprim[i] = (Y[i] - sumPolY[i]) % (1 << (known_low + known_up));    
     }
     
-     for (int i=0 ; i<nbiter ; i++) {
+    double tmp2[nbiter];
+    for (int i=0 ; i<nbiter ; i++) {
         tmp2[i] = 0;
         for(int j=0 ; j<nbiter ; j++)
             tmp2[i] += invG[i * nbiter + j] * Yprim[j];
+        tmp2[i] += 6755399441055744.0;
     }
  
     for(int i = 0 ; i < nbiter ; i++)
-        tmp3[i] = (unsigned long long) roundf(tmp2[i]);
+        tmp3[i] = light_crazy_round(tmp2[i]);
 
     unsigned long long Sprim0 = 0;
     for(int j=0 ; j<nbiter ; j++)
