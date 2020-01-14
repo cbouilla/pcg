@@ -6,6 +6,7 @@ known_low  = 11
 a = 2549297995355413924 * 2^64 + 4865540595714422341
 nboutput = 30
 
+
 def sortiesGenerateur():#OK !
     c = (r.randint(0, 2**(2 * k)) * 2 + 1) % 2**(2 * k) #c est impair
     S=[r.randint(0,2**(k * 2))]

@@ -53,8 +53,10 @@ char * setupGoodY()
 	return goodY;
 }
 
-static inline void setbit(char *goodY, int idx, int v)
+static inline void setbit(char *goodY, int i, unsigned long long Y, int v)
 {
+	// Y &= (1 << (known_up + known_low - 1));
+	int idx = Y + i * (1 << (known_up + known_low));
 	// idx = idx / 4;
 	int j = idx / 8;
 	int l = idx % 8;
@@ -72,8 +74,8 @@ void getGoodY(char* goodY, unsigned long long* tabX, unsigned long long* lowSumP
 	        unsigned long long Xij = tabX[i*k + j]; //unrotate(X[i], j);
 	        unsigned long long goodYi1 = (((Xij % (1 << known_low)) ^ Wi) << known_up) ^ (j ^ (Xij >> (k - known_up)));
 	        unsigned long long goodYi2 = (goodYi1 - 1) % (1 << (known_low + known_up));
-	        setbit(goodY, goodYi1 + i * (1<<(known_low + known_up)), v);
-	        setbit(goodY, goodYi2 + i * (1<<(known_low + known_up)), v);
+	        setbit(goodY, i, goodYi1, v);
+	        setbit(goodY, i, goodYi2, v);
 	    }
 	}
 }
@@ -93,6 +95,7 @@ void getTabTmp(unsigned long long* tabTmp, unsigned long long* X, unsigned long 
 
 static inline int checkY(const char* goodY, int i, unsigned long long Y)
 {
+	// Y = Y(1 << (known_up + known_low - 1));
 	int idx = Y + i * (1 << (known_up + known_low));
 	// idx = idx / 4;
 	int j = idx / 8;
@@ -103,7 +106,13 @@ static inline int checkY(const char* goodY, int i, unsigned long long Y)
 static inline int confirm(unsigned long long Y0, unsigned long long DS640, const unsigned long long* sumPolTest, const char* goodY)
 {
 	/**** Confirmation du DS640 ****/
-    for (int i = 0 ; i < nbtest ; i++) {
+    unsigned long long tmp2 = ((unsigned long long) polA[nbiter]) * DS640 + sumPolTest[0]; //ATTENTION cast pcg128_t
+    unsigned long long Yi1 = (Y0 + (tmp2 >> (k - known_low - known_up))) % (1 << (known_low + known_up)); //avec ou sans retenue OK!
+    if (!(checkY(goodY, 0, Yi1)))
+        return 0;
+
+
+    for (int i = 1 ; i < nbtest ; i++) {
         unsigned long long tmp2 = ((unsigned long long) polA[i + nbiter]) * DS640 + sumPolTest[i]; //ATTENTION cast pcg128_t
         unsigned long long Yi1 = (Y0 + (tmp2 >> (k - known_low - known_up))) % (1 << (known_low + known_up)); //avec ou sans retenue OK!
         if (!(checkY(goodY, i, Yi1))) {

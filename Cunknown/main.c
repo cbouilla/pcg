@@ -15,6 +15,8 @@ int main(){
     
     pcg128_t vraiS[nboutput];
     unsigned long long X[nboutput];
+
+    FILE *f = fopen("results", "w");
     
     //printVal(S0, c);
     
@@ -69,6 +71,7 @@ int main(){
                 }
                 
                 if (solve_isgood(goodY, rot, tabTmp, sumPolY, sumPolTest)) {
+                	fprintf(f)
                 	solve(&DS640, &Y0, goodY, rot, tabTmp, sumPolY, sumPolTest);
                     printf("candidat DS64 trouvé !!\n");
                     printf("%llu\n", DS640);
