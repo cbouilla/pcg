@@ -5,3 +5,7 @@
 /Cunknown/test_falsenegative
 /Cunknown/benchmark
 /Cunknown/main
+/Cunknown/benchmark_omp
+/Cunknown/checkpoint.bin
+/challenges/pcg64-challenge
+/challenges/pcg64s-challenge
