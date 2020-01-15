@@ -35,10 +35,10 @@ def prodMatMat(M1,M2):
 ###### Redéfinition du PCG_128 (avec C aléatoire) ######
 
 def sortiesGenerateur():#OK !
-    #c = (r.randint(0, 2**(2 * k)) * 2 + 1) % 2**(2 * k) #c est impair
-    #S=[r.randint(0,2**(k * 2))]
-    c=6364136223846793005*2**64+1442695040888963407#increment par defaut de pcg (connu)
-    S=[8487854484825256858 + 11929896274893053136 * 2**64]
+    c = (r.randint(0, 2**(2 * k)) * 2 + 1) % 2**(2 * k) #c est impair
+    S=[r.randint(0,2**(k * 2))]
+    #c=6364136223846793005*2**64+1442695040888963407#increment par defaut de pcg (connu)
+    #S=[8487854484825256858 + 11929896274893053136 * 2**64]
     for i in range (nboutput-1):
         S.append((S[i]* a + c) % 2**(2 * k))
     X=[]
@@ -104,6 +104,8 @@ def FindDS64(uX, rot, W0,WC): #rajouter rot dans la version non test ? #OK! ~64b
 def FindRoti(DS640, X, i, Y0, W0,WC):#OK !
     DS640i = (polA[i] * DS640) % 2**k
     DSmod0i = ((DS640i << known_low) + W0 * powA[i] + WC * polA[i] - WC - W0) % 2**(k +known_low)
+    print("DS640i")
+    print(DS640i)
     # Yi = vraiYi ou vraiYi - 1 à cause de la retenue
     Yi1 = (Y0 + (DSmod0i >> (k - known_up))) % (1 << (known_low + known_up))#avec ou sans retenue
     Yi2 = Yi1 + 1
