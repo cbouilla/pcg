@@ -2,7 +2,7 @@ import time
 import random as r
 k = 64
 known_up  = 6
-known_low  = 11
+known_low  = 13
 a = 2549297995355413924 * 2^64 + 4865540595714422341
 nbiter = 5
 nboutput = 30
