@@ -1,5 +1,6 @@
 import time
 import random as r
+from fpylll import *
 k = 64
 known_up  = 6
 known_low  = 13
@@ -34,7 +35,7 @@ def getG(n,mod):
 def getGreduite(n,mod):
     G = getG(n,mod)
     return G.transpose().LLL().transpose()
-    
+
 def getInvG(Greduite):
     return Greduite.inverse().n()
 
@@ -59,6 +60,7 @@ def sortiesGenerateur():#OK !
         rot = S[i] >> (2 * k - known_up)
         X.append((x >> rot) | ((x << (k - rot)) % (1 << k)))
     return X,S,c
+
 
 ## Unrotate
 def rotateX(X, rot):#OK !
