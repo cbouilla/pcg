@@ -41,7 +41,7 @@ def getGreduite(n,mod):
 
 Greduite1 = getGreduite(nbiter - 1, 2^k)
 
-Greduite2 = getGreduitelll(nboutput - 1, 2^(2 * k - known_low))
+Greduite2 = getGreduite(nboutput - 1, 2^(2 * k - known_low))
 
 
 def sortiesGenerateur():#OK !
@@ -90,12 +90,12 @@ def getDY(Y, WC, W0): #OK ! avec erreurs de retenues ~64bits (polC polW)
     return DY
 
 ######FINDDS######
-def FindDS64(uX, rot, W0,WC, Greduite, G, invG): #rajouter rot dans la version non test ? #OK! ~64bits
+def FindDS64(uX, rot, W0,WC, Greduite): #rajouter rot dans la version non test ? #OK! ~64bits
     #polW = getPolW(W0)
     Y = getY(W0, WC, rot, uX)
     DY = getDY(Y, WC, W0) #OK avec erreurs de retenues!
     tmp = vector([y * 1<<(k - known_up - known_low) for y in DY])#on rajoute les zéros, recentrage impossible à cause des erreurs de retenues
-    DS64 = CVP.closest_vector(Greduite,tuple(tmp))
+    DS64 = f.CVP.closest_vector(Greduite,tuple(tmp))
     return DS64, Y[0]
 
 ######FINDROTI######
@@ -161,7 +161,7 @@ for blabla in range(n):
         rot.append(S[i] >> (2 * k - 6))
 
     uX = unrotateX(X,rot)    
-    DS64, Y0 = FindDS64(uX, rot, W0,WC, Greduite1, G1, invG1)#OK!
+    DS64, Y0 = FindDS64(uX, rot, W0,WC, Greduite1)#OK!
     tabrot = FindRot(DS64[0],X, Y0, W0, WC)#a l'air OK!
     test = 0
     if(len(tabrot) == 0):
