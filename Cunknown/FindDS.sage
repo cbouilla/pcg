@@ -7,7 +7,7 @@ known_up  = 6
 known_low  = 13
 a = 2549297995355413924 * 2^64 + 4865540595714422341
 nbiter = 5
-nboutput = 30
+nboutput = 40
 
 
 polA = [0];
@@ -31,29 +31,17 @@ def getG(n,mod):
                 G[i+1].append(mod)
             else:
                 G[i+1].append(0)
-    return matrix(G)
-        
-def getGreduite(n,mod):
-    G = getG(n,mod)
-    Gr = G.transpose().LLL().transpose()
-    return Gr
+    return matrix(G)        
 
-def getGreduitelll(n,mod):
+def getGreduite(n,mod):
     G = getG(n,mod)
     Gr = G.transpose().LLL()
     Glll = f.IntegerMatrix.from_matrix(Gr)
     return Glll
 
-def getInvG(Greduite):
-    return Greduite.inverse().n()
-
-
-Greduite1 = getGreduitelll(nbiter - 1, 2^k)
-G1 = getGreduite(nbiter - 1, 2^k)
-invG1 = getInvG(G1)
+Greduite1 = getGreduite(nbiter - 1, 2^k)
 
 Greduite2 = getGreduitelll(nboutput - 1, 2^(2 * k - known_low))
-#invG2 = getInvG(Greduite2)
 
 
 def sortiesGenerateur():#OK !
@@ -143,9 +131,6 @@ def findDS(rot, Greduite): #OK!
         rotprim.append((rot[i] - ((powA[i] * W0 + polA[i] * WC) >> (2 * k - known_up))) % (1<<known_up))
     tmp = vector([(rotprim[i+1] - rotprim[i]) << (2 * k - known_up - known_low) for i in range(nboutput - 1)])
     return f.CVP.closest_vector(Greduite,tuple(tmp))
-    '''u = invG * tmp
-    tmp = vector([round(u_) for u_ in u])
-    return Greduite * tmp'''
 
 
 def reclistDS(rot, tabrot, Greduite, i):
@@ -164,7 +149,7 @@ def reclistDS(rot, tabrot, Greduite, i):
 ######## ATTENTION CHANGEMENT DE KNOWN_UP DANS LA DEUXIEME PARTIE A RAJOUTER (POUR LE MOMENT 4% DE REUSSITE)
 cpt = 0
 cptcaca = 0
-n = 200
+n = 100
 #X, S,c = sortiesGenerateur()
 for blabla in range(n):
     X, S,c = sortiesGenerateur()
