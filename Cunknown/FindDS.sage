@@ -1,6 +1,7 @@
 import time
 import random as r
-from fpylll import *
+import fpylll as f
+
 k = 64
 known_up  = 6
 known_low  = 13
@@ -34,17 +35,25 @@ def getG(n,mod):
         
 def getGreduite(n,mod):
     G = getG(n,mod)
-    return G.transpose().LLL().transpose()
+    Gr = G.transpose().LLL().transpose()
+    return Gr
+
+def getGreduitelll(n,mod):
+    G = getG(n,mod)
+    Gr = G.transpose().LLL()
+    Glll = f.IntegerMatrix.from_matrix(Gr)
+    return Glll
 
 def getInvG(Greduite):
     return Greduite.inverse().n()
 
 
-Greduite1 = getGreduite(nbiter - 1, 2^k)
-invG1 = getInvG(Greduite1)
+Greduite1 = getGreduitelll(nbiter - 1, 2^k)
+G1 = getGreduite(nbiter - 1, 2^k)
+invG1 = getInvG(G1)
 
-Greduite2 = getGreduite(nboutput - 1, 2^(2 * k - known_low))
-invG2 = getInvG(Greduite2)
+Greduite2 = getGreduitelll(nboutput - 1, 2^(2 * k - known_low))
+#invG2 = getInvG(Greduite2)
 
 
 def sortiesGenerateur():#OK !
@@ -93,14 +102,12 @@ def getDY(Y, WC, W0): #OK ! avec erreurs de retenues ~64bits (polC polW)
     return DY
 
 ######FINDDS######
-def FindDS64(uX, rot, W0,WC, invG, Greduite): #rajouter rot dans la version non test ? #OK! ~64bits
+def FindDS64(uX, rot, W0,WC, Greduite, G, invG): #rajouter rot dans la version non test ? #OK! ~64bits
     #polW = getPolW(W0)
     Y = getY(W0, WC, rot, uX)
     DY = getDY(Y, WC, W0) #OK avec erreurs de retenues!
     tmp = vector([y * 1<<(k - known_up - known_low) for y in DY])#on rajoute les zéros, recentrage impossible à cause des erreurs de retenues
-    u = invG * tmp
-    tmp = vector([round(u_) for u_ in u])
-    DS64 = Greduite * tmp
+    DS64 = CVP.closest_vector(Greduite,tuple(tmp))
     return DS64, Y[0]
 
 ######FINDROTI######
@@ -130,55 +137,53 @@ def FindRot(DS640,X, Y0, W0, WC): #OK !
             return []
     return tabrot
 
-def findDS(rot, Greduite, invG): #OK!
+def findDS(rot, Greduite): #OK!
     rotprim = []
     for i in range(nboutput):
         rotprim.append((rot[i] - ((powA[i] * W0 + polA[i] * WC) >> (2 * k - known_up))) % (1<<known_up))
     tmp = vector([(rotprim[i+1] - rotprim[i]) << (2 * k - known_up - known_low) for i in range(nboutput - 1)])
-    u = invG * tmp
+    return f.CVP.closest_vector(Greduite,tuple(tmp))
+    '''u = invG * tmp
     tmp = vector([round(u_) for u_ in u])
-    return Greduite * tmp
+    return Greduite * tmp'''
 
 
-def reclistDS(rot, tabrot, Greduite, invG, i):
+def reclistDS(rot, tabrot, Greduite, i):
     DS = []
     #print("taille tabrot", len(tabrot), "i", i)
     if(i == nboutput):
-        DS = [findDS(rot, Greduite, invG)]
+        DS = [findDS(rot, Greduite)]
         return(DS)
     #print(tabrot[i])
     for r in tabrot[i]:
         rot.append(r)
-        DS += reclistDS(copy(rot), tabrot, Greduite, invG, i+1)
+        DS += reclistDS(copy(rot), tabrot, Greduite, i+1)
     return(DS)
 
 
 ######## ATTENTION CHANGEMENT DE KNOWN_UP DANS LA DEUXIEME PARTIE A RAJOUTER (POUR LE MOMENT 4% DE REUSSITE)
 cpt = 0
 cptcaca = 0
-n = 100
-
+n = 200
 #X, S,c = sortiesGenerateur()
 for blabla in range(n):
     X, S,c = sortiesGenerateur()
 
     W0 = S[0] % (1 << known_low)
     WC = c % (1 << known_low)
-    up =[]
     rot = []
     for i in range(nboutput):
-        up.append(S[i] >> (2 * k - known_up))
         rot.append(S[i] >> (2 * k - 6))
 
     uX = unrotateX(X,rot)    
-    DS64, Y0 = FindDS64(uX, up, W0,WC, invG1, Greduite1)#OK!
+    DS64, Y0 = FindDS64(uX, rot, W0,WC, Greduite1, G1, invG1)#OK!
     tabrot = FindRot(DS64[0],X, Y0, W0, WC)#a l'air OK!
     test = 0
     if(len(tabrot) == 0):
         cptcaca += 1
     else:
         rot = []
-        listDS = reclistDS(rot, tabrot, Greduite2, invG2, 0)
+        listDS = reclistDS(rot, tabrot, Greduite2, 0)
         for DS in listDS:
             Sprim = [(S[i] - polA[i] * (c % 1<<known_low) - powA[i] * (S[0] % 2^known_low)) % 2^128 for i in range(nboutput)]
             if(DS[0] == ((Sprim[1] - Sprim[0]) >> known_low)):
@@ -187,5 +192,7 @@ for blabla in range(n):
     #print(DS[0])
     #print(12615681514276467327 * 2^64 + 8299778918817149495)
 print(n)
+print("cpt:")
 print(cpt)
+print("cptcaca:")
 print(cptcaca)
