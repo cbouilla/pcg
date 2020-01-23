@@ -133,7 +133,7 @@ def findDS(rot, Greduite): #OK!
     return f.CVP.closest_vector(Greduite,tuple(tmp))
 
 
-def reclistDS(rot, tabrot, Greduite, i):
+def recFindDS(rot, tabrot, Greduite, i):
     DS = []
     #print("taille tabrot", len(tabrot), "i", i)
     if(i == nboutput):
@@ -149,7 +149,7 @@ def reclistDS(rot, tabrot, Greduite, i):
 ######## ATTENTION CHANGEMENT DE KNOWN_UP DANS LA DEUXIEME PARTIE A RAJOUTER (POUR LE MOMENT 4% DE REUSSITE)
 cpt = 0
 cptcaca = 0
-n = 100
+n = 1000
 #X, S,c = sortiesGenerateur()
 for blabla in range(n):
     X, S,c = sortiesGenerateur()
@@ -168,7 +168,7 @@ for blabla in range(n):
         cptcaca += 1
     else:
         rot = []
-        listDS = reclistDS(rot, tabrot, Greduite2, 0)
+        listDS = recFindDS(rot, tabrot, Greduite2, 0)
         for DS in listDS:
             Sprim = [(S[i] - polA[i] * (c % 1<<known_low) - powA[i] * (S[0] % 2^known_low)) % 2^128 for i in range(nboutput)]
             if(DS[0] == ((Sprim[1] - Sprim[0]) >> known_low)):
