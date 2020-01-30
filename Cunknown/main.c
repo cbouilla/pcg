@@ -170,7 +170,7 @@ void result_found(const u64 *X, u64 W0, u64 WC, u64 r)
     
     u64 c = (W0 << (known_low - 1)) + WC;
     char filename[255];
-    sprintf(filename, "solution-%08llx.txt", c);
+    sprintf(filename, "results/solution-%08llx.txt", c);
     FILE *f = fopen(filename, "a");
     if (f == NULL)
         err(1, "cannot open solution file");

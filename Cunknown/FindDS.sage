@@ -1,6 +1,7 @@
 import time
 import random as r
 import fpylll as f
+import os
 
 k = 64
 known_up  = 6
@@ -42,6 +43,19 @@ def getGreduite(n,mod):
 Greduite1 = getGreduite(nbiter - 1, 2^k)
 
 Greduite2 = getGreduite(nboutput - 1, 2^(2 * k - known_low))
+
+
+#### Récupération des données ####
+'''def recupDonnees():
+    listfiles = os.listdir('results')
+    print(listfiles)
+    listDonnees = []
+    for i in range(listfiles):
+        listDonnees.append[]
+        f = open(listfiles[i], "r")
+        while(1):
+            s = f.readline()'''
+            
 
 
 def sortiesGenerateur():#OK !
@@ -91,7 +105,6 @@ def getDY(Y, WC, W0): #OK ! avec erreurs de retenues ~64bits (polC polW)
 
 ######FINDDS######
 def FindDS64(uX, rot, W0,WC, Greduite): #rajouter rot dans la version non test ? #OK! ~64bits
-    #polW = getPolW(W0)
     Y = getY(W0, WC, rot, uX)
     DY = getDY(Y, WC, W0) #OK avec erreurs de retenues!
     tmp = vector([y * 1<<(k - known_up - known_low) for y in DY])#on rajoute les zéros, recentrage impossible à cause des erreurs de retenues
@@ -135,22 +148,19 @@ def findDS(rot, Greduite): #OK!
 
 def recFindDS(rot, tabrot, Greduite, i):
     DS = []
-    #print("taille tabrot", len(tabrot), "i", i)
     if(i == nboutput):
         DS = [findDS(rot, Greduite)]
         return(DS)
-    #print(tabrot[i])
     for r in tabrot[i]:
         rot.append(r)
-        DS += reclistDS(copy(rot), tabrot, Greduite, i+1)
+        DS += recFindDS(copy(rot), tabrot, Greduite, i+1)
     return(DS)
 
 
-######## ATTENTION CHANGEMENT DE KNOWN_UP DANS LA DEUXIEME PARTIE A RAJOUTER (POUR LE MOMENT 4% DE REUSSITE)
 cpt = 0
-cptcaca = 0
+cptrotfail = 0
 n = 1000
-#X, S,c = sortiesGenerateur()
+#recupDonnees()
 for blabla in range(n):
     X, S,c = sortiesGenerateur()
 
@@ -165,7 +175,7 @@ for blabla in range(n):
     tabrot = FindRot(DS64[0],X, Y0, W0, WC)#a l'air OK!
     test = 0
     if(len(tabrot) == 0):
-        cptcaca += 1
+        cptrotfail += 1
     else:
         rot = []
         listDS = recFindDS(rot, tabrot, Greduite2, 0)
@@ -174,10 +184,8 @@ for blabla in range(n):
             if(DS[0] == ((Sprim[1] - Sprim[0]) >> known_low)):
                 test = 1
     cpt += test
-    #print(DS[0])
-    #print(12615681514276467327 * 2^64 + 8299778918817149495)
 print(n)
 print("cpt:")
 print(cpt)
-print("cptcaca:")
-print(cptcaca)
+print("cptrotfail:")
+print(cptrotfail)
