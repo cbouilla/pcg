@@ -43,7 +43,7 @@ def getGreduite(n,mod):
 Greduite1 = getGreduite(nbiter - 1, 2^k)
 
 Greduite2 = getGreduite(nboutput - 1, 2^(2 * k - known_low))
-
+print("Vecteur réputé court de taille : 2^{:.1f}".format(float(log(Greduite2[0].norm(), 2).n())))
 
 #### Récupération des données ####
 '''def recupDonnees():
@@ -138,22 +138,30 @@ def FindRot(DS640,X, Y0, W0, WC): #OK !
             return []
     return tabrot
 
-def findDS(rot, Greduite): #OK!
+def findDS(rot, Greduite, cheat_DS): #OK!
     rotprim = []
     for i in range(nboutput):
-        rotprim.append((rot[i] - ((powA[i] * W0 + polA[i] * WC) >> (2 * k - known_up))) % (1<<known_up))
-    tmp = vector([(rotprim[i+1] - rotprim[i]) << (2 * k - known_up - known_low) for i in range(nboutput - 1)])
+        rotprim.append((((rot[i] << 122) - (powA[i] * W0 + polA[i] * WC)) >> known_low) % (1 << (128 - known_low)))
+    
+    # approximation de cheat_DS
+    tmp = vector([(rotprim[i+1] - rotprim[i])  for i in range(nboutput - 1)])
+    
+    # distance entre approx et vraie solution
+    norm = sqrt(sum([(tmp[i] - cheat_DS[i])**2 for i in range(nboutput - 1)]))
+
+    print("distance : 2^{:.1f}".format(float(log(norm, 2).n())))
+
     return f.CVP.closest_vector(Greduite,tuple(tmp))
 
 
-def recFindDS(rot, tabrot, Greduite, i):
+def recFindDS(rot, tabrot, Greduite, i, cheat_DS):
     DS = []
     if(i == nboutput):
-        DS = [findDS(rot, Greduite)]
+        DS = [findDS(rot, Greduite, cheat_DS)]
         return(DS)
     for r in tabrot[i]:
         rot.append(r)
-        DS += recFindDS(copy(rot), tabrot, Greduite, i+1)
+        DS += recFindDS(copy(rot), tabrot, Greduite, i+1, cheat_DS)
     return(DS)
 
 
@@ -162,13 +170,17 @@ cptrotfail = 0
 n = 1000
 #recupDonnees()
 for blabla in range(n):
-    X, S,c = sortiesGenerateur()
+    X, S, c = sortiesGenerateur()    
 
     W0 = S[0] % (1 << known_low)
     WC = c % (1 << known_low)
     rot = []
     for i in range(nboutput):
         rot.append(S[i] >> (2 * k - 6))
+
+    Y = [((S[i] - (powA[i] * W0 + polA[i] * WC)) >> known_low) % (1 << (2*k - known_low)) for i in range(nboutput)]
+    cheat_DS = [(Y[i + 1] - Y[i]) % (1 << (2*k - known_low)) for i in range(nboutput - 1)]
+    assert vector(cheat_DS) in matrix(Greduite2).image()
 
     uX = unrotateX(X,rot)    
     DS64, Y0 = FindDS64(uX, rot, W0,WC, Greduite1)#OK!
@@ -178,7 +190,7 @@ for blabla in range(n):
         cptrotfail += 1
     else:
         rot = []
-        listDS = recFindDS(rot, tabrot, Greduite2, 0)
+        listDS = recFindDS(rot, tabrot, Greduite2, 0, cheat_DS)
         for DS in listDS:
             Sprim = [(S[i] - polA[i] * (c % 1<<known_low) - powA[i] * (S[0] % 2^known_low)) % 2^128 for i in range(nboutput)]
             if(DS[0] == ((Sprim[1] - Sprim[0]) >> known_low)):
