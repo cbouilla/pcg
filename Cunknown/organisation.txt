@@ -19,16 +19,12 @@ et maintenant, on teste la parallélisation à l'intérieur des tâches
 22 threads --> 32.88s, 522.5M/s, 23.8M/s/thread
 11 threads --> 58.52s, 293.6M/s, 26.7M/s/thread
 
-c'est moins bien !
 
-2048^2 / 80 tâches de 33.6s == 52 428 "jobs" de 33.6s --> 20000 h*CPU sur jz
+vraies mesures sur jean-zay (benchmark_omp, 80 threads)
+===========================
 
-known_low = 12
-==============
+C known --> attention, compiler sur un vrai noeud ! 22.7s avec hyperthreading, 29.0s sans.
 
-80000 h*CPU sur jz
-
-known_low = 13
-==============
-
-320000 h*CPU sur jz
+C unkonwn, known_low = 13 ---> Attaque complète = 358K h-CPU
+C unkonwn, known_low = 12 ---> Attaque complète = 98K h-CPU
+C unkonwn, known_low = 11 ---> Attaque complète = 22K h-CPU

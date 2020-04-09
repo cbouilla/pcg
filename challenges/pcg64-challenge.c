@@ -27,20 +27,23 @@ int main()
     pcg64_random_t rng;
     pcg64_srandom_r(&rng, seeds[0], seeds[1]);
     
+    int known_low = 11;
+    if (DEBUG) {
+        printf("known_low = %d\n", known_low);
+        printf("W_c = %04llx\n", (unsigned long long) (rng.inc % (1 << known_low)));
+    }
+
     printf("Predictor input:\n");
     for (int i = 0; i < 32; i++) {
-        printf("X[%2d] = 0x%016" PRIx64 "\n", i, pcg64_random_r(&rng));
-        if (i == 0 && DEBUG) {
-            int known_low = 13;
-            printf("known_low = %d\n", known_low);
-            printf("W_0 = %04lld\n", (unsigned long long) (rng.state % (1 << known_low)));
-            printf("W_c = %04lld\n", (unsigned long long) (rng.inc % (1 << known_low)));
-        }
+        printf("X[%2d] = 0x%016" PRIx64 ";", i, pcg64_random_r(&rng));
+        if (DEBUG)
+            printf("\t // W_0 = %04llx", (unsigned long long) (rng.state % (1 << known_low)));
+        printf("\n");
     }
     printf("\n");
     printf("Remaining of the sequence (predictor output, in principle):\n");
     for (int i = 32; i < 48; i++)
-        printf("X[%2d] = 0x%016" PRIx64 "\n", i, pcg64_random_r(&rng));
+        printf("X[%2d] = 0x%016" PRIx64 ";\n", i, pcg64_random_r(&rng));
 
     return EXIT_SUCCESS;
 }

@@ -1,4 +1,4 @@
-#include <stdint.h>
+#include <inttypes.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -13,7 +13,7 @@ typedef unsigned long long u64;
 /***** Macro et Variables globales *****/
 #define k 64
 #define known_up 6
-#define known_low 11 //à relancer 3 fois, sur des X differents (X0 - X4 ,X5 - X9,...) puis lancé avec 12 et enfin 13
+#define known_low 11 //à relancer 3 fois, sur des X differents (X0 - X4 ,X5 - X9,...) puis lancer avec 12 et enfin 13
 #define nbiter 5
 #define nbtest 4
 #define nboutput (nbiter + nbtest)

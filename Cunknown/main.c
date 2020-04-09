@@ -186,7 +186,7 @@ void do_task(u64 current, struct task_t *task, const u64 *X)
 {
     u64 W0 = current >> (known_low - 1);
     u64 WC = 1 + 2 * (current % (1 << (known_low - 1)));
-    printf("Doing task %lld / %lld\n", W0, WC);
+    printf("Doing task %04llx / %04llx (W_0 / W_c)\n", W0, WC);
     
     prepare_task(X, W0, WC, task);
     for (u64 r = 0; r < 1 << (nbiter * known_up); r++) {
@@ -202,6 +202,17 @@ void do_task(u64 current, struct task_t *task, const u64 *X)
     finish_task(X, task);
 }
 
+/* 
+ * This runs an (embarassingly parallel) exhaustive search. 
+ * The search space is split into "tasks". Tasks are numbered.
+ * Tasks have the same running time
+ * All tasks must be done to solve the problem.
+ * Tasks are distributed to MPI ranks sequentially (block-wise).
+ * Each MPI rank run tasks on all threads synchronously.
+ * Inside an MPI rank, the state of each thread is initialized by init_task().
+ * All threads run do_task() with a different task number synchronously.
+ * After all threads have run a task, a checkpoint is taken. */
+
 
 int main(int argc, char **argv)
 {
@@ -213,16 +224,23 @@ int main(int argc, char **argv)
     /*  INITIALISATION DES PARAMETRES  */
     init_var_globales();
         
-    u64 X[9];
-    X[0] = 0x47a42ee112e8afb9;
-    X[1] = 0xf5e7948dbc0c7e26;
-    X[2] = 0x91724bdca45a78a4;
-    X[3] = 0x1be0e7e5b398b248;
-    X[4] = 0x6f8b727451e185a8;
-    X[5] = 0x976d59bba78ef4e2;
-    X[6] = 0xc588c4c6c9052cba;
-    X[7] = 0x9cc0fc58615e1b87;
-    X[8] = 0xec7c5d6ee9992147;
+    u64 X[12];
+    X[ 0] = 0xe60f77ceac8f6cd9;  // W_0 = 00ed
+    X[ 0] = 0xa21bd9d52bb064fa;  // W_0 = 01ec
+    X[ 1] = 0xde3e78a8e09e5d29;  // W_0 = 00a7
+    X[ 2] = 0xdbbe7755775e52ac;  // W_0 = 030e
+    X[ 3] = 0xe553b06143b2e108;  // W_0 = 02d1
+    X[ 4] = 0x4d99972ab762dae8;  // W_0 = 0460
+    X[ 5] = 0x27af5ab26f846d1d;  // W_0 = 01eb
+    X[ 6] = 0xd360f68fcc697b33;  // W_0 = 0262
+    X[ 7] = 0x746b18d4b67a4e61;  // W_0 = 0475
+    X[ 8] = 0x9be7410a83ddc14a;  // W_0 = 0594
+    X[ 9] = 0x6c2b07bed5b9fe0b;  // W_0 = 04ef
+    X[10] = 0x2fc807378a7bff2b;  // W_0 = 0276
+      
+
+   
+
 
     u64 range_start, range_end, done;
     restart(X, &range_start, &range_end, &done);
@@ -239,9 +257,9 @@ int main(int argc, char **argv)
     }
     
     /* DEBUG */
-    // W_0 = 7984
-    // W_c = 7673
-    range_start = (7984 << (known_low - 1)) + (7673 - 1) / 2;
+    // W_0 = 0x01ec
+    // W_c = 0x040b
+    range_start = (0x01ec << (known_low - 1)) + (0x040b - 1) / 2;
 
     while (range_start < range_end) {
         #pragma omp parallel
