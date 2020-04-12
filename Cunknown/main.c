@@ -203,6 +203,8 @@ void master()
 	int active_ranks;
 	int done = 0;
 	MPI_Comm_size(MPI_COMM_WORLD, &active_ranks);
+	active_ranks *= 2; /* because of the hack that runs two "threads" per MPI rank */
+
 	while (active_ranks > 0) {
 		MPI_Status status;
 		int msg;
