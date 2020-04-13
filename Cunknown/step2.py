@@ -1,3 +1,4 @@
+import re
 import time
 import fpylll
 import os
@@ -7,7 +8,7 @@ import random
 
 k = 64
 known_up  = 6
-known_low  = 13
+known_low  = 11
 a = 2549297995355413924 * 2**64 + 4865540595714422341
 nbiter = 5
 nboutput = 40
@@ -221,7 +222,7 @@ def findDSdebug(rot, W0, WC): #OK!
     return fpylll.CVP.closest_vector(Greduite2, tmp, method = "proved")
 
 
-def full_DS(W0, WC, rots):
+def full_DS(X, W0, WC, rots):
     uX = unrotateX(X,rot)    
     DS64, Y0 = FindDS64(uX, rot, W0, WC)#OK!
 
@@ -241,35 +242,79 @@ def full_DS(W0, WC, rots):
 
 
 
-
 if __name__ == '__main__':
-    # teste la proba de succès des algorithmes
-    n = 1000
-    success = 0
-    for _ in range(n):
-      try:
-        X, S, c = sortiesGenerateur()    
-    
-        # génère ce qu'on est pas censé connaître, et que le gros calcul doit retrouver
-        W0 = S[0] % LOW
-        WC = c % LOW
-        rot = []
-        for i in range(nboutput):
-            rot.append(S[i] >> 122)
+    X = [0] * 48
+    X[ 1] = 0xd4166f4c3e02d10a;
+    X[ 2] = 0x1d1ceb21e7737101;
+    X[ 3] = 0xf8b90f473a5426d3;
+    X[ 4] = 0xe3a3b7babb2ad9ca;
+    X[ 5] = 0x0077f2c80987dd13;
+    X[ 6] = 0xf8ddaf2431548a13;
+    X[ 7] = 0x80935e041bbab85a;
+    X[ 8] = 0xbe0fde3939201c50;
+    X[ 9] = 0xe9604fdf6b2177b7;
+    X[10] = 0x95d9cf24a229cedf;
+    X[11] = 0x0434a85418759293;
+    X[12] = 0x04d230c1debe7999;
+    X[13] = 0x83a3cd257d4d04b0;
+    X[14] = 0x13990a23037c13c4;
+    X[15] = 0xfbfaea2e50411202;
+    X[16] = 0x421a394a36baebf8;
+    X[17] = 0x5a878c4594ea7221;
+    X[18] = 0xbd37307bdd522b9c;
+    X[19] = 0x39af06b3e9b3ae10;
+    X[20] = 0x1d21f1cee77b8e2e;
+    X[21] = 0xe4bddad0aacaf420;
+    X[22] = 0x1009ed344cd7f2f4;
+    X[23] = 0xff287c5797cceb71;
+    X[24] = 0x85e8968b0d8ab49b;
+    X[25] = 0x69a9b821830862cc;
+    X[26] = 0xf9fe65ed23740aea;
+    X[27] = 0x47669184bc43d948;
+    X[28] = 0xe3f19b31915ae6d3;
+    X[29] = 0x5f3945718b6dac44;
+    X[30] = 0x49bfacfe8056b33c;
+    X[31] = 0xf2b358ceb722628f;
+    X[32] = 0xb4d1bf17f2c57b71;
+    X[33] = 0xb4300000ad802deb;
+    X[34] = 0xe3125e8022de888d;
+    X[35] = 0x2c7f6d404196ed4d;
+    X[36] = 0xb10490274ecbe897;
+    X[37] = 0xb04da8a406da3814;
+    X[38] = 0xbc70124be9a196c9;
+    X[39] = 0xf81a244f765141e6;
+    X[40] = 0x20413cda8442a149;
+    X[41] = 0xf654f8084029c557;
+    X[42] = 0xa1677f2f18f8484c;
+    X[43] = 0x3ef4f6e355c53e70;
+    X[44] = 0x30cceccd8f73c567;
+    X[45] = 0xf22a193ded925cb6;
+    X[46] = 0xa9c0cba2f6abbd89;
+    X[47] = 0xf26c7311f52ededb;
+    del X[0]
 
-        listDS = full_DS(W0, WC, rot)
-    
-        test = False
-        for DS in listDS:
-            true_DS = ((DS[0] << known_low) + (a-1) * W0 + WC) % N
-            if true_DS == (S[1] - S[0]) % N:
-                test = True
-
-        if not test:
-            raise TypeError("full_DS failed")
-        success += 1
-
-      except ValueError as e:
-        print(repr(e))
-
-    print("success: {} / {}".format(success, n))
+    regex = re.compile(r"W_0 = (?P<W0>[0-9a-f]+) / W_c = (?P<WC>[0-9a-f]+) / r = (?P<r>[0-9a-f]+)")
+    with open("../logs/solutions.txt") as f:
+        for line in f:
+            m = regex.match(line)
+            if not m:
+                continue
+            
+            W0 = int(m['W0'], base=16)
+            WC = int(m['WC'], base=16)
+            r = int(m['r'], base=16)
+            
+            r += 1
+            rot = []
+            for _ in range(nbiter):
+                x = r % 64
+                r = r // 64
+                rot.append(x)
+            
+            try:
+                listDS = full_DS(X, W0, WC, rot)
+                for DS in listDS:
+                    true_DS = ((DS[0] << known_low) + (a-1) * W0 + WC) % N
+                    print("Got W_0 = {:04x}, W_c = {:04x}, DS = {:032x}".format(W0, WC, true_DS))
+            except ValueError as e:
+                pass

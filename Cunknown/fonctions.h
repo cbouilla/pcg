@@ -37,8 +37,8 @@ struct task_t {
 /***** Fonctions *****/
 void init_var_globales();
 void init_task(struct task_t *t);
-void prepare_task(const u64 *X, u64 W0, u64 WC, struct task_t *t);
-void finish_task(const u64 *X, struct task_t *t);
+void prepare_task(const u64 (*X)[nboutput], u64 W0, u64 WC, struct task_t *t);
+void finish_task(const u64 (*X)[nboutput], struct task_t *t);
 double wtime();
 bool solve_isgood(const struct task_t *task);
 void solve(const struct task_t *task, u64* DS640, u64* Y0);

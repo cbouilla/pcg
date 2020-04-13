@@ -70,12 +70,12 @@ static inline void setbit(char *goodY, int i, u64 Y, int v)
 		goodY[j] &= ~(1 << l);
 }
 
-void getGoodY(char* goodY, const u64* X, const u64* lowSumPol, int v)
+void getGoodY(char* goodY, const u64 (*X)[nboutput], const u64* lowSumPol, int v)
 {
 	for (int i = 0 ; i < nbtest ; i++){
 		u64 Wi = lowSumPol[nbiter + i] % (1 << known_low);
 	    for (int j = 0 ; j < k ; j++){
-	        u64 Xij = unrotate(X[i + nbiter], j);
+	        u64 Xij = unrotate((*X)[i + nbiter], j);
 	        u64 goodYi1 = (((Xij % (1 << known_low)) ^ Wi) << known_up) ^ (j ^ (Xij >> (k - known_up)));
 	        u64 goodYi2 = (goodYi1 - 1) % (1 << (known_low + known_up));
 	        setbit(goodY, i, goodYi1, v);
@@ -95,6 +95,7 @@ static inline int checkY(const char* goodY, int i, u64 Y)
 	return (goodY[j] >> l) & 1;
 }
 
+/* THIS is also time-critical */
 static inline bool confirm(u64 Y0, u64 DS640, const struct task_t *task)
 {
 	/**** Confirmation du DS640 ****/
@@ -126,7 +127,7 @@ static inline long long light_crazy_round(double x)
     return magic.l;
 }
 
-
+/* THIS is the time-critical function */
 bool solve_isgood(const struct task_t *task)
 {
     /**** Recherche du DS640 ****/
@@ -207,7 +208,7 @@ void init_task(struct task_t *t)
         t->goodY[y] = 0;
 }
 
-void prepare_task(const u64 *X, u64 W0, u64 WC, struct task_t *t)
+void prepare_task(const u64 (*X)[nboutput], u64 W0, u64 WC, struct task_t *t)
 {
     for (int i = 0 ; i < nbiter ; i++) {
         t->lowSumPol[i]  = (W0 * ((u64) powA[i]) + WC * ((u64) polA[i]));
@@ -223,7 +224,7 @@ void prepare_task(const u64 *X, u64 W0, u64 WC, struct task_t *t)
     // getTabTmp(t->tabTmp, X, t->lowSumPol, t->sumPolY);
     for (int i = 0 ; i < k ; i++) {
         for (int j = 0 ; j < nbiter ; j++) {
-            u64 uX = unrotate(X[j], i);
+            u64 uX = unrotate((*X)[j], i);
             t->tabTmp[i * nbiter + j] = (((t->lowSumPol[j] % (1 << known_low)) ^ (uX % (1 << known_low))) << known_up) + (i ^ (uX >> (k - known_up))) - t->sumPolY[j];
         }
     }
@@ -232,7 +233,7 @@ void prepare_task(const u64 *X, u64 W0, u64 WC, struct task_t *t)
         t->rot[i] = 0;
 }
 
-void finish_task(const u64 *X, struct task_t *t)
+void finish_task(const u64 (*X)[nboutput], struct task_t *t)
 {
     getGoodY(t->goodY, X, t->lowSumPol, 0);
 }

@@ -34,7 +34,7 @@ int main()
     }
 
     printf("Predictor input:\n");
-    for (int i = 0; i < 32; i++) {
+    for (int i = 0; i < 48; i++) {
         printf("X[%2d] = 0x%016" PRIx64 ";", i, pcg64_random_r(&rng));
         if (DEBUG)
             printf("\t // W_0 = %04llx", (unsigned long long) (rng.state % (1 << known_low)));
@@ -42,7 +42,7 @@ int main()
     }
     printf("\n");
     printf("Remaining of the sequence (predictor output, in principle):\n");
-    for (int i = 32; i < 48; i++)
+    for (int i = 48; i < 64; i++)
         printf("X[%2d] = 0x%016" PRIx64 ";\n", i, pcg64_random_r(&rng));
 
     return EXIT_SUCCESS;

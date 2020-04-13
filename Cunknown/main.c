@@ -10,12 +10,13 @@
 
 static const bool VERBOSE = false;
 
+
 enum chkpt_status {GOOD_CHECKPOINT, NO_CHECKPOINT, BAD_CHECKPOINT};
 struct checkpoint_t {
     u64 known_bits;
-    u64 X[nbiter];
+    u64 X[nboutput];
 };
-u64 X[12];
+
 enum task_status_t {READY, SENT, DONE};
 int tag_hello = 0;
 int tag_task = 1;
@@ -24,7 +25,7 @@ int tag_result = 3;
 const char * journal_filename = "journal.log";
 
 
-enum chkpt_status load_journal(enum task_status_t *tasks)
+enum chkpt_status load_journal(const u64 (*X)[nboutput], enum task_status_t *tasks)
 {
 	/* try to load checkpoint file */
 	FILE *f = fopen(journal_filename, "r");
@@ -45,9 +46,9 @@ enum chkpt_status load_journal(enum task_status_t *tasks)
 		printf("Guessed bits mismatch. Now=%d, in checkpoint=%lld.\n", known_low, chkpt.known_bits);
 		return BAD_CHECKPOINT;
 	}
-	for (int i = 0; i < nbiter; i++)
-		if (X[i] != chkpt.X[i]) {
-			printf("X[%d] mismatch. Now=%llx, in checkpoint=%llx.\n", i, X[i], chkpt.X[i]);
+	for (int i = 0; i < nboutput; i++)
+		if ((*X)[i] != chkpt.X[i]) {
+			printf("X[%d] mismatch. Now=%llx, in checkpoint=%llx.\n", i, (*X)[i], chkpt.X[i]);
 		   	return BAD_CHECKPOINT;
 		}
 
@@ -75,7 +76,7 @@ enum chkpt_status load_journal(enum task_status_t *tasks)
 }
 
 
-void save_journal_header()
+void save_journal_header(const u64 (*X)[nboutput])
 {
 	struct checkpoint_t chkpt;
 	int size;
@@ -83,8 +84,8 @@ void save_journal_header()
 
 	/* prepare checkpoint data */
 	chkpt.known_bits = known_low;
-	for (int i = 0; i < nbiter; i++)
-		chkpt.X[i] = X[i];
+	for (int i = 0; i < nboutput; i++)
+		chkpt.X[i] = (*X)[i];
 
 	/* try to open journal file */
 	FILE *f = fopen(journal_filename, "w");
@@ -101,7 +102,7 @@ void save_journal_header()
 }
 
 
-void result_found(const u64 *X, u64 W0, u64 WC, u64 r)
+void result_found(const u64 (*X)[nboutput], u64 W0, u64 WC, u64 r)
 {
     /* we print it just in case something goes wrong... */
     printf("solution found : W_0 = %04llx / W_c = %04llx / r = %08llx\n", W0, WC, r);
@@ -113,14 +114,14 @@ void result_found(const u64 *X, u64 W0, u64 WC, u64 r)
     if (f == NULL)
 	err(1, "cannot open solution file");
     for (int i = 0; i < nbiter; i++)
-	fprintf(f, "X[%d] = %llx\n", i, X[i]);
+	fprintf(f, "X[%d] = %llx\n", i, (*X)[i]);
     fprintf(f, "W_0 = %04llx / W_c = %04llx / r = %08llx\n", W0, WC, r);
     fprintf(f, "==============================================\n");
     fclose(f);
 }
 
 
-void do_task(u64 current, struct task_t *task, const u64 *X)
+void do_task(u64 current, struct task_t *task, const u64 (*X)[nboutput])
 {
     double start = MPI_Wtime();
     u64 W0 = current >> (known_low - 1);
@@ -164,7 +165,7 @@ void do_task(u64 current, struct task_t *task, const u64 *X)
  * Observed 6750 task/h on one node.
  * So we need 310 node-hours (we will be billed 12.4K cpu-hours).
  */
-void master() 
+void master(const u64 (*X)[nboutput]) 
 {
 	int n_tasks = 1 << (2 * known_low - 1);    
 	enum task_status_t *tasks = malloc(sizeof(*tasks) * n_tasks);
@@ -176,24 +177,26 @@ void master()
 		tasks[i] = READY;
 	int task_ptr = 0;
 
-	enum chkpt_status status = load_journal(tasks);
+	enum chkpt_status status = load_journal(X, tasks);
 	switch (status) {
 	case BAD_CHECKPOINT:
 	    printf("BAD CHECKPOINT. Refusing to start. Please clean up the mess\n");
 	    exit(EXIT_FAILURE);
 	case NO_CHECKPOINT:
 	    printf("COLD START.\n");
-	    save_journal_header();
+	    save_journal_header(X);
 	    break;
 	case GOOD_CHECKPOINT:
 	    printf("WARM START.\n");
 	    break;
 	}
 
+#if 0
 	/* DEBUG */
-	// W_0 = 0x01ec
-	// W_c = 0x040b
-	// task_ptr = (0x01ec << (known_low - 1)) + (0x040b - 1) / 2;
+	int W_0 = 0x01d0;
+	int W_c = 0x035b;
+	task_ptr = (W_0 << (known_low - 1)) + (W_c - 1) / 2;
+#endif
 
 	FILE *journal_file = fopen(journal_filename, "a");
 	if (journal_file == NULL)
@@ -252,7 +255,7 @@ void master()
  * OK, so a bug in Intel's MPI library prevents us from using one MPI rank
  * per hyperthread, so here we cheat.
  */
-void slave()
+void slave(const u64 (*X)[nboutput])
 {
 	int T = omp_get_max_threads();
 	for (int i = 0; i < T; i++)
@@ -301,23 +304,21 @@ int main(int argc, char **argv)
 
 	init_var_globales();
 	
-	// X[ 0] = 0xe60f77ceac8f6cd9;  // W_0 = 00ed
-	X[ 0] = 0xa21bd9d52bb064fa;  // W_0 = 01ec
-	X[ 1] = 0xde3e78a8e09e5d29;  // W_0 = 00a7
-	X[ 2] = 0xdbbe7755775e52ac;  // W_0 = 030e
-	X[ 3] = 0xe553b06143b2e108;  // W_0 = 02d1
-	X[ 4] = 0x4d99972ab762dae8;  // W_0 = 0460
-	X[ 5] = 0x27af5ab26f846d1d;  // W_0 = 01eb
-	X[ 6] = 0xd360f68fcc697b33;  // W_0 = 0262
-	X[ 7] = 0x746b18d4b67a4e61;  // W_0 = 0475
-	X[ 8] = 0x9be7410a83ddc14a;  // W_0 = 0594
-	X[ 9] = 0x6c2b07bed5b9fe0b;  // W_0 = 04ef
-	X[10] = 0x2fc807378a7bff2b;  // W_0 = 0276
-    
+	u64 X[nboutput];
+	X[ 0] = 0xd4166f4c3e02d10a;
+	X[ 1] = 0x1d1ceb21e7737101;
+	X[ 2] = 0xf8b90f473a5426d3;
+	X[ 3] = 0xe3a3b7babb2ad9ca;
+	X[ 4] = 0x0077f2c80987dd13;
+	X[ 5] = 0xf8ddaf2431548a13;
+	X[ 6] = 0x80935e041bbab85a;
+	X[ 7] = 0xbe0fde3939201c50;
+	X[ 8] = 0xe9604fdf6b2177b7;
+
 	if (rank == 0)
-    		master();
+    		master(&X);
 	else
-    		slave();
+    		slave(&X);
 
 	MPI_Finalize();
 	return 0;
