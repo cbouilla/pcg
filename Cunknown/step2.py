@@ -233,10 +233,10 @@ def full_DS(X, W0, WC, rots):
     output = set()
     
     # vérifie qu'on a bien trouvé un des bon DS complet.
-    listDS = [findDS(rot, W0, WC) for rot in listrot]
+    listDS = [(findDS(rot, W0, WC), rot) for rot in listrot]
     output.update(listDS)
 
-    listDS = [findDSdebug(rot, W0, WC) for rot in listrot]
+    listDS = [(findDSdebug(rot, W0, WC), rot) for rot in listrot]
     output.update(listDS)
     return output
 
@@ -313,8 +313,8 @@ if __name__ == '__main__':
             
             try:
                 listDS = full_DS(X, W0, WC, rot)
-                for DS in listDS:
+                for DS, rot in listDS:
                     true_DS = ((DS[0] << known_low) + (a-1) * W0 + WC) % N
-                    print("Got W_0 = {:04x}, W_c = {:04x}, DS = {:032x}".format(W0, WC, true_DS))
+                    print("W_0, W_c, DS, rot = {:04x}, {:04x}, {:032x}, {}".format(W0, WC, true_DS, rot))
             except ValueError as e:
                 pass

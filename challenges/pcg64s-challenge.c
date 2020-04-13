@@ -24,11 +24,12 @@ int main()
     
     printf("Predictor input:\n");
     for (int i = 0; i < 3; i++)
-        printf("X[%2d] = 0x%016" PRIx64 "\n", i, pcg64s_random_r(&rng));
+        printf("X[%2d] = 0x%016" PRIx64 ";\n", i, pcg64s_random_r(&rng));
     printf("\n");
+    
     printf("Remaining of the sequence (predictor output, in principle):\n");
     for (int i = 3; i < 10; i++)
-        printf("X[%2d] = 0x%016" PRIx64 "\n", i, pcg64s_random_r(&rng));
+        printf("X[%2d] = 0x%016" PRIx64 ";\n", i, pcg64s_random_r(&rng));
 
     return EXIT_SUCCESS;
 }
