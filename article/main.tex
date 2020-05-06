@@ -1,0 +1,92 @@
+\documentclass[preprint]{iacrtrans}
+
+\usepackage[utf8]{inputenc}
+\usepackage{amssymb, amsmath, amsfonts, amscd}
+\usepackage[T1]{fontenc}
+\usepackage{graphicx}
+\usepackage{url}
+\usepackage{xspace}
+\usepackage{subcaption}
+\usepackage{algorithm2e}
+\usepackage{tikz}
+\usepackage{cellspace}
+\usepackage{multirow}
+%\usepackage{parskip}
+\usetikzlibrary{patterns}
+
+%\usepackage[noend]{algpseudocode}
+
+\usepackage[pdftex,bookmarks,bookmarksopen,bookmarksdepth=3]{hyperref}
+\hypersetup{colorlinks=true,citecolor=red,linkcolor=red,urlcolor=black}
+
+
+% knuth-style algos
+\newcommand{\slug}{\hbox{\kern1.5pt\vrule width2.5pt height6pt depth1.5pt\kern1.5pt}}
+\def\xskip{\hskip 7pt plus 3pt minus 4pt}
+\newdimen\algindent
+\newif\ifitempar \itempartrue % normally true unless briefly set false
+\def\algindentset#1{\setbox0\hbox{{\bf #1.\kern.25em}}\algindent=\wd0\relax}
+\def\algbegin #1 #2{\algindentset{#21}\alg #1 #2} % when steps all have 1 digit
+\def\aalgbegin #1 #2{\algindentset{#211}\alg #1 #2} % when 10 or more steps
+\def\aaalgbegin #1 #2{\algindentset{#2111}\alg #1 #2} % when 10 or more steps
+\def\alg#1(#2). {\medbreak % Usage: \algbegin Algorithm A (algname). This...
+  \noindent{\bf#1}({\it#2\/}).\xskip\ignorespaces}
+\def\algstep#1.{\ifitempar\smallskip\noindent\else\itempartrue
+  \hskip-\parindent\fi
+  \hbox to\algindent{\bf\hfil #1.\kern.25em}%
+  \hangindent=\algindent\hangafter=1\ignorespaces}
+% end of borrowed macros
+
+
+\title{Predicting the PCG PSeudo-Random Number Generator In Practice} 
+
+\author{Charles Bouillaguet\inst{1} \and Julia Sauvage\inst{2} \and Florette Martinez\inst{3}}
+
+
+\institute{% 
+University of Lille, France \\ 
+\email{charles.bouillaguet@univ-lille.fr}
+\and 
+Sorbonne University \\
+\email{julia.sauvage@etu.upmc.fr}
+\and 
+LIP6, CNRS, SU ? \\
+\email{florette.martinez@lip6.fr}
+
+}
+
+\begin{document}
+\maketitle
+
+\keywords{keywords}
+
+\begin{abstract}
+  blablabla
+\end{abstract}
+
+\section{Introduction}
+
+\section{The PCG Pseudo-Random Number Generator Family}
+
+\section{Warm-Up: Prediction with Known Increment }
+
+\begin{theorem}
+  The algorithm described above works with probability.... in time ...
+\end{theorem}
+
+\section{Prediction with Unknown Increment}
+
+\begin{theorem}
+  The algorithm described above works with probability.... in time ...
+\end{theorem}
+
+\section{Implementation of the Predictor and Practical Results}
+
+\section{Conclusion}
+
+\bibliographystyle{alpha}
+\bibliography{biblio}
+
+%\appendix
+
+\end{document}
