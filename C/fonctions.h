@@ -11,6 +11,7 @@
 
 int nb_thread;
 pcg128_t a;
+pcg128_t a_inv;
 pcg128_t c;
 pcg128_t polC[nbiter];
 

@@ -24,6 +24,8 @@ void init_var_globales(){
     //multiplier a OK !
     a = (((pcg128_t) 2549297995355413924) << k) + ((pcg128_t) 4865540595714422341);
     
+    a_inv = (((pcg128_t) 566787436162029664) << k) + ((pcg128_t) 11001107174925446285ull);
+
     //increment c OK !
     c = (((pcg128_t)6364136223846793005) << k) + 1442695040888963407;
     
@@ -111,12 +113,14 @@ int solve(pcg128_t* S, const unsigned long long* X, const int* rot, const unsign
     double Yprim[nbiter];
     unsigned long long tmp3[nbiter];
     
+    // total : 6 XOR, 6 AND, 6 SHIFT, 3 ADD, 3 SUB, 3 u64->double
     for (int i = 0 ; i < nbiter ; i++) {
         Y[i] = (((sumPol[i] ^ X[i]) % (1 << known_low)) << known_up ) + (rot[i] ^ (X[i] >> (k - known_up)));
         Yprim[i] = (Y[i] - sumPolY[i]) % (1 << (known_low + known_up));    
     }
     
     double tmp2[nbiter];
+    // total : 9 MUL (double) + 10 ADD (double)
     for (int i=0 ; i<nbiter ; i++) {
         tmp2[i] = 0;
         for(int j=0 ; j<nbiter ; j++)
@@ -124,16 +128,20 @@ int solve(pcg128_t* S, const unsigned long long* X, const int* rot, const unsign
         tmp2[i] += 6755399441055744.0;
     }
  
+    // total : 6 SHIFT
     for(int i = 0 ; i < nbiter ; i++)
         tmp3[i] = light_crazy_round(tmp2[i]);
 
     unsigned long long Sprim0 = 0;
+    // total : 3 ADD, 3 MUL
     for(int j=0 ; j<nbiter ; j++)
         Sprim0 += Greduite[j] * tmp3[j];
 
+    // SHIFT, ADD
     unsigned long long Smod = (Sprim0 << known_low) + sumPol[0];
     S[0] = (((pcg128_t)(Smod ^ X[0])) << k) + ((pcg128_t) Smod);
 
+    // clocking PCG two times
     for (int i = 1 ; i < nbiter ; i++) {
         S[i] = S[i-1] * a + c;
         unsigned long long XX = S[i] ^ (S[i] >> 64);

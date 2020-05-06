@@ -1,14 +1,9 @@
-import time
-import fpylll
-import os
-from itertools import product
-from math import log
-import random
 
 k = 64
 known_up  = 6
 known_low  = 13
 a = 2549297995355413924 * 2**64 + 4865540595714422341
+a_inv = 566787436162029664* 2**64 + 11001107174925446285
 nbiter = 5
 nboutput = 40
 N = 2**128
@@ -65,60 +60,60 @@ def sortiesGenerateur(S0, c, k):
 
 if __name__ == '__main__':
     X = [0] * 48
-    X[ 1] = 0xd4166f4c3e02d10a;
-    X[ 2] = 0x1d1ceb21e7737101;
-    X[ 3] = 0xf8b90f473a5426d3;
-    X[ 4] = 0xe3a3b7babb2ad9ca;
-    X[ 5] = 0x0077f2c80987dd13;
-    X[ 6] = 0xf8ddaf2431548a13;
-    X[ 7] = 0x80935e041bbab85a;
-    X[ 8] = 0xbe0fde3939201c50;
-    X[ 9] = 0xe9604fdf6b2177b7;
-    X[10] = 0x95d9cf24a229cedf;
-    X[11] = 0x0434a85418759293;
-    X[12] = 0x04d230c1debe7999;
-    X[13] = 0x83a3cd257d4d04b0;
-    X[14] = 0x13990a23037c13c4;
-    X[15] = 0xfbfaea2e50411202;
-    X[16] = 0x421a394a36baebf8;
-    X[17] = 0x5a878c4594ea7221;
-    X[18] = 0xbd37307bdd522b9c;
-    X[19] = 0x39af06b3e9b3ae10;
-    X[20] = 0x1d21f1cee77b8e2e;
-    X[21] = 0xe4bddad0aacaf420;
-    X[22] = 0x1009ed344cd7f2f4;
-    X[23] = 0xff287c5797cceb71;
-    X[24] = 0x85e8968b0d8ab49b;
-    X[25] = 0x69a9b821830862cc;
-    X[26] = 0xf9fe65ed23740aea;
-    X[27] = 0x47669184bc43d948;
-    X[28] = 0xe3f19b31915ae6d3;
-    X[29] = 0x5f3945718b6dac44;
-    X[30] = 0x49bfacfe8056b33c;
-    X[31] = 0xf2b358ceb722628f;
-    X[32] = 0xb4d1bf17f2c57b71;
-    X[33] = 0xb4300000ad802deb;
-    X[34] = 0xe3125e8022de888d;
-    X[35] = 0x2c7f6d404196ed4d;
-    X[36] = 0xb10490274ecbe897;
-    X[37] = 0xb04da8a406da3814;
-    X[38] = 0xbc70124be9a196c9;
-    X[39] = 0xf81a244f765141e6;
-    X[40] = 0x20413cda8442a149;
-    X[41] = 0xf654f8084029c557;
-    X[42] = 0xa1677f2f18f8484c;
-    X[43] = 0x3ef4f6e355c53e70;
-    X[44] = 0x30cceccd8f73c567;
-    X[45] = 0xf22a193ded925cb6;
-    X[46] = 0xa9c0cba2f6abbd89;
-    X[47] = 0xf26c7311f52ededb;
-    del X[0]
+    X[ 0] = 0x46b9d66bb1e9fbf0;
+    X[ 1] = 0xc0b7382496f0e363;
+    X[ 2] = 0x78bf5fb5f4bbc09e;
+    X[ 3] = 0x75f352cb784fa167;
+    X[ 4] = 0x0c8c9a24d94bbc61;
+    X[ 5] = 0xa665faf0ba5eede6;
+    X[ 6] = 0x14162574ccdcdc3f;
+    X[ 7] = 0x5fae9c165a0f7180;
+    X[ 8] = 0x780f6c5c0f9bf744;
+    X[ 9] = 0xee89349d3a7cd604;
+    X[10] = 0xa2052341850dbc24;
+    X[11] = 0x99b08d5d32d5048d;
+    X[12] = 0x2a854a252e8284ea;
+    X[13] = 0xe2ffa2aab19b966c;
+    X[14] = 0xf18760da7640f5da;
+    X[15] = 0x89e7da73a09f2ec9;
+    X[16] = 0x71044040d182a2b2;
+    X[17] = 0x21e4bac7c9d97896;
+    X[18] = 0xe077b5e0a770055f;
+    X[19] = 0x3c5d2adc91377527;
+    X[20] = 0x8d1f3c155a55ca0b;
+    X[21] = 0x8db1105671cc6031;
+    X[22] = 0x4cd45a248ea6912d;
+    X[23] = 0x9af4e51b0af05f0d;
+    X[24] = 0xa400b754f2b2b0b3;
+    X[25] = 0xc493c31ea136a8f2;
+    X[26] = 0x96672aaa1688b031;
+    X[27] = 0xd2f7f9527275bfd2;
+    X[28] = 0x5187489c1b75e2a7;
+    X[29] = 0x627224615c897f12;
+    X[30] = 0xa202366a1039e4bc;
+    X[31] = 0x48fc42d00ed0c6ed;
+    X[32] = 0xc66eb8c29ef48de2;
+    X[33] = 0xe0ac6abe677dbdb7;
+    X[34] = 0x1dae3a9ed33b97fe;
+    X[35] = 0x4359d58482eb24c1;
+    X[36] = 0x075b7c7245fddda5;
+    X[37] = 0xf9d67dfd4bdb5bdd;
+    X[38] = 0x18c778e280d64a55;
+    X[39] = 0x7534aeccf7b47c2b;
+    X[40] = 0x2937665c341e30c5;
+    X[41] = 0x190f02e1acb9233e;
+    X[42] = 0x2895523d59cbfdb1;
+    X[43] = 0x9a730f18211b67d7;
+    X[44] = 0x72277c4b0673a1eb;
+    X[45] = 0xda17af3b16f6f009;
+    X[46] = 0x7c245c9bdd4a47b7;
+    X[47] = 0x20cb56ac9e64fc94;
+
+
     original_X = X   
 
-    W_0, W_c, start_DS, rot = 0x01d0, 0x035b, 0x65cca9e25d817ee1460ae35556d5069b, (28, 53, 44, 7, 47, 22, 2, 10, 60, 27, 46, 27, 28, 2, 44, 10, 36, 10, 62, 42, 20, 40, 15, 14, 7, 59, 44, 46, 59, 9, 46, 10, 61, 5, 28, 53, 19, 32, 18, 55)
-    # W_0, W_c, start_DS, rot = 0x01d0, 0x035b, 0x65cca9e25d817ee1460ae35556d5069b, (28, 53, 44, 7, 47, 22, 2, 10, 60, 27, 46, 27, 28, 2, 44, 10, 36, 10, 62, 33, 20, 40, 15, 14, 7, 59, 44, 46, 59, 9, 46, 10, 61, 5, 28, 53, 19, 32, 18, 55)
-    # W_0, W_c, start_DS, rot = 0x05d0, 0x035b, 0x65cca9e25d817ee1460ae35556d5069b, (28, 53, 44, 7, 47, 22, 2, 10, 60, 27, 46, 27, 28, 2, 44, 10, 36, 10, 62, 42, 20, 40, 15, 14, 7, 59, 44, 46, 59, 9, 46, 10, 61, 5, 28, 53, 19, 32, 18, 55)
-    # W_0, W_c, start_DS, rot = 0x05d0, 0x035b, 0x65cca9e25d817ee1460ae35556d5069b, (28, 53, 44, 7, 47, 22, 2, 10, 60, 27, 46, 27, 28, 2, 44, 10, 36, 10, 62, 33, 20, 40, 15, 14, 7, 59, 44, 46, 59, 9, 46, 10, 61, 5, 28, 53, 19, 32, 18, 55)
+    W_0, W_c, start_DS, rot = 0x00c9, 0x0643, 0x15b3f74a3b47132dcf2389239ebaa9a7, (49, 54, 11, 48, 41, 8, 18, 50, 29, 40, 29, 50, 26, 22, 63, 55, 24, 62, 60, 46, 32, 52, 17, 1, 47, 23, 35, 49, 18, 3, 6, 30, 0, 63, 16, 25, 63, 53, 63, 59)
+
 
     uX = unrotateX(X, rot, nboutput)
     DS = [(polA[i] * start_DS) % N for i in range(nboutput)]
@@ -165,6 +160,12 @@ if __name__ == '__main__':
         found_S0 += known_S[i] << i
     found_S1 = (found_S0 + start_DS) % N
     found_c = (found_S1 - a*found_S0) % N
+
+    S_prev = (found_S0 - found_c) * a_inv % N
+    seed = (S_prev - found_c - a*found_c) * a_inv % N
+
+    print("c = {:016x} {:016x}".format(found_c >> 65, (found_c >> 1) % K))
+    print("seed = {:016x} {:016x}".format(seed >> 64, seed % K))
 
     XX = sortiesGenerateur(found_S0, found_c, 64)
     for i, x in enumerate(XX):

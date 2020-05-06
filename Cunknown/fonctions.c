@@ -5,6 +5,7 @@
 #include "fonctions.h"
 
 pcg128_t a;
+pcg128_t a_inv;
 pcg128_t powA[nboutput];
 pcg128_t polA[nboutput];
 
@@ -26,6 +27,8 @@ void init_var_globales()
 {
     //multiplier a OK !
     a = (((pcg128_t) 2549297995355413924) << k) + ((pcg128_t) 4865540595714422341);
+
+    a_inv = (((pcg128_t) 566787436162029664) << k) + ((pcg128_t) 11001107174925446285);
 
     //increment polynome polC OK !
     polA[0] = 0;
@@ -99,6 +102,7 @@ static inline int checkY(const char* goodY, int i, u64 Y)
 static inline bool confirm(u64 Y0, u64 DS640, const struct task_t *task)
 {
 	/**** Confirmation du DS640 ****/
+    // <= 8 ADD, 4 MUL, 8 SHIFT, 8 AND
     for (int i = 0 ; i < nbtest ; i++) {
         u64 tmp2 = ((u64) polA[i + nbiter]) * DS640 + task->sumPolTest[i]; //ATTENTION cast pcg128_t
         u64 Yi1 = (Y0 + (tmp2 >> (k - known_low - known_up))) % (1 << (known_low + known_up)); //avec ou sans retenue OK!
@@ -135,12 +139,15 @@ bool solve_isgood(const struct task_t *task)
     for (int i = 0; i < nbiter; i++) //Y
         tmp[i] = task->tabTmp[i + nbiter * task->rot[i]];  
     
+    // ADD
     u64 Y0 = tmp[0] + task->sumPolY[0];
     
+    // 4 SUB, 4 AND, 4 u64->double
     double tmp3[nbiter - 1];
     for (int i = 0; i < nbiter - 1; i++)  //DY
         tmp3[i] = (tmp[i+1] - tmp[i]) % (1 << (known_low + known_up));
     
+    // 20 ADD (double), 16 MUL (double)
     double u[nbiter-1];
     for (int i = 0; i < nbiter - 1; i++) {
         u[i] = 0.0;
@@ -149,11 +156,13 @@ bool solve_isgood(const struct task_t *task)
         u[i] += 6755399441055744.0;
     }
 
+    // 8 SHIFT, 4 MUL, 4 ADD
     u64 DS640 = 0;
     for (int i = 0; i < nbiter-1; i++) {
         DS640 += Greduite[i] * light_crazy_round(u[i]);
     }
   
+    // 8 ops dans la plupart des cas
  	return confirm(Y0, DS640, task);
 }
 

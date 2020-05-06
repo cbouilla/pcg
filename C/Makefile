@@ -1,5 +1,5 @@
-CFLAGS = -O3 -Wall -Wextra -march=native -mtune=native -fopenmp
-LDFLAGS = -fopenmp
+CFLAGS = -O3 -Wall -Wextra -march=native -mtune=native -fopenmp -g
+LDFLAGS = -fopenmp -g
 LDLIBS = -lgmp -lm
 
 all: main

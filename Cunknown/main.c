@@ -206,7 +206,7 @@ void master(const u64 (*X)[nboutput])
 	int active_ranks;
 	int done = 0;
 	MPI_Comm_size(MPI_COMM_WORLD, &active_ranks);
-	active_ranks *= 2; /* because of the hack that runs two "threads" per MPI rank */
+	active_ranks = 2*(active_ranks - 1); /* because of the hack that runs two "threads" per MPI rank */
 
 	while (active_ranks > 0) {
 		MPI_Status status;
@@ -255,7 +255,7 @@ void master(const u64 (*X)[nboutput])
  * OK, so a bug in Intel's MPI library prevents us from using one MPI rank
  * per hyperthread, so here we cheat.
  */
-void slave(const u64 (*X)[nboutput])
+void slave(const u64 (*X)[nboutput], int rank)
 {
 	int T = omp_get_max_threads();
 	for (int i = 0; i < T; i++)
@@ -283,8 +283,10 @@ void slave(const u64 (*X)[nboutput])
 				do_task(task_id[t], &task[t], X);
 		}
 		for (int i = 0; i < T; i++)
-			MPI_Bsend(&task_id[i], 1, MPI_INT, 0, tag_result, MPI_COMM_WORLD);
+			if (task_id[i] >= 0)
+				MPI_Bsend(&task_id[i], 1, MPI_INT, 0, tag_result, MPI_COMM_WORLD);
 	}
+	printf("MPI slave %d, I'm done!\n", rank);
 }
 
 
@@ -305,20 +307,20 @@ int main(int argc, char **argv)
 	init_var_globales();
 	
 	u64 X[nboutput];
-	X[ 0] = 0xd4166f4c3e02d10a;
-	X[ 1] = 0x1d1ceb21e7737101;
-	X[ 2] = 0xf8b90f473a5426d3;
-	X[ 3] = 0xe3a3b7babb2ad9ca;
-	X[ 4] = 0x0077f2c80987dd13;
-	X[ 5] = 0xf8ddaf2431548a13;
-	X[ 6] = 0x80935e041bbab85a;
-	X[ 7] = 0xbe0fde3939201c50;
-	X[ 8] = 0xe9604fdf6b2177b7;
-
+	X[ 0] = 0x46b9d66bb1e9fbf0;
+	X[ 1] = 0xc0b7382496f0e363;
+	X[ 2] = 0x78bf5fb5f4bbc09e;
+	X[ 3] = 0x75f352cb784fa167;
+	X[ 4] = 0x0c8c9a24d94bbc61;
+	X[ 5] = 0xa665faf0ba5eede6;
+	X[ 6] = 0x14162574ccdcdc3f;
+	X[ 7] = 0x5fae9c165a0f7180;
+	X[ 8] = 0x780f6c5c0f9bf744;
+	
 	if (rank == 0)
     		master(&X);
 	else
-    		slave(&X);
+    		slave(&X, rank);
 
 	MPI_Finalize();
 	return 0;
