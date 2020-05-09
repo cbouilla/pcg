@@ -27,7 +27,7 @@ int main()
     init_var_globales();
 	
     /********** INPUT ***********/
-    unsigned long long X[nbiter];
+    u64 X[nbiter];
 
     // challenge output given by M. O'Neil
     X[ 0] = 0x6ec191a37a421087;
@@ -35,14 +35,13 @@ int main()
     X[ 2] = 0x85994d489913af70;
 
     double start = wtime();
-    unsigned long long done = 0;
+    u64 done = 0;
     
     #pragma omp parallel for
-    for (unsigned long long W0 = 0; W0 < (1<<known_low) ; W0++){
+    for (u64 W0 = 0; W0 < (1<<known_low) ; W0++){
 	
 	/*Variables privées*/
 	pcg128_t S[nbiter];
-	// u64 urX[nbiter];
 	int rot[nbiter] = {0, 0, 0};
 	struct task_t task;
 	setup_task(W0, X, &task);
@@ -53,7 +52,7 @@ int main()
 	}
 
 
-	for (int r = 0 ; r < 1<<(3*known_up) ; r++) {
+	for (int r = 0 ; r < 1 << (nbiter*known_up) ; r++) {
 	    /***** Modification de rot et unrotX *****/
 	    rot[0] = (rot[0] + 1) % k;
 	    int i = 0;
@@ -61,7 +60,6 @@ int main()
 		i++;
 		rot[i] = (rot[i] + 1) %k;
 	    }
-	    // unrotate(urX, X, rot);
 	    
 	    /***** Résolution *****/
 	    if (solve(S, rot, &task))

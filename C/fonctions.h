@@ -22,8 +22,6 @@ pcg128_t polC[nbiter];
 typedef unsigned long long u64;
 
 struct task_t {
-        // u64 sumPol[nbiter];
-        // u64 sumPolY[nbiter];
         u64 X[nbiter][64];
         double Yprime[nbiter][64];
         u64 sumPol0;
@@ -41,6 +39,4 @@ void getPolW(pcg128_t *polW, u64 W0);
 void getSumPol(u64* sumPol, u64* sumPolY, const pcg128_t* polW);
 
 void setup_task(u64 W0, const u64 *X, struct task_t *task);
-
-
 bool solve(pcg128_t* S, const int* rot, const struct task_t *task);

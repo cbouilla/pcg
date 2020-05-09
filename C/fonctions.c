@@ -140,24 +140,14 @@ void setup_task(u64 W0, const u64 *urX, struct task_t *task)
 
 bool solve(pcg128_t* S, const int* rot, const struct task_t *task)
 {  
-    double tmp2[nbiter];
     // total : 9 MUL (double) + 10 ADD (double)
-    for (int i = 0; i < nbiter; i++) {
-        tmp2[i] = 0;
-        for(int j = 0; j < nbiter; j++)
-            tmp2[i] += invG[i * nbiter + j] * task->Yprime[j][rot[j]];
-        tmp2[i] += 6755399441055744.0;
-    }
- 
-    // total : 6 SHIFT
-    u64 tmp3[nbiter];
-    for(int i = 0 ; i < nbiter ; i++)
-        tmp3[i] = light_crazy_round(tmp2[i]);
-
     u64 Sprim0 = 0;
-    // total : 3 ADD, 3 MUL
-    for(int j=0 ; j<nbiter ; j++)
-        Sprim0 += Greduite[j] * tmp3[j];
+    for (int i = 0; i < nbiter; i++) {
+        double tmp2 = 0;
+        for(int j = 0; j < nbiter; j++)
+            tmp2 += invG[i * nbiter + j] * task->Yprime[j][rot[j]];
+        Sprim0 += Greduite[i] * light_crazy_round(tmp2 + 6755399441055744.0);
+    }
 
     // SHIFT, ADD
     u64 Smod = (Sprim0 << known_low) + task->sumPol0;

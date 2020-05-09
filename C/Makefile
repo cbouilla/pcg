@@ -1,10 +1,10 @@
-# CC = icc
-# CFLAGS = -O3 -xHost -qopt-zmm-usage=high -qopenmp
-# LDFLAGS = -fopenmp -qopenmp
+CC = icc
+CFLAGS = -O3 -qopenmp
+LDFLAGS = -qopenmp
 
 # gcc
-CFLAGS = -O3 -Wall -Wextra -Werror -march=native -mtune=native -fopenmp -g
-LDFLAGS = -fopenmp
+#CFLAGS = -O3 -Wall -Wextra -Werror -march=native -mtune=native -fopenmp -g
+#LDFLAGS = -fopenmp
 
 
 
