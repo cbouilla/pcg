@@ -7,7 +7,7 @@
 
 
 /***** Macro et Variables globales *****/
-#define k 64
+// #define k 64
 #define known_up 6
 #define known_low 18
 #define nbiter 3
@@ -23,7 +23,7 @@ typedef unsigned long long u64;
 
 struct task_t {
         u64 X[nbiter][64];
-        double Yprime[nbiter][64];
+        double Ginv_Yprime[nbiter][nbiter][64];
         u64 sumPol0;
 };
 
@@ -33,8 +33,6 @@ void init_var_globales();
 double wtime();
 
 ////////////////Fonctions pour la récupération de S//////////////
-void rotate(unsigned long long* rX, const unsigned long long* X, const int* rot);
-void unrotate(u64* urX, const u64* X, const int* rot);
 void getPolW(pcg128_t *polW, u64 W0);
 void getSumPol(u64* sumPol, u64* sumPolY, const pcg128_t* polW);
 

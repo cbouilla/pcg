@@ -52,13 +52,13 @@ int main()
 	}
 
 
-	for (int r = 0 ; r < 1 << (nbiter*known_up) ; r++) {
+	for (int r = 0 ; r < 1 << (nbiter*6) ; r++) {
 	    /***** Modification de rot et unrotX *****/
-	    rot[0] = (rot[0] + 1) % k;
+	    rot[0] = (rot[0] + 1) % 64;
 	    int i = 0;
 	    while (rot[i] == 0 && i < nbiter) {
 		i++;
-		rot[i] = (rot[i] + 1) %k;
+		rot[i] = (rot[i] + 1) % 64;
 	    }
 	    
 	    /***** Résolution *****/

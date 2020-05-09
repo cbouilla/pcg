@@ -22,12 +22,12 @@ double invG[9] = {
 
 void init_var_globales(){
     //multiplier a OK !
-    a = (((pcg128_t) 2549297995355413924) << k) + ((pcg128_t) 4865540595714422341);
+    a = (((pcg128_t) 2549297995355413924) << 64) + ((pcg128_t) 4865540595714422341);
     
-    a_inv = (((pcg128_t) 566787436162029664) << k) + ((pcg128_t) 11001107174925446285ull);
+    a_inv = (((pcg128_t) 566787436162029664) << 64) + ((pcg128_t) 11001107174925446285ull);
 
     //increment c OK !
-    c = (((pcg128_t)6364136223846793005) << k) + 1442695040888963407;
+    c = (((pcg128_t)6364136223846793005) << 64) + 1442695040888963407;
     
     //nombre de threads 
     nb_thread = omp_get_max_threads();
@@ -41,7 +41,7 @@ void init_var_globales(){
     }
 
     for (int i = 0; i < 9; i++)
-        invG[i] *= 1ll << (k - known_low - known_up);
+        invG[i] *= 1ll << (64 - known_low - 6);
 }
 
 
@@ -61,19 +61,6 @@ static u64 rot(u64 x, int i)
         return (x >> (64 - i)) | (x << i);
 }
 
-void rotate(unsigned long long* rX, const unsigned long long* X, const int* rot)
-{ //pas verifié, repris de pcg_random
-    for(int i = 0 ; i < nbiter ; i++)
-        rX[i]= (X[i] >> rot[i]) | (X[i] << ((- rot[i]) & 63));
-}
-
-void unrotate(u64* urX, const u64* X, const int* rot)
-{//pas verifié, repris de pcg_random
-    int rot2[nbiter];
-    for( int i = 0 ; i < nbiter ; i++)
-        rot2[i] = (k - rot[i]) % k;
-    rotate(urX, X, rot2);
-}
 
 void getPolW(pcg128_t *polW, u64 W0)
 { //OK !
@@ -89,7 +76,7 @@ void getSumPol(u64* sumPol, u64* sumPolY, const pcg128_t* polW)
     for(int i = 0 ; i < nbiter ; i++){
         sum = polC[i] + polW[i];
         sumPol[i] = sum;
-        sumPolY[i] = (sum >> (k - known_up)) % (1 << (known_low + known_up));
+        sumPolY[i] = (sum >> 58) % (1 << (known_low + 6));
     }
 }
 
@@ -125,15 +112,20 @@ void setup_task(u64 W0, const u64 *urX, struct task_t *task)
         // initialise sumPol et sumPolY à partir de polW
         getSumPol(sumPol, sumPolY, polW);
 
+        u64 Yprime[nbiter][64];
         for (int i = 0; i < nbiter; i++)
                 for (int j = 0; j < 64; j++) {
                         u64 X = rot(urX[i], j);
                         u64 Y = (((sumPol[i] ^ X) % (1 << known_low)) << 6) + (j ^ (X >> 58));
-                        u64 Yprime = (Y - sumPolY[i]) % (1 << (known_low + 6));
-                        
+                        Yprime[i][j] = (Y - sumPolY[i]) % (1 << (known_low + 6));
                         task->X[i][j] = X;
-                        task->Yprime[i][j] = (double) Yprime; // conversion en double
                 }
+
+        for (int i = 0; i < nbiter; i++)
+                for (int j = 0; j < nbiter; j++)
+                        for (int k = 0; k < 64; k++)
+                                task->Ginv_Yprime[i][j][k] = invG[i * nbiter + j] * Yprime[j][k];
+
         task->sumPol0 = sumPol[0];
 }
 
@@ -145,7 +137,7 @@ bool solve(pcg128_t* S, const int* rot, const struct task_t *task)
     for (int i = 0; i < nbiter; i++) {
         double tmp2 = 0;
         for(int j = 0; j < nbiter; j++)
-            tmp2 += invG[i * nbiter + j] * task->Yprime[j][rot[j]];
+            tmp2 += task->Ginv_Yprime[i][j][rot[j]];
         Sprim0 += Greduite[i] * light_crazy_round(tmp2 + 6755399441055744.0);
     }
 
