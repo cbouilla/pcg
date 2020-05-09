@@ -1,3 +1,4 @@
+# icc (avec "source /usr/intel/compilers_and_libraries/linux/bin/compilervars.sh intel64" avant)
 CC = icc
 CFLAGS = -O3 -qopenmp
 LDFLAGS = -qopenmp

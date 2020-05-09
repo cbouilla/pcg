@@ -60,7 +60,9 @@ int main()
 		i++;
 		rot[i] = (rot[i] + 1) % 64;
 	    }
-	    
+	    if (i > 0)
+	    	refresh_task(rot, &task);
+
 	    /***** Résolution *****/
 	    if (solve(S, rot, &task))
 		result_found(S[0], start);

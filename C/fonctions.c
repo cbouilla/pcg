@@ -81,15 +81,6 @@ void getSumPol(u64* sumPol, u64* sumPolY, const pcg128_t* polW)
 }
 
 /* cf. https://stackoverflow.com/questions/17035464/a-fast-method-to-round-a-double-to-a-32-bit-int-explained#comment61972557_17035583 */
-static inline long long crazy_round(double x)
-{
-    union { double d; long long l; } magic; 
-    magic.d = x + 6755399441055744.0; 
-    magic.l <<= 13; 
-    magic.l >>= 13;
-    return magic.l;
-}
-
 static inline long long light_crazy_round(double x)
 {
     union { double d; long long l; } magic; 
@@ -97,6 +88,11 @@ static inline long long light_crazy_round(double x)
     magic.l <<= 13; 
     magic.l >>= 13;
     return magic.l;
+}
+
+static inline long long crazy_round(double x)
+{
+    return light_crazy_round(x + 6755399441055744.0);
 }
 
 
@@ -129,21 +125,26 @@ void setup_task(u64 W0, const u64 *urX, struct task_t *task)
         task->sumPol0 = sumPol[0];
 }
 
+void refresh_task(const int *rot, struct task_t *task)
+{
+    for (int i = 0; i < nbiter; i++) {
+        task->tmp2[i] = 0;
+        for(int j = 1; j < nbiter; j++)
+            task->tmp2[i] += task->Ginv_Yprime[i][j][rot[j]];
+    }
+}
 
 bool solve(pcg128_t* S, const int* rot, const struct task_t *task)
 {  
-    // total : 9 MUL (double) + 10 ADD (double)
     u64 Sprim0 = 0;
     for (int i = 0; i < nbiter; i++) {
-        double tmp2 = 0;
-        for(int j = 0; j < nbiter; j++)
-            tmp2 += task->Ginv_Yprime[i][j][rot[j]];
-        Sprim0 += Greduite[i] * light_crazy_round(tmp2 + 6755399441055744.0);
+        double tmp2 = task->tmp2[i] + task->Ginv_Yprime[i][0][rot[0]];
+        Sprim0 += Greduite[i] * crazy_round(tmp2);
     }
 
     // SHIFT, ADD
     u64 Smod = (Sprim0 << known_low) + task->sumPol0;
-    S[0] = (((pcg128_t)(Smod ^ task->X[0][rot[0]])) << 64) + ((pcg128_t) Smod);
+    S[0] = (((pcg128_t) (Smod ^ task->X[0][rot[0]])) << 64) + ((pcg128_t) Smod);
 
     // clock PCG two times, check that we reconstruct the correct (de-rotated) output
     for (int i = 1; i < nbiter; i++) {

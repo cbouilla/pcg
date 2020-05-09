@@ -25,6 +25,7 @@ struct task_t {
         u64 X[nbiter][64];
         double Ginv_Yprime[nbiter][nbiter][64];
         u64 sumPol0;
+        double tmp2[nbiter];
 };
 
 
@@ -33,8 +34,9 @@ void init_var_globales();
 double wtime();
 
 ////////////////Fonctions pour la récupération de S//////////////
-void getPolW(pcg128_t *polW, u64 W0);
-void getSumPol(u64* sumPol, u64* sumPolY, const pcg128_t* polW);
+// void getPolW(pcg128_t *polW, u64 W0);
+// void getSumPol(u64* sumPol, u64* sumPolY, const pcg128_t* polW);
 
 void setup_task(u64 W0, const u64 *X, struct task_t *task);
+void refresh_task(const int *rot, struct task_t *task);
 bool solve(pcg128_t* S, const int* rot, const struct task_t *task);
