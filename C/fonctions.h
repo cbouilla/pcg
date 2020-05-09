@@ -1,5 +1,8 @@
 #include <stdint.h>
+#include <stdbool.h>
+
 #include "pcg_oneseq.h"
+
 #include <omp.h>
 
 
@@ -15,20 +18,28 @@ pcg128_t a_inv;
 pcg128_t c;
 pcg128_t polC[nbiter];
 
-// extern unsigned long long Greduite[9];
-// extern double invG[9];
+
+typedef unsigned long long u64;
+
+struct task_t {
+        u64 sumPol[nbiter];
+        u64 sumPolY[nbiter];
+        u64 X[nbiter][64];
+        double Yprime[nbiter][64];
+};
+
 
 /***** Fonctions *****/
 void init_var_globales();
 double wtime();
 
-
 ////////////////Fonctions pour la récupération de S//////////////
-void rotate(unsigned long long* rX, unsigned long long* X,int* rot);
-void unrotate(unsigned long long* urX, unsigned long long* X, int* rot);
-void getPolW(pcg128_t *polW, unsigned long long W0);
+void rotate(unsigned long long* rX, const unsigned long long* X, const int* rot);
+void unrotate(u64* urX, const u64* X, const int* rot);
+void getPolW(pcg128_t *polW, u64 W0);
+void getSumPol(u64* sumPol, u64* sumPolY, const pcg128_t* polW);
 
-void getSumPol(unsigned long long* sumPol,unsigned long long* sumPolY, pcg128_t* polW);
+void setup_task(u64 W0, const u64 *X, struct task_t *task);
 
-int solve(pcg128_t* S, const unsigned long long* X, const int* rot, const unsigned long long* sumPol, const unsigned long long* sumPolY);
 
+bool solve(pcg128_t* S, const int* rot, const struct task_t *task);

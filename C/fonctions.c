@@ -56,27 +56,35 @@ double wtime()
 
 ////////////////Fonctions pour la récupération de S//////////////
 
+static u64 rot(u64 x, int i)
+{
+        return (x >> (64 - i)) | (x << i);
+}
 
-void rotate(unsigned long long* rX, unsigned long long* X,int* rot){ //pas verifié, repris de pcg_random
+void rotate(unsigned long long* rX, const unsigned long long* X, const int* rot)
+{ //pas verifié, repris de pcg_random
     for(int i = 0 ; i < nbiter ; i++)
         rX[i]= (X[i] >> rot[i]) | (X[i] << ((- rot[i]) & 63));
 }
 
-void unrotate(unsigned long long* urX, unsigned long long* X, int* rot){//pas verifié, repris de pcg_random
+void unrotate(u64* urX, const u64* X, const int* rot)
+{//pas verifié, repris de pcg_random
     int rot2[nbiter];
     for( int i = 0 ; i < nbiter ; i++)
         rot2[i] = (k - rot[i]) % k;
     rotate(urX, X, rot2);
 }
 
-void getPolW(pcg128_t *polW, unsigned long long W0){ //OK !
+void getPolW(pcg128_t *polW, u64 W0)
+{ //OK !
     polW[0] = W0;
     for(int i = 1 ; i < nbiter ; i++){
         polW[i] = polW[i-1] * a;
     }
 }
 
-void getSumPol(unsigned long long* sumPol,unsigned long long* sumPolY, pcg128_t* polW){
+void getSumPol(u64* sumPol, u64* sumPolY, const pcg128_t* polW)
+{
     pcg128_t sum;
     for(int i = 0 ; i < nbiter ; i++){
         sum = polC[i] + polW[i];
@@ -84,7 +92,6 @@ void getSumPol(unsigned long long* sumPol,unsigned long long* sumPolY, pcg128_t*
         sumPolY[i] = (sum >> (k - known_up)) % (1 << (known_low + known_up));
     }
 }
-
 
 /* cf. https://stackoverflow.com/questions/17035464/a-fast-method-to-round-a-double-to-a-32-bit-int-explained#comment61972557_17035583 */
 static inline long long crazy_round(double x)
@@ -106,47 +113,76 @@ static inline long long light_crazy_round(double x)
 }
 
 
-/* sumPol/sumPolY are constant over many iterations. X (unrotated) and rot vary each time. */
-int solve(pcg128_t* S, const unsigned long long* X, const int* rot, const unsigned long long* sumPol, const unsigned long long* sumPolY)
+void setup_task(u64 W0, const u64 *urX, struct task_t *task)
 {
-    unsigned long long Y[nbiter];
-    double Yprim[nbiter];
-    unsigned long long tmp3[nbiter];
-    
+        pcg128_t polW[nbiter]; // temporary byproduct
+        
+        // initialise polW à partir de W0
+        getPolW(polW, W0);
+
+        // initialise sumPol et sumPolY à partir de polW
+        getSumPol(task->sumPol, task->sumPolY, polW);
+
+        for (int i = 0; i < nbiter; i++)
+                for (int j = 0; j < 64; j++) {
+                        u64 X = rot(urX[i], j);
+                        u64 Y = (((task->sumPol[i] ^ X) % (1 << known_low)) << 6) + (j ^ (X >> 58));
+                        u64 Yprime = (Y - task->sumPolY[i]) % (1 << (known_low + 6));
+                        
+                        task->X[i][j] = X;
+                        task->Yprime[i][j] = (double) Yprime; // conversion en double
+                }
+}
+
+
+/* sumPol/sumPolY are constant over many iterations. 
+   X ("de-rotated") and rot vary each time. 
+   returns true when a consistent solution is found. In that case S is set to the correct internal state.
+   */
+bool solve(pcg128_t* S, const int* rot, const struct task_t *task)
+{
+        // pour chaque 0 <= j < nbiter, 0 <= i < 64, X[i] = T[i, rot[i]]
+        // par conséquent, (rot[i] ^ (X[i] >> 58)) == T'[i, rot[i]]
+        // Yprim[i] == T[i, rot[i]]
+
     // total : 6 XOR, 6 AND, 6 SHIFT, 3 ADD, 3 SUB, 3 u64->double
-    for (int i = 0 ; i < nbiter ; i++) {
-        Y[i] = (((sumPol[i] ^ X[i]) % (1 << known_low)) << known_up ) + (rot[i] ^ (X[i] >> (k - known_up)));
-        Yprim[i] = (Y[i] - sumPolY[i]) % (1 << (known_low + known_up));    
-    }
+    //u64 Y[nbiter];
+    // double Yprim[nbiter];
+    // for (int i = 0; i < nbiter; i++) {
+    //     u64 X = task->X[i][rot[i]];
+    //     u64 Y = (((task->sumPol[i] ^ X) % (1 << known_low)) << 6) + (rot[i] ^ (X >> 58));
+    //     Yprim[i] = (Y - task->sumPolY[i]) % (1 << (known_low + 6));    
+    // }
     
     double tmp2[nbiter];
     // total : 9 MUL (double) + 10 ADD (double)
-    for (int i=0 ; i<nbiter ; i++) {
+    for (int i = 0; i < nbiter; i++) {
         tmp2[i] = 0;
-        for(int j=0 ; j<nbiter ; j++)
-            tmp2[i] += invG[i * nbiter + j] * Yprim[j];
+        for(int j = 0; j < nbiter; j++)
+            tmp2[i] += invG[i * nbiter + j] * task->Yprime[j][rot[j]];
         tmp2[i] += 6755399441055744.0;
     }
  
     // total : 6 SHIFT
+    u64 tmp3[nbiter];
     for(int i = 0 ; i < nbiter ; i++)
         tmp3[i] = light_crazy_round(tmp2[i]);
 
-    unsigned long long Sprim0 = 0;
+    u64 Sprim0 = 0;
     // total : 3 ADD, 3 MUL
     for(int j=0 ; j<nbiter ; j++)
         Sprim0 += Greduite[j] * tmp3[j];
 
     // SHIFT, ADD
-    unsigned long long Smod = (Sprim0 << known_low) + sumPol[0];
-    S[0] = (((pcg128_t)(Smod ^ X[0])) << k) + ((pcg128_t) Smod);
+    u64 Smod = (Sprim0 << known_low) + task->sumPol[0];
+    S[0] = (((pcg128_t)(Smod ^ task->X[0][rot[0]])) << 64) + ((pcg128_t) Smod);
 
-    // clocking PCG two times
-    for (int i = 1 ; i < nbiter ; i++) {
-        S[i] = S[i-1] * a + c;
-        unsigned long long XX = S[i] ^ (S[i] >> 64);
-        if (XX != X[i])
-            return 0;
+    // clock PCG two times, check that we reconstruct the correct (de-rotated) output
+    for (int i = 1; i < nbiter; i++) {
+        S[i] = S[i - 1] * a + c;
+        u64 XX = S[i] ^ (S[i] >> 64);
+        if (XX != task->X[i][rot[i]])
+            return false;
     }
-    return 1;
+    return true;
 }

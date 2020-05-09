@@ -1,6 +1,14 @@
-CFLAGS = -O3 -Wall -Wextra -march=native -mtune=native -fopenmp -g
-LDFLAGS = -fopenmp -g
-LDLIBS = -lgmp -lm
+# CC = icc
+# CFLAGS = -O3 -xHost -qopt-zmm-usage=high -qopenmp
+# LDFLAGS = -fopenmp -qopenmp
+
+# gcc
+CFLAGS = -O3 -Wall -Wextra -Werror -march=native -mtune=native -fopenmp -g
+LDFLAGS = -fopenmp
+
+
+
+LDLIBS = -lm
 
 all: main
 
