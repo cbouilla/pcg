@@ -434,6 +434,29 @@ Each coefficient is about 128 bit long. Here is the $L'$ (using the LLL algorith
 \end{equation}
 This algorithm is clearly really efficient, the coefficients of $L'$ are really small. Its bigger coefficient is $240$. Its smaller than $2^8 = 256$. In our case $M = 2^{64 + known\_low}$. In our tests, we had $known\_low = 16$. We need $Z'$ to be less than 72 bits long, which isn't hard to attain.
 
+\section{lattice geometric progression}
+
+One of the key point of the algorithm is, given a modulus \(M\) and a given common ration \(\alpha\), to find a modular geometric progression knowing only the most significant bits of its \(n\) first terms.
+
+We call \(L(\alpha,M,n)\) the set of n-tuples \(U = (u_0,\dots u_{n-1})\) satisfying :
+
+\[u_{i} = \alpha u_{i-1} \mod M \] for all \(i\) in \(\{1,\dots,n-1\}\).
+
+
+We easily notice that, if \(U\) and \(V\) are in \(L(\alpha,M,n)\), so are \(-U\) and \(U+V\), hence \(L(\alpha,M,n)\) is a lattice.
+
+The lattice \(L(\alpha,M,n)\) is spawned by the lines of the following matrix :
+
+\[G =\begin{pmatrix}
+1&\alpha&\alpha^2&\dots&\alpha^{n-1}\\
+0&M&0&\dots&0\\
+0&0&M&\dots&0\\
+\dots&\dots&\dots&\dots&\dots\\
+0&0&0&\dots&M\\
+\end{pmatrix}\]
+
+We want to find an element \(U\) in the lattice only knowing the most significant bits of each of its coordinates. We decompose \(U = U_1 + U_2\) where \(U_1\) contains only the upper bits and \(U2\) the lowers one. There is no reason for \(U_1\) to be in the lattice, but as \(U_2\) is small, we know \(U_1\) is \emph{close} to \(U\). So, to find \(U\), we will solve CVP(\(L(\alpha,M)\),\(U_1\)).
+
 \section{Predicting PCG with Known Increment}
 \subsection{Reduction to a truncated LCG model}
 By exploiting the nature of this generator, it becomes apparent that some values can be easily guessed. We already saw that if we guess $rot_i$, then retrieving $X_i$ becomes a simple \texttt{XOR} operation, and in turn, if we have some knowledge of a particular bit of $lowS_i$ (respectively $upS_i$), we can deduce the equivalent bit from $upS_i$ (respectively $lowS_i$).\\
@@ -503,6 +526,59 @@ Using this bijection, we can validate if our chosen values are correct. Indeed, 
 \ENDFOR
 \end{algorithmic}
 \end{algorithm}
+
+\section{babairounding}
+
+We call \(S't\) the truncated vector : \(S'[\ell,64+\ell]\).
+
+We consider the case were we successfully guessed the 6 upper bits of each \(S_i\) and the \(\ell\) lower bits of \(S_0\). Then we know the \(6+\ell\) upper bits of \(S't\).
+
+(à détailer ?)	
+
+We had define \(S'\) such that \(S'\) is in the lattice \(L(A,2^{128},n)\) and its \(\ell \) lower bits are 0. Then \(S't\) is in \(L(1,2^{64},n)\).
+
+If we consider the vector \(T'\) computed in step (numerodelastepenquestion), we notice it is close to \(S't\) in the sense of they have exactly the same \(6+\ell\) upper bits. So we want to recover \(S't\) by solving an approach \(CVP(L(A,2^{64},n),T')\).
+
+Now we need to prove that the \(pwet\) obtained with the Babai rounding is indeed \(S't\).
+
+We denote \(r = rounding(YG^{-1}) \).
+
+\begin{align*}
+\lVert S't - pwet \rVert &= \lVert S't - rG \rVert \\
+&= \lVert S't - (r-YG^{-1} + YG^{-1})G \rVert\\
+&= \lVert S't - Y + (r-YG^{-1})G \rVert\\
+&\leqslant \lVert S't - Y \rVert + \lVert(r-YG^{-1})\rVert \times \lVert G\rVert\\	
+\end{align*}
+
+By definition, \(r\) is the closest integer vector to \(YG^{-1}\). But as \(S't\) is an element of the lattice, \(S'tG^{-1}\) is an integer vector. Thus \(r-YG^{-1}\) is smaller than \(S'tG^{-1}-YG^{-1}\).
+
+Hence :
+\begin{align*}
+\lVert S't - pwet \rVert &\leqslant \lVert S't - Y \rVert + \lVert(r-YG^{-1})\rVert \times \lVert G\rVert\\	
+&\leqslant \lVert S't - Y \rVert + \lVert(S'tG^{-1}-YG^{-1})\rVert \times \lVert G\rVert\\	
+&\leqslant \lVert S't - Y \rVert + \lVert(S't-Y)\rVert \times \lVert G^{-1} \rVert  \times \lVert G\rVert\\
+& 	\leqslant \lVert S't - Y \rVert \times (1 +\lVert G^{-1} \rVert  \times \lVert G\rVert )\\
+\end{align*}
+
+But, by construction of \(Y\), we have that \(\lVert S't - Y \rVert \leqslant \sqrt{n2^{2(58-l)}} \). So
+
+\[ \lVert S't - pwet \rVert \leqslant \sqrt{n2^{2(58-l)}}\times (1 +\lVert G^{-1} \rVert  \times \lVert G\rVert )\]\\
+
+
+
+
+Now all we need to do is find sets of parameters \((n,l)\) such that the following inequality is satisfied: 
+\[\sqrt{n2^{2(58-\ell)}} \times (1 +\lVert G^{-1} \rVert  \times \lVert G\rVert) \leqslant \lVert SVP(L(A,2^{64},n))\rVert \].
+
+We notice that only the left term of the inequality depends on \(\ell\).
+
+Hence, some sets of parameters that satisfies this inequality are :
+\begin{itemize}
+	\item \(n = 3\) and \(\ell \geqslant 19\)
+	\item \(n = 4\) and \(\ell \geqslant 13\)
+	\item \(n = 5\) and \(\ell \geqslant 11\)
+	\item \(n = 6\) and \(\ell \geqslant 8\)
+\end{itemize}
                 
 \subsection{Performance test results}
 Our code is implemented in Sagemath. This choice was made because of the development advantages it offered: to be able to work with arbitrarily large integers and have access to a built-in LLL function.\\
