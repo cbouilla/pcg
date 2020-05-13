@@ -333,14 +333,15 @@ describing in which circumstances they should be used.
 Pour deviner l'état interne du générateur, une méthode consiste à procéder par brute-force. On devine les 64 bits supérieurs de $S_0$, on en déduit la rotation $r_0$ utilisée, on peut retrouver  les 64 bits inférieurs:
 
 \begin{equation}
-   S_0[0:64] = S_0[64:128] XOR \texttt{ROT(X_0 , 64 - r_0)} 
+   S_0[0:64] = S_0[64:128] \texttt{ XOR } \texttt{ROT(X_0 , 64 - r_0)} \\
 \end{equation}
 
-Cette méthode demanderait de l'ordre de 2^64 calculs, ce qui n'est pas acceptable. Nous pouvons cependant utiliser cette équation pour déduire des informations sur l'état interne de S. En effet,en devinant par brute-force les 6 bits du haut de S, et ses \ell bits du bas, on récupère :
+Cette méthode demanderait de l'ordre de $2^{64}$ calculs, ce qui n'est pas acceptable. Nous pouvons cependant utiliser ce{tte équation pour déduire des informations sur l'état interne de S. En effet,en devinant par brute-force les 6 bits du haut de S, et ses $\ell$ bits du bas, on récupère :\\
 % schéma "relevant bits of the outputs"
 
-On réduit $S$ à une série géométrique plus simple, . Notons $S'$ l'état interne auquel on retire sa composante en $C$, et en $S_0[0:\ell]$ (note de bas de page : le fait de retirer $S_0[0:\ell]$ n'est pas nécéssaire, mais nous permet de limiter la taille des instances utilisées à 64 bits, très utile pour la programmation en C). Nous utiliserons le réseau engendré par les $S'[\ell : 64 + \ell]$, de matrice génératrice :
+On réduit $S$ à une série géométrique plus simple. Notons $S'$ l'état interne auquel on retire sa composante en $C$, et en $S_0[0:\ell]$ (note de bas de page : le fait de retirer $S_0[0:\ell]$ n'est pas nécéssaire, mais nous permet de limiter la taille des instances utilisées à 64 bits, très utile pour la programmation en C). Nous utiliserons le réseau engendré par les $S'[\ell : 64 + \ell]$, de matrice génératrice :\\
 \begin{equation}
+M =
 \begin{pmatrix} 
 1 & \alpha & \alpha ^2 & \dots & \alpha ^{nbiter - 1}\\
 0 & M & 0 & \dots & 0\\
@@ -349,7 +350,7 @@ On réduit $S$ à une série géométrique plus simple, . Notons $S'$ l'état in
 0 & 0 & \dots & 0 & M
 \end{pmatrix}
 \end{equation}
-On 
+
 
 \subsection{Algorithme}
 On calcule préalablement les matrices $G$ et $G^{-1}$, avec $G$ la matrice génératrice réduite du réseau blablabla par l'algorithme LLL.
