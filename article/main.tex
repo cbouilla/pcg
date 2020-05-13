@@ -333,7 +333,7 @@ describing in which circumstances they should be used.
 Pour deviner l'état interne du générateur, une méthode consiste à procéder par brute-force. On devine les 64 bits supérieurs de $S_0$, on en déduit la rotation $r_0$ utilisée, on peut retrouver  les 64 bits inférieurs:
 
 \begin{equation}
-   S_0[0:64] = S_0[64:128] \texttt{ XOR } \texttt{ROT(X_0 , 64 - r_0)} \\
+   S_0[0:64] = S_0[64:128] \texttt{ XOR } \texttt{ROT}(X_0 , 64 - r_0) \\
 \end{equation}
 
 Cette méthode demanderait de l'ordre de $2^{64}$ calculs, ce qui n'est pas acceptable. Nous pouvons cependant utiliser ce{tte équation pour déduire des informations sur l'état interne de S. En effet,en devinant par brute-force les 6 bits du haut de S, et ses $\ell$ bits du bas, on récupère :\\
@@ -356,12 +356,12 @@ M =
 On calcule préalablement les matrices $G$ et $G^{-1}$, avec $G$ la matrice génératrice réduite du réseau blablabla par l'algorithme LLL.
 Pour tous les $r_i$ et les $S_0[0 : \ell]$ possibles:\\
 \begin{enumerate}
-\item On récupère le $T$ correspondant à nos suppositions. On calcule $T'$. ($T'_i = (S_i[64 - 6 : 64 + \ell] - (a^i*S_0[0 : \ell] + C * \sum_{j = 0}^i a^j)[64 - 6 : 64 + \ell]) * 2^{64 - 6 - \ell}$)\\
+\item On récupère le $T$ correspondant à nos suppositions. On calcule $T'$. ($T'_i = (S_i[64 - 6 : 64 + \ell] - (a^i*S_0[0 : \ell] + C * \sum_{j = 0}^i a^j)[64 - 6 : 64 + \ell]) * 2^{64 - 6 - \ell}$)
 %schema T et T'
 
 \item We get the correspondant $S'[\ell : 64 + \ell]$ by using the babai rounding technique on $T'$ using $G$ and $G^{-1}$.
 
-\item We test our solution by computing $S_0$ and testing if the following internals states are coherent with the PCG outputs. If the results are coherents, we return S_0.
+\item We test our solution by computing $S_0$ and testing if the following internals states are coherent with the PCG outputs. If the results are coherents, we return $S_0$.
 
 \end{enumerate}
 
