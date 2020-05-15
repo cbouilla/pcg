@@ -295,6 +295,61 @@ Pour améliorer les performances de nos algorithmes les plus critiques, nous n'a
 \todo{description babai rounding}
 \todo{et preuve ?}
 
+\section{lattice geometric progression}
+
+\subsection{The lattice}
+
+One of the key point of the algorithm is, given a modulus \(M\) and a given common ration \(\alpha\), to find a modular geometric progression knowing only the most significant bits of its \(n\) first terms.
+
+We call \(L(\alpha,M,n)\) the set of n-tuples \(U = (u_0,\dots u_{n-1})\) satisfying :
+
+\[u_{i} = \alpha u_{i-1} \mod M \] for all \(i\) in \(\{1,\dots,n-1\}\).
+
+
+We easily notice that, if \(U\) and \(V\) are in \(L(\alpha,M,n)\), so are \(-U\) and \(U+V\), hence \(L(\alpha,M,n)\) is a lattice.
+
+The lattice \(L(\alpha,M,n)\) is spawned by the lines of the following \(n\times n\) matrix :
+
+\[\begin{pmatrix}
+1&\alpha&\alpha^2&\dots&\alpha^{n-1}\\
+0&M&0&\dots&0\\
+0&0&M&\dots&0\\
+\dots&\dots&\dots&\dots&\dots\\
+0&0&0&\dots&M\\
+\end{pmatrix}\]
+
+We want to find an element \(U\) in the lattice only knowing the most significant bits of each of its coordinates. 
+
+
+We decompose \(U = T + (T-U)\) where \(T\) contains only the upper bits and \(T-U\) the lowers one. There is no reason for \(T\) to be in the lattice, but as \(T-U\) is small, we know \(T\) is \emph{close} to \(U\). So, to find \(U\), we will solve CVP(\(L(\alpha,M,n)\),\(T\)).
+
+\subsection{A first way to solve the CVP : the Babai's rounding}
+
+We compute \(G\) the LLL-reduction of the generating matrix of \(L(\alpha,M,n)\).
+
+As \(T\) is not an element of the lattice, \(TG^{-1}\) is not an integer vector.
+
+We fix \(r = rounding(TG^{-1}) \), then \(rG\) is an element of the lattice. What can we say about the distance between \(rG\) and \(U\) ?
+
+\begin{align*}
+\lVert U - rG \rVert &= \lVert U - (r-TG^{-1} + TG^{-1})G \rVert\\
+&= \lVert U - T + (r-TG^{-1})G \rVert\\
+&\leqslant \lVert U - T \rVert + \lVert(r-TG^{-1})\rVert \times \lVert G\rVert\\	
+\end{align*}
+
+By definition, \(r\) is the closest integer vector to \(TG^{-1}\). But as \(U\) is an element of the lattice, \(UG^{-1}\) is an integer vector. Thus \(r-TG^{-1}\) is smaller than \(UG^{-1}-TG^{-1}\).
+
+Hence :
+\begin{align*}
+\lVert U - rG \rVert &\leqslant \lVert U - T \rVert + \lVert(r-TG^{-1})\rVert \times \lVert G\rVert\\	
+&\leqslant \lVert U - T \rVert + \lVert(UG^{-1}-TG^{-1})\rVert \times \lVert G\rVert\\	
+&\leqslant \lVert U - T \rVert + \lVert(U-Y)\rVert \times \lVert G^{-1} \rVert  \times \lVert G\rVert\\
+& 	\leqslant \lVert U - T \rVert \times (1 +\lVert G^{-1} \rVert  \times \lVert G\rVert )\\
+\end{align*}
+
+If we can prove that the left side of the inequality is smaller than the SVP of G, then wa have proved that \(rG\) is indeed the vector we were searching for.
+
+
 \section{C connu}
 
 \subsection{Réduction}
@@ -337,57 +392,70 @@ Notons cependant que les composantes en $C$ et $S[0:l]$ sont calculées en dehor
 \end{enumerate}
 
 
-\section{babairounding}
+\subsection{preuve cas facile}
 
-We call \(S't\) the truncated vector : \(S'[\ell,64+\ell]\).
+The vector \(S'\) has been constructed such that it is in \(L(A,2^{128},n)\) and its \(\ell\) lower bits are zero.
 
-We consider the case were we successfully guessed the 6 upper bits of each \(S_i\) and the \(\ell\) lower bits of \(S_0\). Then we know the \(6+\ell\) upper bits of \(S't\).
+We call \(U\) the truncated vector : \(S'[\ell,64+\ell]\). We notice that \(U\) is in \(L(A,2^{64},n)\).
 
-(à détailer ?)	
+We consider the case were we successfully guessed the 6 upper bits of each \(S_i\) and the \(\ell\) lower bits of \(S_0\). Then we know the \(6+\ell\) upper bits of \(U\).
 
-We had define \(S'\) such that \(S'\) is in the lattice \(L(A,2^{128},n)\) and its \(\ell \) lower bits are 0. Then \(S't\) is in \(L(1,2^{64},n)\).
-
-If we consider the vector \(T'\) computed in step (numerodelastepenquestion), we notice it is close to \(S't\) in the sense of they have exactly the same \(6+\ell\) upper bits. So we want to recover \(S't\) by solving an approach \(CVP(L(A,2^{64},n),T')\).
-
-Now we need to prove that the \(pwet\) obtained with the Babai rounding is indeed \(S't\).
-
-We denote \(r = rounding(YG^{-1}) \).
-
-\begin{align*}
-\lVert S't - pwet \rVert &= \lVert S't - rG \rVert \\
-&= \lVert S't - (r-YG^{-1} + YG^{-1})G \rVert\\
-&= \lVert S't - Y + (r-YG^{-1})G \rVert\\
-&\leqslant \lVert S't - Y \rVert + \lVert(r-YG^{-1})\rVert \times \lVert G\rVert\\	
-\end{align*}
-
-By definition, \(r\) is the closest integer vector to \(YG^{-1}\). But as \(S't\) is an element of the lattice, \(S'tG^{-1}\) is an integer vector. Thus \(r-YG^{-1}\) is smaller than \(S'tG^{-1}-YG^{-1}\).
-
-Hence :
-\begin{align*}
-\lVert S't - pwet \rVert &\leqslant \lVert S't - Y \rVert + \lVert(r-YG^{-1})\rVert \times \lVert G\rVert\\	
-&\leqslant \lVert S't - Y \rVert + \lVert(S'tG^{-1}-YG^{-1})\rVert \times \lVert G\rVert\\	
-&\leqslant \lVert S't - Y \rVert + \lVert(S't-Y)\rVert \times \lVert G^{-1} \rVert  \times \lVert G\rVert\\
-& 	\leqslant \lVert S't - Y \rVert \times (1 +\lVert G^{-1} \rVert  \times \lVert G\rVert )\\
-\end{align*}
-
-But, by construction of \(Y\), we have that \(\lVert S't - Y \rVert \leqslant \sqrt{n2^{2(58-l)}} \). So
-
-\[ \lVert S't - pwet \rVert \leqslant \sqrt{n2^{2(58-l)}}\times (1 +\lVert G^{-1} \rVert  \times \lVert G\rVert )\]\\
+(maybe dessin)
 
 
+We consider the vector \(T'\) computed in step (numerodelastepenquestion). To recover \(U\), we use the Babai's rounding explain in section (insererlasection) on \(T'\) and \(L(A,2^{64},n)\).
 
+As \(U\) and \(T'\) have exactly the same \(6+\ell\) upper bits  know that \(\lVert U-T \rVert \leqslant \sqrt{n2^{2(58-l)}}\).
 
-Now all we need to do is find sets of parameters \((n,l)\) such that the following inequality is satisfied: 
-\[\sqrt{n2^{2(58-\ell)}} \times (1 +\lVert G^{-1} \rVert  \times \lVert G\rVert) \leqslant \lVert SVP(L(A,2^{64},n))\rVert \].
+So, to be sure that our algorithm return the vector \(U\), we need to find sets of parameters \((n,\ell)\) such that :	 
 
-We notice that only the left term of the inequality depends on \(\ell\).
+\[\sqrt{n2^{2(58-\ell)}} \times (1 +\lVert G^{-1} \rVert  \times \lVert G\rVert) \leqslant \lVert SVP(L(A,2^{64},n))\rVert \]
 
-Hence, some sets of parameters that satisfies this inequality are :
 \begin{itemize}
-	\item \(n = 3\) and \(\ell \geqslant 19\)
-	\item \(n = 4\) and \(\ell \geqslant 13\)
-	\item \(n = 5\) and \(\ell \geqslant 11\)
-	\item \(n = 6\) and \(\ell \geqslant 8\)
+	\item For \(n=3\)
+	
+	\(G = \begin{pmatrix}
+	-1241281756092&3827459685972&-728312298332\\
+	-5001120657083&-2117155768935&5479732607037\\
+	8655886039732&3303731088004&6319848582548\\
+	\end{pmatrix}\)
+	
+	\(\lVert G \rVert \times \lVert G^{-1} \rVert = 2.869065991049632\)
+	
+	\(\lVert SVP(G) \rVert = 4.08909120094543e{^12}\)
+	
+	Hence, the smallest l such that the inequality is satisfied is \(\ell = 19\) %17 avec borne CVP
+	
+	\item For \(n=4\)
+	
+	\(G = \begin{pmatrix}
+	-186304953996472&-126056243766680&7937589136904&93078431381544\\
+	-216211368070119&99587582169277&-214303762177807&-1707551230219\\
+	110964501361298&-5646098666150&-268280113597118&149382085707466\\
+	131252974561432&-233919070109448&-98716819647784&-134620659538888\\
+	\end{pmatrix}\)
+	
+	\(\lVert G \rVert \times \lVert G^{-1} \rVert = 2.060717188416003\)
+	
+	\(\lVert SVP(G) \rVert = 2.43569932844650e^{14}\)
+	
+	Hence, the smallest l such that the inequality is satisfied is \(\ell = 13\) %11 avec borne CVP
+	
+	\item For \(n=5\)
+	
+	\(\lVert G \rVert \times \lVert G^{-1} \rVert = 3.7692142154392747\)
+	
+	\(\lVert SVP(G) \rVert = 1.71669732658884e^{15}\)
+	
+	Hence, the smallest l such that the inequality is satisfied is \(\ell = 11\)  %9 avec borne CVP
+	
+	\item For \(n=6\)
+	
+	\(\lVert G \rVert \times \lVert G^{-1} \rVert = 2.6925925483728537\)
+	
+	\(\lVert SVP(G) \rVert =1.02550589786192e^{16}\)
+	
+	Hence, the smallest l such that the inequality is satisfied is \(\ell = 8\) %7 avec borne CVP
 \end{itemize}
 
 [insert here] attack predicting algo description.
