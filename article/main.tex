@@ -19,6 +19,8 @@
 \usepackage[pdftex,bookmarks,bookmarksopen,bookmarksdepth=3]{hyperref}
 \hypersetup{colorlinks=true,citecolor=red,linkcolor=red,urlcolor=black}
 
+\DeclareMathSymbol{:}{\mathord}{operators}{"3A}
+
 \usepackage{algorithmic}
 
 % knuth-style algos
@@ -186,91 +188,106 @@ emailed back the seeds used to generate the challenge streams the next day.
 
 \section{The PCG Pseudo-Random Number Generator Family}
 
-\todo{cette section doit décrire précisément PCG.}
+This section describes the \textsf{PCG64} non-cryptographic pseudo-random number
+generator (more precisely \textsf{PCG-XSL-RR} in the designer's terminology). It
+has an internal state of 128-bit, which operate as a linear congruential
+generator modulo~$2^{128}$. More precisely:
+\[
+  S_{i+1} = a S_i + c \bmod 2^{128},
+\]
+Where $a = 47026247687942121848144207491837523525$ is a fixed 126-bit
+constant. The first initial state $S_0$ is the seed of the generator. The
+increment $c$ may be specified by the user of the PRNG to produce different
+output streams with the same seed (just as the IV acts in a stream cipher). If
+no value of $c$ is specified, then a default increment is provided:
+$c = 117397592171526113268558934119004209487$.
 
-\begin{quote}
-  In addition, one of the generators, PCG-XSL-RR(described in Section 6.3.3), is
-  explicitly designed to make any attempt at state reconstruction especially
-  difficult, using xor folding tominimize the amount of information about
-  internal state that leaks out.
-\end{quote}
+Each time the PRNG is clocked, 64 output bits are extracted from the internal
+state using a non-linear function that makes use of data-dependent rotations, in
+a way reminiscent of the \textsf{RC5} block cipher~\cite{Rivest94}. The six most
+significant bits of the internal state encode a number $0 \leq r < 64$. The two
+64-bit halves of the internal state are XORed together, and this 64-bit result
+is rotated right by $r$ positions. The successive 64-bit outputs of the
+generator are $X_0, X_1, \dots$ where:
+\[
+  X_i =(S_i[0:64] \oplus S_i[64:128]) \ggg S_i[122:128].
+\]
 
-\begin{quote}
-  Although these properties make it extremely challenging for an agent observing
-  theexternal behavior of a program to guess the state of its random number
-  generator,
-\end{quote}
+Figure~\ref{pcg128out} summarizes the process. The overall design strategy is
+similar to that of a filtered LFSR: the successive states of a weak internal
+generator with a strong algebraic structure are ``filtered'' by a non-linear
+function.
 
-% import numpy
-% print(numpy.random.default_rng())
-% ---> Generator(PCG64)
+Updating the internal state requires a $128 \times 128 \rightarrow 128$
+multiplication operation. In fact, this can be done with two
+$64 \times 64 \rightarrow 64$ multiplications, one
+$64 \times 64 \rightarrow 128$ multiplication and two 64-bit additions. High-end
+desktop CPUs all implement these operations in hardware, so the generator is
+relatively fast on these platforms.
 
-\subsection{LCG algorithm}
+\begin{figure}
+  \begin{center}
+\begin{tikzpicture}[scale=0.66]
+%  \draw[red, use as bounding box] (-1.25, -6.75) rectangle (12.8, 2.25);
+  
+  % S_i
 
-The PCG algorithm we studied is based on the Linear Congruential Generators algorithm. The LCG algorithm is simply based on a congruential multiplication. This type of generator is based on four values: an internal state $S_{i}$, a multiplier $A$, an increment $C$ and the size $M$. Generally, to initialize a generator of a given size, a seed value is provided as the first internal state, and a default multiplier and increment are used. We will study the case where $M$ and $A$ are known and where $M$ is a power of 2.\\
+    % bordures
+    \draw[very thick]  (0, 0) rectangle (12.8, 1);
+    \draw  (0.6, 0) rectangle +(0, 1);
+    \draw[very thick]  (6.4, 0) rectangle +(0, 1);
+    \foreach \i in {0, 1, ..., 128} \draw (\i/10, 0) -- +(0, 0.1);
+    
+    % déco autour
+    \node[draw] at (6.4, 3) (update) {$\times a + c \bmod 2^{128}$};
+    \draw[thick,->] (12.8, 0.5) -- (13.8, 0.5) node[below right] {$S_i$} -- (13.8, 3) -- (update);
+    \draw (13.7, 2.5) -- +(0.2, -0.2);
+    \path (13.9, 2.5) node[anchor=west] {128};
 
-Calling the generator results in calculating the next internal state $S_{i+1} = A \times S_i + C \mod{M}$ and outputting $S_{i+1}$ as data.
+    \draw[thick,->] (update) -- (-2, 3) -- (-2, 0.5) node[below left] {$S_{i+1}$} -- (0, 0.5);
+    \draw (-2.1, 2.5) -- +(0.2, -0.2);
+    \path (-1.9, 2.5) node[anchor=west] {128};
 
-This type of generator is trivially predictable because, the internal state is given to us at each output, and in the event that $C$ is unknown, we can still deduce it with two consecutive outputs: $C = S_{i+1} - A \times S_i$.\\
+    
+    \node[font=\footnotesize,anchor=east] at (12.9, -0.33) {0};
+    \node[font=\footnotesize,anchor=east] at (6.5, -0.33) {64};
+    \node[font=\footnotesize,anchor=west] at (0.5, -0.33) {122};
+    \node[font=\footnotesize] at (-0.25, -0.33) {128};
+    
+    \draw (6.4, -2) node (x) {$\bigoplus$};
+    
+    \draw[->] (3.2, -0.1) |- (x);
+    \draw (3.1, -0.9) -- +(0.2, -0.2);
+    \path (3.3, -1) node[anchor=west] {64};
+    
+    \draw[->] (9.6, -0.1) |- (x);
+    \draw (9.5, -0.9) -- +(0.2, -0.2);
+    \path (9.7, -1) node[anchor=west] {64};
 
-A better variant of the standard LCG is the Truncated LCG, where the output consists only of the higher bits of the internal state $S_i$. This way the entire internal state isn't accessible. Returning the lower bits is not interesting because as we can understand easily and will prove later, lower bits of a state only depend on the lower bits of the previous state.
+    \node[minimum width=1.8cm] at (6.4, -4) (r) {$\ggg$};
+    \draw (5.8, -3.6) rectangle +(1.2, -0.8);
+    \draw[fill=black] (5.8, -4.1) -- (5.95, -4) -- (5.8, -3.9) -- cycle;
+    
+    \draw (0.3, 1.1) -- (0.3, 1.5) -- (-1, 1.5) -- (-1, -4) -- (5.8, -4);
+    \draw (-1.1, -2.9) -- +(0.2, -0.2);
+    \path (-0.9, -3) node[anchor=west] {6};
 
-\subsection{PCG algorithm}
+    \draw[->] (x) -- +(0, -1.5);
+    \node at (6.4, -6.25) (xi) {$X_i$};
+    \draw[->] (6.4, -4.4) -- (xi);
 
-The PCG algorithm we studied is based on the LCG algorithm. To start, here are a few definitions:
-\begin{itemize}
-    \item let $k$ be the size of our generator, in this case $k = 128$ bits;
-    \item let $M$ be the modulus with $M = 2^k$;
-    \item let $S_i$ be the internal state at the $i$-th iteration and $S$ be the list of $S_i$;
-    \item let $X_i$ be the output at the $i$-th iteration of the generator and $X$ be the list of $X_i$;
-    \item let $lowS_i$ be the $k/2$ least significant bits of $S_i$;
-    \item let $upS_i$ be the $k/2$ most significant bits of $S_i$;
-    \item let $rot_i$ be the 6 most significant bits of $S_i$;
-    \item let $nbiter$ be the number of consecutive outputs for prediction purposes.
-\end{itemize}
-
-The internal state can be redefined as:
-\begin{equation}
-    S_i = 2^{k/2} \times upS_i + lowS_i 
-\end{equation}
-
-The 6 most significant bits, $rot_i$, of the internal state are used as a value to determine the rotation in the PCG algorithm. Let \texttt{rotate} be the function that performs said rotation (Figure \ref{pcg128out}).\\
-The rotation is a simple exchange of bits, where a $k/2$ bit value is split into 2 parts: one of $rot_i$ bits and the other in $(k/2) - rot_i$ bits. The two parts are then swapped, and the new value is returned. 
-
-This generator is initialised with a given $k$ bit internal state $S_0$ (of size 128 bits in the case of PCG128), and optionally with an $k$ bit increment $C$. If no increment is given, the algorithm will use a known default increment. For each output of the generator, the algorithm will perform the following calculations" (Figure \ref{pcg128out}):\\
-\begin{align}
-    X_{i} &= \mathtt{rotate}(upS_i\ \oplus\ lowS_i)\\
-    S_{i+1} &= A \times S_{i} + C \mod{2^k}
-\end{align}
-In the case of PCG128, $A$ is a default increment of size 125 bits prime with $2^k$.
-
-\begin{figure}[h!]
-    \centering
-    \includegraphics[width=0.75\linewidth]{pictures/PCG128.png}
-    \caption{PCG128 : Output process}
-    \label{pcg128out}
+    \draw (6.3, -4.9) -- +(0.2, -0.2);
+    \path (6.5, -5) node[anchor=west] {64};
+  \end{tikzpicture}
+\end{center}
+\caption{\textsf{PCG64}: Internal state update and output process.}
+\label{pcg128out}
 \end{figure}
-
-
-
-Given the nature of the generator, the following values are known at every step:
-\begin{itemize}
-    \item the size of the generator $k$;
-    \item the list of outputs $X$;
-    \item the multiplier $A$;
-    \item and eventually $C$, if the default increment was used. 
-\end{itemize}
-
-To break this generator, we had to differentiate between cases when the default $C$ was used or not. It was also interesting to note what was the minimum number of $X_i$ needed to reliably attack it.
-
-
-
 
 
 \section{Algorithm of Frieze \textit{et al}}
 
-\todo{Comme on utilise à plusieurs reprise l'idée de se ramener à un LCG
-  tronqué, autant décrire la technique à base de réseaux un bon coup.}
+\todo{à fusionnier avec la section suivante!}
 Pour casser PCG, nous avons utilisé la méthode présentée par Alan M. Frieze, Johan Hastad, Ravi Kannan, Jeffray C. Lagarias et Adi Shamir \cite{Frieze}. Plaçons nous dans le cas simple du Lehmer's generator\cite{Lehmer}. It's a Linear Congruential Generator, a known multiplier $A$, a known modulus $2^128$ and no increment. The outputs $X$ are the 64 upper-bits of $S$. For $n \in \mathbb{N}$, the $n$ firsts internal states form a lattice we will name $\mathcal{L}(A,2^{128},n)$. 
 \todo{rajouter ref Lehmer's generator}
 
@@ -295,8 +312,8 @@ Pour améliorer les performances de nos algorithmes les plus critiques, nous n'a
 \todo{description babai rounding}
 \todo{et preuve ?}
 
-\section{lattice geometric progression}
-
+\section{Reconstructing Truncated Geometric Sequences}
+\todo{à fusionnier avec la section précédente!}
 \subsection{The lattice}
 
 One of the key point of the algorithm is, given a modulus \(M\) and a given common ration \(\alpha\), to find a modular geometric progression knowing only the most significant bits of its \(n\) first terms.
@@ -323,7 +340,7 @@ We want to find an element \(U\) in the lattice only knowing the most significan
 
 We decompose \(U = T + (T-U)\) where \(T\) contains only the upper bits and \(T-U\) the lowers one. There is no reason for \(T\) to be in the lattice, but as \(T-U\) is small, we know \(T\) is \emph{close} to \(U\). So, to find \(U\), we will solve CVP(\(L(\alpha,M,n)\),\(T\)).
 
-\subsection{A first way to solve the CVP : the Babai's rounding}
+\subsection{A first way to solve the CVP : Babai's Round-off Algorithm}
 
 We compute \(G\) the LLL-reduction of the generating matrix of \(L(\alpha,M,n)\).
 
@@ -337,7 +354,7 @@ We fix \(r = rounding(TG^{-1}) \), then \(rG\) is an element of the lattice. Wha
 &\leqslant \lVert U - T \rVert + \lVert(r-TG^{-1})\rVert \times \lVert G\rVert\\	
 \end{align*}
 
-By definition, \(r\) is the closest integer vector to \(TG^{-1}\). But as \(U\) is an element of the lattice, \(UG^{-1}\) is an integer vector. Thus \(r-TG^{-1}\) is smaller than \(UG^{-1}-TG^{-1}\).
+By definition, \(r\) is the closest integer vector to \(TG^{-1}\). But as \(U\) is an element of the lattice, \(UG^{-1}\) is an integer vector. Thus \(r-TG^{-1}\) is shorter than \(UG^{-1}-TG^{-1}\).
 
 Hence :
 \begin{align*}
@@ -347,7 +364,7 @@ Hence :
 & 	\leqslant \lVert U - T \rVert \times (1 +\lVert G^{-1} \rVert  \times \lVert G\rVert )\\
 \end{align*}
 
-If we can prove that the left side of the inequality is smaller than the SVP of G, then wa have proved that \(rG\) is indeed the vector we were searching for.
+If we can prove that the left side \todo{right side?} of the inequality is smaller than the SVP of G, then wa have proved that \(rG\) is indeed the vector we were searching for.
 
 
 \section{C connu}
