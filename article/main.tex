@@ -266,43 +266,6 @@ To break this generator, we had to differentiate between cases when the default 
 
 
 
-\section{Naive Brute-Force Reconstruction of the Internal State}
-
-In this section we describe the simplest possible prediction algorithm we could
-think of. They serve as ``baseline'' to evaluate the more refined predictors
-described below.
-
-\todo{Dans le cas où C est connu, c'est le truc de Vigna, non ?}
-
-
-In case $C$ is unknown, retrieving $S_0$ is harder. The naive algorithm gives us
-an answer within $2^{128+6}$ simple operations whit the following algorithm:
-
-\begin{algorithmic}[!h]
-\FOR{all possibilities of $lowC$ and $upS_0$}
-    \STATE \texttt{unrotate}($X_0$)
-    \STATE $lowS_0 = upS_0\ \mathtt{XOR}\ X_0$
-    \STATE $lowS_1 = lowC + lowS_0 \times A \mod{2^{k/2}}$
-    \FOR{all possibilities of $rot_1$}
-        \STATE $\mathtt{unrotate}(X_1)$
-        \STATE $upS_1 = lowS_1\ \mathtt{XOR}\ X_1$
-        \STATE $C = S_1 - A \times S_0 \mod{2^{k}}$
-        \STATE $S_2 = S_1 \times A + C$
-        \IF {$S_2$ is coherent with  $X_2$}
-            \STATE print($C$,$S_0$)
-        \ENDIF
-    \ENDFOR
-\ENDFOR
-\end{algorithmic}
-
-This algorithm reveals us $C$ and a list of outputs with $S_0$ in it. The entry
-is 256 bits long, and we used 3 64 bits long outputs of the generator. There
-will be about $2^{64}$ possible $S_0$. This is why we need a couple other
-outputs to get the real $S_0$. Sorting out which is the correct $S_0$ can be
-done afterwards, and won't affect the complexity. But given the complexity of
-this algorithm, it is even more unrealistic to solve problem in this fashion
-then the previous one where $C$ was known.
-
 
 \section{Predicting Truncated Linear Congruential Generators}
 
@@ -336,8 +299,7 @@ Pour deviner l'état interne du générateur, une méthode consiste à procéder
    S_0[0:64] = S_0[64:128] \texttt{ XOR } \texttt{ROT}(X_0 , 64 - r_0) \\
 \end{equation}
 
-Cette méthode demanderait de l'ordre de $2^{64}$ calculs, ce qui n'est pas acceptable. Nous pouvons cependant utiliser ce{tte équation pour déduire des informations sur l'état interne de S. En effet,en devinant par brute-force les 6 bits du haut de S, et ses $\ell$ bits du bas, on récupère :\\
-% schéma "relevant bits of the outputs"
+Cette méthode demanderait de l'ordre de $2^{64}$ calculs, ce qui n'est pas acceptable. Nous pouvons cependant utiliser cette équation pour déduire des informations sur l'état interne de S. En effet,en devinant par brute-force les 6 bits du haut de S, et ses $\ell$ bits du bas, on récupère :\\% schéma "relevant bits of the outputs"
 
 On réduit $S$ à une série géométrique plus simple. Notons $S'$ l'état interne auquel on retire sa composante en $C$, et en $S_0[0:\ell]$ (note de bas de page : le fait de retirer $S_0[0:\ell]$ n'est pas nécéssaire, mais nous permet de limiter la taille des instances utilisées à 64 bits, très utile pour la programmation en C). Nous utiliserons le réseau engendré par les $S'[\ell : 64 + \ell]$, de matrice génératrice :\\
 \begin{equation}
@@ -351,13 +313,13 @@ M =
 \end{pmatrix}
 \end{equation}
 
-
 \subsection{Algorithme}
 On calcule préalablement les matrices $G$ et $G^{-1}$, avec $G$ la matrice génératrice réduite du réseau blablabla par l'algorithme LLL.
 Pour tous les $r_i$ et les $S_0[0 : \ell]$ possibles:\\
 \begin{enumerate}
 \item On récupère le $T$ correspondant à nos suppositions. On calcule $T'$. ($T'_i = (S_i[64 - 6 : 64 + \ell] - (a^i*S_0[0 : \ell] + C * \sum_{j = 0}^i a^j)[64 - 6 : 64 + \ell]) * 2^{64 - 6 - \ell}$)
 %schema T et T'
+Notons cependant que les composantes en $C$ et $S[0:l]$ sont calculées en dehors de la boucle et stockées dans un tableau pour des raisons de performance. Ceci est fait de même dans tous les algorithmes suivants.
 
 \item We get the correspondant $S'[\ell : 64 + \ell]$ by using the babai rounding technique on $T'$ using $G$ and $G^{-1}$.
 
@@ -426,8 +388,48 @@ Hence, some sets of parameters that satisfies this inequality are :
 \end{theorem}
 
 \section{Predicting PCG with Unknown Increment}
+We can't use the same algorithm for the general case. We don't known $C$, so we used an other geometric reduction.
+$(\Delta S_{i+1}S_i)_i$ est un suite géométrique de raison $a$.
 
-[insert here] attack predicting algo description. Phase 1, Phase 2, Phase 3
+On calcule préalablement les matrices $G$ et $G^{-1}$.
+
+\subsection{Part 1 : Premier filtre}
+Pour tous les $r_i$, les $S_0[0 : \ell]$ et les $C[0 : \ell]$ possibles:
+\begin{enumerate}
+  \item On récupère le $T$  correspondant à nos suppositions. On calcule $\Delta T$ :
+  \begin{equation}
+    \Delta T_i = (S_{i+1}[58 : 64 + \ell] - S_i[58 : 64 + \ell] - (S_0[0:\ell] * (a^{i+1} - a^i) + C[0:\ell] * a^i )[58 : 64 + \ell]) * 2^{64 - l - 6}
+  \end{equation}
+  On peut donc aussi définir $\Delta T_i = T'_{i+1} - T'_{i}$ avec $T'$ dont on aurait soustrait la composante en $C[0:\ell]$ et non en $C$.
+
+  \item We get the correspondant $\Delta S_0S_1[0 : 64 + \ell]$ by using the babai rounding technique on $\Delta T$ using $G$ and $G^{-1}$.
+
+  \item On teste s'il existe pour l'itération suivante au moins une rotation $r_n$ cohérente avec le $\Delta T$ trouvé. Pratiquement, pour chacune des 64 $r_n$ possibles, on teste si :
+  \begin{align}
+     \Delta S_0S_n[0:l] &= S_0[64:64 + l] XOR \mathtt{ROT(X_n , 64 - r_n)[0:l]}\\
+     r_n &= S_0[58:64] XOR \mathtt{ROT(X_n , 64 - r_n)[58:64]}
+  \end{align}
+  Si un de ces égalité n'est pas vérifiée, la solution n'est pas retenue, on passe à la prochaine itération.
+
+  \item On répète la dernière opération encore 3 fois.
+\end{enumerate}
+Cette première partie de l'algorithme comporte l'énorme majorité du temps de calcul, c'est donc sur elle que doit se porter la recherche de performance.
+
+
+\subsection{Part 2 : Récupération de la différence complète et deuxième filtre}
+On calcule préalalement H matrice génératrice du réseau Lblablabla2 réduite par la méthode LLL.
+On a récupéré de la Part 1 une série de $S_0[0 : \ell]$, $r_i$ (i = 0, ..., n) et $C[0 : \ell]$ parmi lequels se trouve notre solution.
+\begin{enumerate}
+  \item recupérer toutes les $r_i$ possibles, pour $n \leq i \leq m$  par la même méthode que l'étape 3 de la Part 1, répétée $m-n$ fois. On garde en mémoire toutes les rotations possiles.
+  \item Pour chacune des $r$ possibles
+  \begin{enumerate}
+    \item We cumpute $\Delta r$ avec le même méthode que pour $\Delta T$ : 
+    \begin{equation}
+      \Delta r_i &= (S_{i+1}[122 : 128] - S_i[122:128] - (S_0[0:\ell] * (a^{i+1} - a^i) + C[0:\ell] * a^i )[122:128]) * 2^{64 - l - 6}
+    \end{equation}
+    \item We get the correspondant $\Delta S'_0S'_1$ ($S'$ dont on aurait retiré que ) computing $\texttt{CVP}(r * 2^{128 - \ell}, Lblablabla2)$. We use the fpylll python library CVP function. On stocke le $DS_0S_1$ correspondant.
+  \end{enumerate}
+\end{enumerate}
 
 \begin{theorem}
   The algorithm described above works with probability.... in time ...
