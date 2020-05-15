@@ -393,6 +393,50 @@ $(\Delta S_{i+1}S_i)_i$ est un suite géométrique de raison $a$.
 
 On calcule préalablement les matrices $G$ et $G^{-1}$.
 
+\begin{tikzpicture}[yscale=0.66]
+  \draw[red, use as bounding box] (-0.75, -3.75) rectangle (12.8, 2.25);
+  
+  % S_i
+  \begin{scope}
+    % remplissage
+    \fill[fill=lightgray] (4.6, 0) rectangle +(2.4, 1);
+    \fill[fill=lightgray] (0, 0) rectangle +(0.6, 1);
+    \fill[fill=lightgray] (11, 0) rectangle +(1.8, 1);
+    
+    % bordures
+    \draw[thick]  (0, 0) rectangle (12.8, 1);
+    \draw  (0.6, 0) rectangle +(0, 1);
+    \draw[thick]  (6.4, 0) rectangle +(0, 1);
+    \draw  (7.0, 0) rectangle +(0, 1);
+    \draw  (4.6, 0) rectangle +(0, 1);
+    \draw  (11, 0) rectangle +(0, 1);
+    
+    % déco autour
+    \node at (-0.5, 0.5) {$S_i$};
+    \draw[<->] (0, 1.5) -- node[above] {64 bits} +(6.375, 0);
+    \draw[<->] (6.425, 1.5) -- node[above] {64 bits} +(6.375, 0);
+  \end{scope}
+
+  % T_i
+  \begin{scope}[xshift=4.6cm, yshift=-1.5cm]    
+    \draw[dashed]  (0, 0) rectangle +(6.4, 1);
+    \draw[thick]  (0, 0) rectangle +(2.4, 1);
+    \draw[]  (1.8, 0) rectangle +(0, 1);
+    \path (2.4, 0) rectangle node {00000000 \dots 00000000} (6.4, 1);
+
+    % déco
+    \node at (-0.5, 0.5) {$T_i$};
+    \draw[<->] (0, -0.5) -- node[below] {$\ell$ bits} +(1.775, 0);
+    \draw[<->] (1.8, -0.5) -- node[below] {6} +(0.6, 0);
+    \draw[<->] (0, -1.5) -- node[below] {64 bits} +(6.375, 0);
+  \end{scope}
+
+  % flèches S_i --> T_i
+  \draw[ultra thick,->] (5.5, 0.5) -- +(0, -1.5);
+  \draw[ultra thick,->] (6.7, 0.5) -- +(0, -1.5);
+  
+\end{tikzpicture}
+
 \subsection{Part 1 : Premier filtre}
 Pour tous les $r_i$, les $S_0[0 : \ell]$ et les $C[0 : \ell]$ possibles:
 \begin{enumerate}
@@ -425,7 +469,7 @@ On a récupéré de la Part 1 une série de $S_0[0 : \ell]$, $r_i$ (i = 0, ..., 
   \begin{enumerate}
     \item We cumpute $\Delta r$ avec le même méthode que pour $\Delta T$ : 
     \begin{equation}
-      \Delta r_i &= (S_{i+1}[122 : 128] - S_i[122:128] - (S_0[0:\ell] * (a^{i+1} - a^i) + C[0:\ell] * a^i )[122:128]) * 2^{64 - l - 6}
+      \Delta r_i = (S_{i+1}[122 : 128] - S_i[122:128] - (S_0[0:\ell] * (a^{i+1} - a^i) + C[0:\ell] * a^i )[122:128]) * 2^{64 - l - 6}
     \end{equation}
     \item We get the correspondant $\Delta S'_0S'_1$ ($S'$ dont on aurait retiré que ) computing $\texttt{CVP}(r * 2^{128 - \ell}, Lblablabla2)$. We use the fpylll python library CVP function. On stocke le $DS_0S_1$ correspondant.
   \end{enumerate}
