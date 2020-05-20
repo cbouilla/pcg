@@ -568,7 +568,14 @@ reconstructed. The precise details follow.
 
 Set $S_i' = S_i - S_0[0:\ell] a^i - c (\sum_{j=0}^{i-1} a^i)$. It is easy to check that
 $S'_{i+1} = a S'_i$, and therefore the successive $S'_i$'s follow a geometric
-progression\footnote{note de bas de page : le fait de retirer $S_0[0:\ell]$
+progression. Indeed :
+\begin{align*}
+S_i = S_{i-1} a + c
+S_i = S_{i-2} a^2 + (a + 1) c
+S_i = S_0 a^i + (\sum_{j=0}^{i-1} a^i) c
+S_i - (\sum_{j=0}^{i-1} a^i) c - S_0[0:\ell] a^i = (S_0 - S_0[0:\ell]) a^i 
+\end{align*}
+\footnote{note de bas de page : le fait de retirer $S_0[0:\ell]$
   n'est pas nécéssaire, mais nous permet de limiter la taille des instances
   utilisées à 64 bits, très utile pour la programmation en C)}.
 
