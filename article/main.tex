@@ -1,4 +1,4 @@
-\documentclass[preprint]{iacrtrans}
+\documentclass[preprint,svgnames]{iacrtrans}
 
 \usepackage[utf8]{inputenc}
 \usepackage{amssymb, amsmath, amsfonts, amscd}
@@ -209,9 +209,9 @@ significant bits of the internal state encode a number $0 \leq r < 64$. The two
 64-bit halves of the internal state are XORed together, and this 64-bit result
 is rotated right by $r$ positions. The successive 64-bit outputs of the
 generator are $X_0, X_1, \dots$ where:
-\[
+\begin{equation}\label{eq:output}
   X_i =(S_i[0:64] \oplus S_i[64:128]) \ggg S_i[122:128].
-\]
+\end{equation}
 
 Figure~\ref{pcg128out} summarizes the process. The overall design strategy is
 similar to that of a filtered LFSR: the successive states of a weak internal
@@ -224,6 +224,7 @@ $64 \times 64 \rightarrow 64$ multiplications, one
 $64 \times 64 \rightarrow 128$ multiplication and two 64-bit additions. High-end
 desktop CPUs all implement these operations in hardware, so the generator is
 relatively fast on these platforms.
+
 
 \begin{figure}
   \begin{center}
@@ -385,20 +386,195 @@ But, as the vector \(U\) is in the lattice and by definition of the CVP, \(|CVP(
 If we can prove that the right side of the inequality is smaller than the SVP of the lattice, then wa have proved that \(CVP(L(\alpha,M,n),T)\) is indeed the vector we were searching for.
 
 
-\section{C connu}
+\section{Warm-up: A Prediction Algorithm for \textsf{PCG64} With Known Increment}
 
-\subsection{Réduction}
-Pour deviner l'état interne du générateur, une méthode consiste à procéder par brute-force. On devine les 64 bits supérieurs de $S_0$, on en déduit la rotation $r_0$ utilisée, on peut retrouver  les 64 bits inférieurs:
+We first consider the easier case where the ``increment'' (the $c$ term in the
+definition of the underlying linear congruential generator) is known --- recall
+that a default value is specified in case the user of the pseudo-random
+generator does not want to provide one.
 
-\begin{equation}
-   S_0[0:64] = S_0[64:128] \oplus \texttt{ROT}(X_0 , 64 - r_0) \\
-\end{equation}
+In this case, reconstructing the 128-bit internal state $S_i$ of the generator
+obis sufficient to produce the pseudo-random flow with 100\% accuracy (the
+generator can also be clocked backwards if necessary, so that the seed can be
+easily reconstructed). We therefore focus on $S_0$, the first internal state
+after seeding. A very simple strategy could be the following:
+\begin{enumerate}
+\item Guess the 64 upper bits of $S_0$.
+\item Compute the missing 64 lower bits using~\eqref{eq:output}, with:
+\[
+   S_0[0:64] = S_0[64:128] \oplus (X_0  \lll S[122:128]).
+\]
+\item If $X_1$ is computed correctly, output $S_0$.
+\end{enumerate}
 
-Cette méthode demanderait de l'ordre de $2^{64}$ calculs, ce qui n'est pas acceptable. Nous pouvons cependant utiliser cette équation pour déduire des informations sur l'état interne de S. En effet,en devinant par brute-force les 6 bits du haut de S, et ses $\ell$ bits du bas, on récupère :
+This requires $2^{64}$ iterations of a loop that does a dozen arithmetic
+operations. This is the baseline that we improve upon. An improved
+``guess-and-determine'' prediction algorithm is possible, which essentially
+amounts to expose a truncated version of the underlying linear congruential
+generator, and attack it using the well-known tools. This is possible by
+combining the following ingredients:
+\begin{itemize}
+\item The underlying linear congruential generator uses a power-of-two modulus,
+  therefore the $\ell$ low-order bits of $S_{i+1}$ are entirely determined by
+  the $\ell$ low-order bits of $S_i$. More precisely, we have:
+  \begin{equation}\label{eq:lcg}
+    S_{i+1} = aS_i + c \bmod 2^\ell, \qquad \text{for all } 0 \leq \ell \leq 128
+  \end{equation}
+  Therefore, guessing low-order bits of $S_0$ yields a ``long-term advantage''
+  that holds for all subsequent states.
 
-\todo{schéma "relevant bits of the outputs"}
+\item Guessing a 6-bit rotation gives access to the XOR of the two halves of the
+  internal state. If a part of the state is known, then this transfers existing
+  knowledge to the other half.
+\end{itemize}
 
-On réduit $S$ à une série géométrique plus simple. Notons $S'$ l'état interne auquel on retire sa composante en $C$, et en $S_0[0:\ell]$ (note de bas de page : le fait de retirer $S_0[0:\ell]$ n'est pas nécéssaire, mais nous permet de limiter la taille des instances utilisées à 64 bits, très utile pour la programmation en C). Nous utiliserons le réseau engendré par les $S'[\ell : 64 + \ell]$, nommé $\mathcal{L}(A,2^64,n)$. On se réduit donc au cas facile étudié dans la partie précédente.
+In figure~\ref{fig:Cknown}, we see that guessing $S_0[0:\ell]$ and a few 6-bit
+rotations give access to $S_i[58:64+\ell]$ for the corresponding consecutive
+states. Therefore, we are facing a truncated linear congruential generator on
+$64+\ell$ bits, where we only know $6+\ell$ bits of output, for a few
+consecutive outputs. This is sufficient to reconstruct entirely the successive
+states of this truncated linear congruential generator. This reveals
+$S_0[0:64+\ell]$, and using~\eqref{eq:output} the entire $S_0$ can be
+reconstructed. The precise details follow.
+
+\begin{figure}
+\begin{center}
+\begin{tikzpicture}[yscale=0.66]
+  \path[red, use as bounding box] (-0.75, -9.5) rectangle (12.8, 2.25);
+  
+  % S_0
+  \begin{scope}
+    % remplissage
+    \fill[fill=Yellow] (4.6, 0) rectangle +(2.4, 1);
+    \fill[fill=magenta] (0, 0) rectangle +(0.6, 1);
+    \fill[fill=magenta] (11, 0) rectangle  +(1.8, 1);
+    
+    % bordures
+    \draw[thick]  (0, 0) rectangle (12.8, 1);
+    \draw  (0.6, 0) rectangle +(0, 1);
+    \draw[thick]  (6.4, 0) rectangle +(0, 1);
+    \draw  (7.0, 0) rectangle +(0, 1);
+    \draw  (4.6, 0) rectangle +(0, 1);
+    \draw  (11, 0) rectangle +(0, 1);
+    
+    % déco autour
+    \node at (-0.5, 0.5) {$S_0$};
+    \draw[<->] (0, 1.5) -- node[above] {64 bits} +(6.375, 0);
+    \draw[<->] (6.425, 1.5) -- node[above] {64 bits} +(6.375, 0);
+  \end{scope}
+
+  % T_0
+  \begin{scope}[xshift=4.6cm, yshift=-1.5cm]    
+    \draw[dashed]  (0, 0) rectangle +(6.4, 1);
+    \draw[thick]  (0, 0) rectangle +(2.4, 1);
+    \draw[]  (1.8, 0) rectangle +(0, 1);
+    \path (2.4, 0) rectangle node {$00000000 \cdots 00000000$} (6.4, 1);
+
+    % déco
+    \node at (-0.5, 0.5) {$T_0$};
+  \end{scope}
+
+  % flèches S_i --> T_i
+  \draw[ultra thick,->] (5.5, 0.5) -- +(0, -1.5);
+  \draw[ultra thick,->] (6.7, 0.5) -- +(0, -1.5);
+
+  
+  %%%%%%%%%
+
+  
+  % S_1
+  \begin{scope}[yshift=-3cm]
+    % remplissage
+    \fill[fill=Yellow] (4.6, 0) rectangle +(2.4, 1);
+    \fill[fill=magenta] (0, 0) rectangle +(0.6, 1);
+    \fill[fill=cyan] (11, 0) rectangle +(1.8, 1);
+    
+    % bordures
+    \draw[thick]  (0, 0) rectangle (12.8, 1);
+    \draw  (0.6, 0) rectangle +(0, 1);
+    \draw[thick]  (6.4, 0) rectangle +(0, 1);
+    \draw  (7.0, 0) rectangle +(0, 1);
+    \draw  (4.6, 0) rectangle +(0, 1);
+    \draw  (11, 0) rectangle +(0, 1);
+    
+    % déco autour
+    \node at (-0.5, 0.5) {$S_1$};
+
+    % flèches S_i --> T_i
+    \draw[ultra thick,->] (5.5, 0.5) -- +(0, -1.5);
+    \draw[ultra thick,->] (6.7, 0.5) -- +(0, -1.5);
+  \end{scope}
+
+  % T_1
+  \begin{scope}[xshift=4.6cm, yshift=-4.5cm]    
+    \draw[dashed]  (0, 0) rectangle +(6.4, 1);
+    \draw[thick]  (0, 0) rectangle +(2.4, 1);
+    \draw[]  (1.8, 0) rectangle +(0, 1);
+    \path (2.4, 0) rectangle node {$00000000 \cdots 00000000$} (6.4, 1);
+
+    % déco
+    \node at (-0.5, 0.5) {$T_1$};
+  \end{scope}
+
+  %%%%%%%%%%%%%
+
+  
+  % S_2
+  \begin{scope}[yshift=-6cm]
+    % remplissage
+    \fill[fill=Yellow] (4.6, 0) rectangle +(2.4, 1);
+    \fill[fill=magenta] (0, 0) rectangle +(0.6, 1);
+    \fill[fill=cyan] (11, 0) rectangle +(1.8, 1);
+    
+    % bordures
+    \draw[thick]  (0, 0) rectangle (12.8, 1);
+    \draw  (0.6, 0) rectangle +(0, 1);
+    \draw[thick]  (6.4, 0) rectangle +(0, 1);
+    \draw  (7.0, 0) rectangle +(0, 1);
+    \draw  (4.6, 0) rectangle +(0, 1);
+    \draw  (11, 0) rectangle +(0, 1);
+    
+    % déco autour
+    \node at (-0.5, 0.5) {$S_2$};
+    
+    % flèches S_i --> T_i
+    \draw[ultra thick,->] (5.5, 0.5) -- +(0, -1.5);
+    \draw[ultra thick,->] (6.7, 0.5) -- +(0, -1.5);
+  \end{scope}
+
+  % T_2
+  \begin{scope}[xshift=4.6cm, yshift=-7.5cm]    
+    \draw[dashed]  (0, 0) rectangle +(6.4, 1);
+    \draw[thick]  (0, 0) rectangle +(2.4, 1);
+    \draw[]  (1.8, 0) rectangle +(0, 1);
+    \path (2.4, 0) rectangle node {$00000000 \cdots 00000000$} (6.4, 1);
+
+    % déco
+    \node at (-0.5, 0.5) {$T_2$};
+    \draw[<->] (0, -0.5) -- node[below] {$\ell$ bits} +(1.775, 0);
+    \draw[<->] (1.8, -0.5) -- node[below] {6} +(0.6, 0);
+    \draw[<->] (0, -1.25) -- node[below] {64 bits} +(6.4, 0);
+    \draw[<->] (6.4, -1.25) -- node[below] {$\ell$ bits} +(1.775, 0);
+  \end{scope}
+\end{tikzpicture}
+
+\end{center}
+\caption{A guess-and-determine algorithm to reconstruct the first internal state
+  $S_0$. Magenta bits are guessed; cyan bits are obtained using the linear
+  congruence relation~\eqref{eq:lcg}; yellow bits are obtained
+  from the output and the guessed rotations using~\eqref{eq:output}.}
+\label{fig:Cknown}
+\end{figure}
+
+Set $S_i' = S_i - (S_0[0:\ell] + c) \sum_{j=0}^i a^i$. It is easy to check that
+$S'_{i+1} = a S'_i$, and therefore the successive $S'_i$'s follow a geometric
+progression\footnote{note de bas de page : le fait de retirer $S_0[0:\ell]$
+  n'est pas nécéssaire, mais nous permet de limiter la taille des instances
+  utilisées à 64 bits, très utile pour la programmation en C)}.
+
+
+
+Nous utiliserons le réseau engendré par les $S'[\ell : 64 + \ell]$, nommé $\mathcal{L}(A,2^64,n)$. On se réduit donc au cas facile étudié dans la partie précédente.
 \begin{equation}
 genMatrix =
 \begin{pmatrix} 
@@ -410,7 +586,8 @@ genMatrix =
 \end{pmatrix}
 \end{equation}
 
-\subsection{Algorithme}
+
+
 On calcule préalablement les matrices $G$ et $G^{-1}$, avec $G$ la matrice génératrice réduite du réseau $\mathcal{L}(A,2^64,n)$ par l'algorithme LLL.
 Pour tous les $r_i$ et les $S_0[0 : \ell]$ possibles:\\
 \begin{enumerate}
