@@ -338,9 +338,9 @@ The lattice \(L(\alpha,M,n)\) is spawned by the lines of the following \(n\times
 We want to find an element \(U\) in the lattice only knowing the most significant bits of each of its coordinates. 
 
 
-We decompose \(U = T + (T-U)\) where \(T\) contains only the upper bits and \(T-U\) the lowers one. There is no reason for \(T\) to be in the lattice, but as \(T-U\) is small, we know \(T\) is \emph{close} to \(U\). So, to find \(U\), we will solve CVP(\(L(\alpha,M,n)\),\(T\)).
+We decompose \(U = T + (T-U)\) where \(T\) contains only the upper bits and \(T-U\) the lowers one. There is no reason for \(T\) to be in the lattice, but as \(T-U\) is small, we know \(T\) is \emph{close} to \(U\).
 
-\subsection{A first way to solve the CVP : Babai's Round-off Algorithm}
+\subsection{A first way to find U : the Babai's rounding}
 
 We compute \(G\) the LLL-reduction of the generating matrix of \(L(\alpha,M,n)\).
 
@@ -364,7 +364,25 @@ Hence :
 & 	\leqslant \lVert U - T \rVert \times (1 +\lVert G^{-1} \rVert  \times \lVert G\rVert )\\
 \end{align*}
 
-If we can prove that the left side \todo{right side?} of the inequality is smaller than the SVP of G, then wa have proved that \(rG\) is indeed the vector we were searching for.
+If we can prove that the right side \todo{je confonds ma gauche et ma droite et je vous zut :p} of the inequality is smaller than the SVP of G, then wa have proved that \(rG\) is indeed the vector we were searching for.
+
+ \subsection{A second way to find U : using an exact CVP solver}
+
+Solving exactly the CVP is a hard computational problem. But as we do not manipulate quantities too big, we still can use an exact CVP solver.
+
+We know that \(U\) is in the lattice, \(T\) is not and \(|T-U|\) is small. Then we can hope for \(U\) to be the closet vector of \(T\) which is in the lattice : the vector \(U\) may be the solution of \(CVP(L(\alpha,M,n),T)\).
+
+What can we say about \(|CVP(L(\alpha,M,n),T)-U|\) ?
+
+\begin{align*}
+|CVP(L(\alpha,M,n),T)-U| &= |CVP(L(\alpha,M,n),T)-T+T-U|\\
+& \leqslant |CVP(L(\alpha,M,n),T)-T|+|T-U|\\
+\end{align*}
+
+But, as the vector \(U\) is in the lattice and by definition of the CVP, \(|CVP(L(\alpha,M,n),T)-T| \leqslant |T-U| \), hence 
+\[|CVP(L(\alpha,M,n),T)-U|\leqslant 2|T-U|\]
+
+If we can prove that the right side of the inequality is smaller than the SVP of the lattice, then wa have proved that \(CVP(L(\alpha,M,n),T)\) is indeed the vector we were searching for.
 
 
 \section{C connu}
@@ -573,6 +591,36 @@ On a récupéré de la Part 1 une série de $S_0[0 : \ell]$, $r_i$ (i = 0, ..., 
     
   \end{enumerate}
 \end{enumerate}
+
+\subsection{preuve cas difficile}
+\todo{À ranger au bon endroit}
+% Babai ça marche pas (genre zero)
+
+The vector \(S'\) has been constructed such that it is in \(L(A,2^{128},n)\) and its \(\ell\) lower bits are zero.
+
+We call \(U\) the truncated vector : \(S'[\ell,128]\). We notice that \(U\) is in \(L(A,2^{128-\ell},n)\).
+
+We consider the case were we successfully guessed the 6 upper bits of each \(S_i\) and the \(\ell\) lower bits of \(S_0\). Then we know the 6 upper bits of \(U\).
+
+(maybe dessin)
+
+
+We consider the vector \(T'\) computed in step (numerodelastepenquestion). To recover \(U\), we use an exact CVP solver as explain in  (insererlasection) on \(T'\) and \(L(A,2^{128-\ell},n)\).
+
+As \(U\) and \(T'\) have exactly the same \(6\) upper bits  know that \(\lVert U-T \rVert \leqslant \sqrt{n2^{2(128-6-\ell)}}\).
+
+So, to be sure that our algorithm return the vector \(U\), we need to find sets of parameters \((n,\ell)\) such that :	 
+
+\[2\sqrt{n}^{(128-6-\ell)} \leqslant \lVert SVP(L(A,2^{128-\ell},n))\rVert \]
+
+\begin{itemize}
+	\item For \(\ell=11\), the smallest \(n\) we need is 39.
+	
+	\item For \(\ell=12\), the smallest \(n\) we need is 38.
+	
+	\item For \(\ell=13\), the smallest \(n\) we need is again 38 .
+	
+\end{itemize} 
 
 \begin{theorem}
   The algorithm described above works with probability.... in time ...
