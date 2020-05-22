@@ -448,8 +448,8 @@ entire $S_0$ can be reconstructed. The precise details follow.
   \begin{scope}
     % remplissage
     \fill[fill=Yellow] (4.6, 0) rectangle +(2.4, 1);
-    \fill[fill=magenta] (0, 0) rectangle +(0.6, 1);
-    \fill[fill=magenta] (11, 0) rectangle  +(1.8, 1);
+    \fill[fill=magenta] (0, 0) rectangle node {$r_0$} +(0.6, 1);
+    \fill[fill=magenta] (11, 0) rectangle node {$w$} +(1.8, 1);
     
     % bordures
     \draw[thick]  (0, 0) rectangle (12.8, 1);
@@ -488,8 +488,8 @@ entire $S_0$ can be reconstructed. The precise details follow.
   \begin{scope}[yshift=-3cm]
     % remplissage
     \fill[fill=Yellow] (4.6, 0) rectangle +(2.4, 1);
-    \fill[fill=magenta] (0, 0) rectangle +(0.6, 1);
-    \fill[fill=cyan] (11, 0) rectangle +(1.8, 1);
+    \fill[fill=magenta] (0, 0) rectangle node {$r_1$} +(0.6, 1);
+    \fill[fill=cyan] (11, 0) rectangle node[text=white] {$w_1$} +(1.8, 1);
     
     % bordures
     \draw[thick]  (0, 0) rectangle (12.8, 1);
@@ -525,8 +525,8 @@ entire $S_0$ can be reconstructed. The precise details follow.
   \begin{scope}[yshift=-6cm]
     % remplissage
     \fill[fill=Yellow] (4.6, 0) rectangle +(2.4, 1);
-    \fill[fill=magenta] (0, 0) rectangle +(0.6, 1);
-    \fill[fill=cyan] (11, 0) rectangle +(1.8, 1);
+    \fill[fill=magenta] (0, 0) rectangle node {$r_2$} +(0.6, 1);
+    \fill[fill=cyan] (11, 0) rectangle node[text=white] {$w_2$} +(1.8, 1);
     
     % bordures
     \draw[thick]  (0, 0) rectangle (12.8, 1);
@@ -594,27 +594,27 @@ Therefore, the algorithm that reconstructs the internal state of the
 
 \begin{center}\noindent\framebox{
   \begin{minipage}{0.95\textwidth}
-\aalgbegin Algorithm K (State reconstruction with known increment). Reconstruct $S_0$ from three consecutive outputs $X_j$ ($0 \leq j < 3$). In all the algorithm, we have $j= 0, 1, 2$.
+    \algbegin Algorithm K (State reconstruction with known
+    increment). Reconstruct $S_0$ from three consecutive outputs $X_j$
+    ($0 \leq j < 3$). In all steps of the algorithm, we have $j= 0, 1, 2$.
 
-\algstep K1. [Guess state] For each $0 \leq w < 2^{19}$, set $S_0[0 : \ell] = w$ and do steps K2--K10.
+\algstep K1. [Guess state] For each $0 \leq w < 2^{19}$, set $w_j = a^j w \bmod 2^{19}$ and do steps K2--K0.
 
-\algstep K2. [Propagate state] Set $S_j[0:\ell] \gets a^j w \bmod 2^{19}$.
+\algstep K2. [Guess rotations] For each $0 \leq r_0, r_1, r_2 < 64$, do steps K3--K9.
 
-\algstep K3. [Guess rotations] For each $0 \leq r_0, r_1, r_2 < 64$, do steps K4--K10.
+\algstep K3. [Undo rotations] Set $Y_j \gets X_j \lll r_j$. % ($Y_j$ is the $j$-th output on which the rotation has been undone).
 
-\algstep K4. [Undo rotations] Set $S_j[122:128] \gets r_j$ and $Y_j \gets X_j \lll r_j$.
+\algstep K4. [Build $T$] Set $T_j \gets \left(r_j \oplus Y_j[58:64]\right) \oplus \bigl( 64 \cdot \left(w_j \oplus Y_j[0:19]\right)\bigr)$.
 
-\algstep K5. [Propagate] Set $S_j[58:64] \gets r_j \oplus Y_j[58:64]$ and $S_j[64:83] \gets S_j[0:19] \oplus Y_j[0:19]$.
+\algstep K5. [Shift $T$] Set $T'_j \gets  T_j - (a^j w + c \sum_{k = 0}^j a^k)[58:83]$
 
-\algstep K6. [Build partial $T$] Set $T_j \gets \left(S_j[58:83] - (a^j w + c \sum_{k = 0}^j a^k)[58:83]\right) \cdot 2^{39}$
+\algstep K6. [Truncated LCG] Set $(U_0, U_1, U_2) \gets \left\lfloor (T_0, T_1, T_2) \cdot 2^{39} \cdot \widetilde G^{-1} \right\rceil \cdot \widetilde G$.
 
-\algstep K7. [Reconstruct $T$] Set $(U_0, U_1, U_2) \gets \left\lfloor (T_0, T_1, T_2) \cdot \widetilde G^{-1} \right\rceil \cdot \widetilde G$.
+\algstep K7. [Reconstruct $S_0$] Set $\widehat S_0[0:64] \gets w + 2^{19} \cdot U_0[0:45]$ and $\widehat S_0[64:128] \gets S_0[0:64] \oplus Y_0$.
 
-\algstep K8. [Reconstruct $S_0$] Set $S_0[19:83] \gets U_0$ and $S_0[83:122] \gets U_0[0:39] \oplus Y_0[19:58]$.
+\algstep K8. [Recompute $Y_1$] Set $\widehat S_1 \gets a \widehat S_0 + c$ and $\widehat Y_1 = \widehat S_1[0:64] \oplus \widehat S_1[64:128]$.
 
-\algstep K9. [Recompute $X_1$] Compute $\widehat S_1 \gets a S_0 + c$ and $\widehat X_1 =(\widehat S_1[0:64] \oplus \widehat S_1[64:128]) \ggg r_1$.
-
-\algstep K10. [Check] If $\widehat{X}_1 = X_1$, the output $S_0$ as a candidate internal state.
+\algstep K9. [Check] If $\widehat{Y}_1 = Y_1$, then output $\widehat S_0$ as a candidate internal state.
 \end{minipage}
 }
 \end{center}
