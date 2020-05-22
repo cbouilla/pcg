@@ -314,6 +314,8 @@ Pour améliorer les performances de nos algorithmes les plus critiques, nous n'a
 \todo{et preuve ?}
 
 \section{Reconstructing Truncated Geometric Sequences}
+\label{sec:geometric}
+
 \todo{à fusionnier avec la section précédente!}
 \subsection{The lattice}
 
@@ -394,10 +396,10 @@ that a default value is specified in case the user of the pseudo-random
 generator does not want to provide one.
 
 In this case, reconstructing the 128-bit internal state $S_i$ of the generator
-obis sufficient to produce the pseudo-random flow with 100\% accuracy (the
+is sufficient to produce the pseudo-random flow with 100\% accuracy (the
 generator can also be clocked backwards if necessary, so that the seed can be
-easily reconstructed). We therefore focus on $S_0$, the first internal state
-after seeding. A very simple strategy could be the following:
+easily reconstructed). We therefore focus on reconstructing $S_0$ (the seed)
+from $X_0, X_1, X_2, \dots$. A very simple strategy could be the following:
 \begin{enumerate}
 \item Guess the 64 upper bits of $S_0$.
 \item Compute the missing 64 lower bits using~\eqref{eq:output}, with:
@@ -429,13 +431,13 @@ combining the following ingredients:
 \end{itemize}
 
 In figure~\ref{fig:Cknown}, we see that guessing $S_0[0:\ell]$ and a few 6-bit
-rotations give access to $S_i[58:64+\ell]$ for the corresponding consecutive
-states. Therefore, we are facing a truncated linear congruential generator on
-$64+\ell$ bits, where we only know $6+\ell$ bits of output, for a few
-consecutive outputs. This is sufficient to reconstruct entirely the successive
-states of this truncated linear congruential generator. This reveals
-$S_0[0:64+\ell]$, and using~\eqref{eq:output} the entire $S_0$ can be
-reconstructed. The precise details follow.
+rotations give access to $S_i[58:64+\ell]$ for the corresponding
+states. Therefore, looking at $S_i[\ell:64+\ell]$, we are facing a truncated
+linear congruential generator on $64$ bits, where we have access to the most
+$6+\ell$ bits of each state, for a few consecutive states. This is sufficient to
+reconstruct entirely the successive states of this truncated linear congruential
+generator. This reveals $S_0[\ell:64+\ell]$, and using~\eqref{eq:output} the
+entire $S_0$ can be reconstructed. The precise details follow.
 
 \begin{figure}
 \begin{center}
@@ -468,7 +470,7 @@ reconstructed. The precise details follow.
     \draw[dashed]  (0, 0) rectangle +(6.4, 1);
     \draw[thick]  (0, 0) rectangle +(2.4, 1);
     \draw[]  (1.8, 0) rectangle +(0, 1);
-    \path (2.4, 0) rectangle node {$00000000 \cdots 00000000$} (6.4, 1);
+    \path (2.4, 0) rectangle node {$???????? \cdots ????????$} (6.4, 1);
 
     % déco
     \node at (-0.5, 0.5) {$T_0$};
@@ -510,7 +512,7 @@ reconstructed. The precise details follow.
     \draw[dashed]  (0, 0) rectangle +(6.4, 1);
     \draw[thick]  (0, 0) rectangle +(2.4, 1);
     \draw[]  (1.8, 0) rectangle +(0, 1);
-    \path (2.4, 0) rectangle node {$00000000 \cdots 00000000$} (6.4, 1);
+    \path (2.4, 0) rectangle node {$???????? \cdots ????????$} (6.4, 1);
 
     % déco
     \node at (-0.5, 0.5) {$T_1$};
@@ -547,7 +549,7 @@ reconstructed. The precise details follow.
     \draw[dashed]  (0, 0) rectangle +(6.4, 1);
     \draw[thick]  (0, 0) rectangle +(2.4, 1);
     \draw[]  (1.8, 0) rectangle +(0, 1);
-    \path (2.4, 0) rectangle node {$00000000 \cdots 00000000$} (6.4, 1);
+    \path (2.4, 0) rectangle node {$???????? \cdots ????????$} (6.4, 1);
 
     % déco
     \node at (-0.5, 0.5) {$T_2$};
@@ -561,55 +563,61 @@ reconstructed. The precise details follow.
 \end{center}
 \caption{A guess-and-determine algorithm to reconstruct the first internal state
   $S_0$. Magenta bits are guessed; cyan bits are obtained using the linear
-  congruence relation~\eqref{eq:lcg}; yellow bits are obtained
+  congruence relation~\eqref{eq:lcg} modulo $2^\ell$; yellow bits are obtained
   from the output and the guessed rotations using~\eqref{eq:output}.}
 \label{fig:Cknown}
 \end{figure}
 
-Set $S_i' = S_i - S_0[0:\ell] a^i - c (\sum_{j=0}^{i-1} a^i)$. It is easy to check that
-$S'_{i+1} = a S'_i$, and therefore the successive $S'_i$'s follow a geometric
-progression. Indeed :
-\begin{align*}
-S_i = S_{i-1} a + c
-S_i = S_{i-2} a^2 + (a + 1) c
-S_i = S_0 a^i + (\sum_{j=0}^{i-1} a^i) c
-S_i - (\sum_{j=0}^{i-1} a^i) c - S_0[0:\ell] a^i = (S_0 - S_0[0:\ell]) a^i 
-\end{align*}
-\footnote{note de bas de page : le fait de retirer $S_0[0:\ell]$
-  n'est pas nécéssaire, mais nous permet de limiter la taille des instances
-  utilisées à 64 bits, très utile pour la programmation en C)}.
+Set $S_i' = S_i - S_0[0:\ell] a^i - c \sum_{j=0}^{i-1} a^i$. The sequence
+$(S'_i)$ describe the internal states we would observe if $c=0$ and
+$S_0[0:\ell] = 0$. It is easy to check that $S'_{i} = a^i (S_0 - S_0[0:\ell])$,
+and therefore the successive $S'_i$'s follow a geometric progression. % Indeed :
+% \begin{align*}
+% S_i &= a S_{i-1} + c\\
+%     &= a^2 S_{i-2} + (a + 1) c \\
+%     &\vdots  \\
+%     &= a^i S_0  + c \sum_{j=0}^{i-1} a^i \\
+%   S'_i  &= S_i - c \sum_{j=0}^{i-1} a^i - S_0[0:\ell] a^i \\
+%     &= a^i (S_0 - S_0[0:\ell])
+% \end{align*}
+The $\ell$ low-order bits of $S_0 - S_0[0:\ell]$ are all zero by construction;
+therefore set $T_i = \left(S'_i / 2^\ell\right) \bmod 2^{64}$ (the division by
+$2^\ell$ is exact). It follows that the $(T_i)$ is also a geometric progression
+with common ratio $a$, and we have access to the $\ell+6$ high order bits of
+$T_i$ if we guess the $i$-th rotation. We have seen in
+section~\ref{sec:geometric} that 19 known bits on 3 consecutive outputs are
+sufficient for a deterministic reconstruction of the full sequence. Therefore,
+we guess 19 low-order bits of the state and three consecutive rotations.
 
+Therefore, the algorithm that reconstructs the internal state of the
+\textsf{PCG64} generator with known increment proceeds as follows:
 
+\begin{center}\noindent\framebox{
+  \begin{minipage}{0.95\textwidth}
+\aalgbegin Algorithm K (State reconstruction with known increment). Reconstruct $S_0$ from three consecutive outputs $X_j$ ($0 \leq j < 3$). In all the algorithm, we have $j= 0, 1, 2$.
 
-Nous utiliserons le réseau engendré par les $S'[\ell : 64 + \ell]$, nommé $\mathcal{L}(A,2^64,n)$. On se réduit donc au cas facile étudié dans la partie précédente.
-\begin{equation}
-genMatrix =
-\begin{pmatrix} 
-1 & A & A ^2 & \dots & A ^{n- 1}\\
-0 & M & 0 & \dots & 0\\
-0 & 0 & M & \dots & 0\\
-\vdots & & & \ddots & \vdots\\
-0 & 0 & \dots & 0 & M
-\end{pmatrix}
-\end{equation}
+\algstep K1. [Guess state] For each $0 \leq w < 2^{19}$, set $S_0[0 : \ell] = w$ and do steps K2--K10.
 
+\algstep K2. [Propagate state] Set $S_j[0:\ell] \gets a^j w \bmod 2^{19}$.
 
+\algstep K3. [Guess rotations] For each $0 \leq r_0, r_1, r_2 < 64$, do steps K4--K10.
 
-On calcule préalablement les matrices $G$ et $G^{-1}$, avec $G$ la matrice génératrice réduite du réseau $\mathcal{L}(A,2^64,n)$ par l'algorithme LLL.
-Pour tous les $r_i$ et les $S_0[0 : \ell]$ possibles:\\
-\begin{enumerate}
-\item On récupère le $T$ correspondant à nos suppositions. On calcule $T'$. ($T'_i = (S_i[64 - 6 : 64 + \ell] - (A^i*S_0[0 : \ell] + C * \sum_{j = 0}^i A^j)[64 - 6 : 64 + \ell])[64 - 6 : 64 + \ell] * 2^{64 - 6 - \ell}$)
+\algstep K4. [Undo rotations] Set $S_j[122:128] \gets r_j$ and $Y_j \gets X_j \lll r_j$.
 
-\todo{schema T et T'}
+\algstep K5. [Propagate] Set $S_j[58:64] \gets r_j \oplus Y_j[58:64]$ and $S_j[64:83] \gets S_j[0:19] \oplus Y_j[0:19]$.
 
-Notons cependant que les composantes en $C$ et $S[0:l]$ sont calculées en dehors de la boucle et stockées dans un tableau pour des raisons de performance. Ceci est fait de même dans tous les algorithmes suivants.
+\algstep K6. [Build partial $T$] Set $T_j \gets \left(S_j[58:83] - (a^j w + c \sum_{k = 0}^j a^k)[58:83]\right) \cdot 2^{39}$
 
-\item We get the correspondant $S'[\ell : 64 + \ell]$ by using the babai rounding technique on $T'$ using $G$ and $G^{-1}$.
+\algstep K7. [Reconstruct $T$] Set $(U_0, U_1, U_2) \gets \left\lfloor (T_0, T_1, T_2) \cdot \widetilde G^{-1} \right\rceil \cdot \widetilde G$.
 
-\item We test our solution by computing $S_0$ and testing if the following internals states are coherent with the PCG outputs. If the results are coherents, we return $S_0$.
+\algstep K8. [Reconstruct $S_0$] Set $S_0[19:83] \gets U_0$ and $S_0[83:122] \gets U_0[0:39] \oplus Y_0[19:58]$.
 
-\end{enumerate}
+\algstep K9. [Recompute $X_1$] Compute $\widehat S_1 \gets a S_0 + c$ and $\widehat X_1 =(\widehat S_1[0:64] \oplus \widehat S_1[64:128]) \ggg r_1$.
 
+\algstep K10. [Check] If $\widehat{X}_1 = X_1$, the output $S_0$ as a candidate internal state.
+\end{minipage}
+}
+\end{center}
 
 \subsection{preuve cas facile}
 
