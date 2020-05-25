@@ -1,4 +1,4 @@
-\documentclass[preprint,svgnames]{iacrtrans}
+\documentclass[nohyperref,preprint,svgnames]{iacrtrans}
 
 \usepackage[utf8]{inputenc}
 \usepackage{amssymb, amsmath, amsfonts, amscd}
@@ -7,7 +7,7 @@
 \usepackage{url}
 \usepackage{xspace}
 \usepackage{subcaption}
-\usepackage{algorithm2e}
+%\usepackage{algorithm2e}
 \usepackage{tikz}
 \usepackage{cellspace}
 \usepackage{multirow}
@@ -16,28 +16,31 @@
 
 %\usepackage[noend]{algpseudocode}
 
-\usepackage[pdftex,bookmarks,bookmarksopen,bookmarksdepth=3]{hyperref}
-\hypersetup{colorlinks=true,citecolor=red,linkcolor=red,urlcolor=black}
+%\usepackage[pdftex,bookmarks,bookmarksopen,bookmarksdepth=3]{hyperref}
+%\hypersetup{colorlinks=true,citecolor=red,linkcolor=red,urlcolor=black}
 
 \DeclareMathSymbol{:}{\mathord}{operators}{"3A}
+\DeclareMathOperator{\LCG}{LCG}
+\DeclareMathOperator{\MCG}{MCG}
 
-\usepackage{algorithmic}
+\usepackage[noend]{algpseudocode}
+%\usepackage{algorithmicx}
 
 % knuth-style algos
-\newcommand{\slug}{\hbox{\kern1.5pt\vrule width2.5pt height6pt depth1.5pt\kern1.5pt}}
-\def\xskip{\hskip 7pt plus 3pt minus 4pt}
-\newdimen\algindent
-\newif\ifitempar \itempartrue % normally true unless briefly set false
-\def\algindentset#1{\setbox0\hbox{{\bf #1.\kern.25em}}\algindent=\wd0\relax}
-\def\algbegin #1 #2{\algindentset{#21}\alg #1 #2} % when steps all have 1 digit
-\def\aalgbegin #1 #2{\algindentset{#211}\alg #1 #2} % when 10 or more steps
-\def\aaalgbegin #1 #2{\algindentset{#2111}\alg #1 #2} % when 10 or more steps
-\def\alg#1(#2). {\medbreak % Usage: \algbegin Algorithm A (algname). This...
-  \noindent{\bf#1}({\it#2\/}).\xskip\ignorespaces}
-\def\algstep#1.{\ifitempar\smallskip\noindent\else\itempartrue
-  \hskip-\parindent\fi
-  \hbox to\algindent{\bf\hfil #1.\kern.25em}%
-  \hangindent=\algindent\hangafter=1\ignorespaces}
+% \newcommand{\slug}{\hbox{\kern1.5pt\vrule width2.5pt height6pt depth1.5pt\kern1.5pt}}
+% \def\xskip{\hskip 7pt plus 3pt minus 4pt}
+% \newdimen\algindent
+% \newif\ifitempar \itempartrue % normally true unless briefly set false
+% \def\algindentset#1{\setbox0\hbox{{\bf #1.\kern.25em}}\algindent=\wd0\relax}
+% \def\algbegin #1 #2{\algindentset{#21}\alg #1 #2} % when steps all have 1 digit
+% \def\aalgbegin #1 #2{\algindentset{#211}\alg #1 #2} % when 10 or more steps
+% \def\aaalgbegin #1 #2{\algindentset{#2111}\alg #1 #2} % when 10 or more steps
+% \def\alg#1(#2). {\medbreak % Usage: \algbegin Algorithm A (algname). This...
+%   \noindent{\bf#1}({\it#2\/}).\xskip\ignorespaces}
+% \def\algstep#1.{\ifitempar\smallskip\noindent\else\itempartrue
+%   \hskip-\parindent\fi
+%   \hbox to\algindent{\bf\hfil #1.\kern.25em}%
+%   \hangindent=\algindent\hangafter=1\ignorespaces}
 % end of borrowed macros
 
 \newcommand{\todo}[1]{\textcolor{red}{TODO:[#1]}}
@@ -200,7 +203,7 @@ constant. The first initial state $S_0$ is the seed of the generator. The
 increment $c$ may be specified by the user of the PRNG to produce different
 output streams with the same seed (just as the IV acts in a stream cipher). If
 no value of $c$ is specified, then a default increment is provided:
-$c = 117397592171526113268558934119004209487$.
+$c = 117397592171526113268558934119004209487$. Note that $c$ must be odd.
 
 Each time the PRNG is clocked, 64 output bits are extracted from the internal
 state using a non-linear function that makes use of data-dependent rotations, in
@@ -316,6 +319,28 @@ Pour améliorer les performances de nos algorithmes les plus critiques, nous n'a
 \section{Reconstructing Truncated Geometric Sequences}
 \label{sec:geometric}
 
+\subsection{Reconstructing Linear Congruential Generators}
+
+Given a bit-size $k$, a fixed multiplier $a$ and an increment $c$, define the
+sequence $u_0 = x, u_{i+1} = a u_i + c \bmod 2^k$. The sequence $u$ form the
+successive internal states of a linear congruential generator (LCG). When the
+increment is zero, the sequence forms a geometric progression with common ratio
+$a$, and is sometimes referred to as the output of a multiplicative congruential
+generator (MCG).
+
+Let $\LCG_{n,k}(x, c)$ denote the vector
+$(u_0, \dots, u_{n-1}) \in \mathbb{Z}_{2^k}$ (we will omit $n$ and $k$ when they
+are obvious from the context).  It is easy to check that:
+\begin{align}
+  \label{eq:lcg-additive}
+  \LCG_{n,k}(x + y, c + d) &= \LCG_{n,k}(x, c) + \LCG_{n,k}(y, d),  \\
+  \label{eq:lcg-scalar}
+  \LCG_{n,k}(\lamba x, \lambda c) = \lambda \LCG_{n,k}(x, c). 
+  
+\end{align}
+
+
+
 \todo{à fusionnier avec la section précédente!}
 \subsection{The lattice}
 
@@ -389,6 +414,7 @@ If we can prove that the right side of the inequality is smaller than the SVP of
 
 
 \section{Warm-up: A Prediction Algorithm for \textsf{PCG64} With Known Increment}
+\label{sec:Cknown}
 
 We first consider the easier case where the ``increment'' (the $c$ term in the
 definition of the underlying linear congruential generator) is known --- recall
@@ -406,15 +432,16 @@ from $X_0, X_1, X_2, \dots$. A very simple strategy could be the following:
 \[
    S_0[0:64] = S_0[64:128] \oplus (X_0  \lll S[122:128]).
 \]
-\item If $X_1$ is computed correctly, output $S_0$.
+\item If $X_1$ is computed correctly, then output $S_0$.
 \end{enumerate}
 
-This requires $2^{64}$ iterations of a loop that does a dozen arithmetic
-operations. This is the baseline that we improve upon. An improved
-``guess-and-determine'' prediction algorithm is possible, which essentially
-amounts to expose a truncated version of the underlying linear congruential
-generator, and attack it using the well-known tools. This is possible by
-combining the following ingredients:
+This ``baseline'' procedure requires $2^{64}$ iterations of a loop that does a
+dozen arithmetic operations; it always output the correct value of $S_0$, and
+may output a few other ones (they can be easily discarded by checking $X_2$). An
+improved ``guess-and-determine'' prediction algorithm is possible, which
+essentially amounts to expose a truncated version of the underlying linear
+congruential generator, and attack it using the well-known tools. This is
+possible by combining the following ingredients:
 \begin{itemize}
 \item The underlying linear congruential generator uses a power-of-two modulus,
   therefore the $\ell$ low-order bits of $S_{i+1}$ are entirely determined by
@@ -434,10 +461,11 @@ In figure~\ref{fig:Cknown}, we see that guessing $S_0[0:\ell]$ and a few 6-bit
 rotations give access to $S_i[58:64+\ell]$ for the corresponding
 states. Therefore, looking at $S_i[\ell:64+\ell]$, we are facing a truncated
 linear congruential generator on $64$ bits, where we have access to the most
-$6+\ell$ bits of each state, for a few consecutive states. This is sufficient to
-reconstruct entirely the successive states of this truncated linear congruential
-generator. This reveals $S_0[\ell:64+\ell]$, and using~\eqref{eq:output} the
-entire $S_0$ can be reconstructed. The precise details follow.
+$6+\ell$ bits of each state (denoted by $T$), for a few consecutive states. This
+is sufficient to reconstruct entirely the successive states of this truncated
+linear congruential generator. This reveals $S_0[\ell:64+\ell]$, and
+using~\eqref{eq:output} the entire $S_0$ can be reconstructed. The precise
+details follow.
 
 \begin{figure}
 \begin{center}
@@ -470,7 +498,7 @@ entire $S_0$ can be reconstructed. The precise details follow.
     \draw[dashed]  (0, 0) rectangle +(6.4, 1);
     \draw[thick]  (0, 0) rectangle +(2.4, 1);
     \draw[]  (1.8, 0) rectangle +(0, 1);
-    \path (2.4, 0) rectangle node {$???????? \cdots ????????$} (6.4, 1);
+    \path (2.4, 0) rectangle node {$???????????????????$} (6.4, 1);
 
     % déco
     \node at (-0.5, 0.5) {$T_0$};
@@ -512,7 +540,7 @@ entire $S_0$ can be reconstructed. The precise details follow.
     \draw[dashed]  (0, 0) rectangle +(6.4, 1);
     \draw[thick]  (0, 0) rectangle +(2.4, 1);
     \draw[]  (1.8, 0) rectangle +(0, 1);
-    \path (2.4, 0) rectangle node {$???????? \cdots ????????$} (6.4, 1);
+    \path (2.4, 0) rectangle node {$???????????????????$} (6.4, 1);
 
     % déco
     \node at (-0.5, 0.5) {$T_1$};
@@ -549,7 +577,7 @@ entire $S_0$ can be reconstructed. The precise details follow.
     \draw[dashed]  (0, 0) rectangle +(6.4, 1);
     \draw[thick]  (0, 0) rectangle +(2.4, 1);
     \draw[]  (1.8, 0) rectangle +(0, 1);
-    \path (2.4, 0) rectangle node {$???????? \cdots ????????$} (6.4, 1);
+    \path (2.4, 0) rectangle node {$???????????????????$} (6.4, 1);
 
     % déco
     \node at (-0.5, 0.5) {$T_2$};
@@ -568,59 +596,63 @@ entire $S_0$ can be reconstructed. The precise details follow.
 \label{fig:Cknown}
 \end{figure}
 
-Set $S_i' = S_i - S_0[0:\ell] a^i - c \sum_{j=0}^{i-1} a^i$. The sequence
-$(S'_i)$ describe the internal states we would observe if $c=0$ and
-$S_0[0:\ell] = 0$. It is easy to check that $S'_{i} = a^i (S_0 - S_0[0:\ell])$,
-and therefore the successive $S'_i$'s follow a geometric progression. % Indeed :
-% \begin{align*}
-% S_i &= a S_{i-1} + c\\
-%     &= a^2 S_{i-2} + (a + 1) c \\
-%     &\vdots  \\
-%     &= a^i S_0  + c \sum_{j=0}^{i-1} a^i \\
-%   S'_i  &= S_i - c \sum_{j=0}^{i-1} a^i - S_0[0:\ell] a^i \\
-%     &= a^i (S_0 - S_0[0:\ell])
-% \end{align*}
-The $\ell$ low-order bits of $S_0 - S_0[0:\ell]$ are all zero by construction;
-therefore set $T_i = \left(S'_i / 2^\ell\right) \bmod 2^{64}$ (the division by
-$2^\ell$ is exact). It follows that the $(T_i)$ is also a geometric progression
-with common ratio $a$, and we have access to the $\ell+6$ high order bits of
-$T_i$ if we guess the $i$-th rotation. We have seen in
+We consider the first three internal states
+$\mathbf{S} = (S_0, S_1, S_2) = \LCG_{3, 128}(S_0, c)$. We will guess the $\ell$
+least-significant bits of $S_0$, therefore let us assume that their value is
+known and denote it by $w$. We define $\mathbf{S}' = \LCG_{3, 128}(S_0 - w,
+0)$. By~\eqref{eq:lcg-additive}, we have
+$\mathbf{S}' = \mathbf{S} - \LCG_{3, 128}(w, c)$. The point is that the elements
+of $\mathbf{S}'$ follow a geometric progression of common ratio $a$; in
+addition, the $\ell$ least significant bits of each components are zero. The
+crux of the reconstruction algorithm is to find $\mathbf{S}'$.
+
+For this, set $\mathbf{T}' = \left(\mathbf{S}' / 2^\ell\right) \bmod 2^{64}$
+(the division by $2^\ell$ is exact). It follows that the $\mathbf{T}'$ is also a
+geometric progression with common ratio $a$, and we have access to the $\ell+6$
+high order bits of $T'_i$ if we guess the $i$-th rotation. We have seen in
 section~\ref{sec:geometric} that 19 known bits on 3 consecutive outputs are
 sufficient for a deterministic reconstruction of the full sequence. Therefore,
-we guess 19 low-order bits of the state and three consecutive rotations.
+we guess $\ell = 19$ low-order bits of the state and three consecutive
+rotations.
 
 Therefore, the algorithm that reconstructs the internal state of the
 \textsf{PCG64} generator with known increment proceeds as follows:
 
-\begin{center}\noindent\framebox{
-  \begin{minipage}{0.95\textwidth}
-    \algbegin Algorithm K (State reconstruction with known
-    increment). Reconstruct $S_0$ from three consecutive outputs $X_j$
-    ($0 \leq j < 3$). In all steps of the algorithm, we have $j= 0, 1, 2$.
+  \begin{algorithmic}[1]
+    \Procedure{ReconstructState${}_\ell$}{$X_0, X_1, X_2$}
+    \For{$0 \leq w < 2^{\ell}$} \Comment{Guess least-significant bits of $S_0$}
+    \State $w_j = a^j w \bmod 2^{\ell}$ \Comment{Propagate to $S_1, S_2$}
+    \State $S'_j \gets a^j w + c \sum_{k = 0}^j a^k \bmod 2^{128}$    \Comment{Shifted states}
+    
+    \For{$0 \leq r_0, r_1, r_2 < 64$} \Comment{Guess rotations}
+    
+    \State $Y_j \gets X_j \lll r_j$ \Comment{Undo rotations}
+    
+    \State $ T_j \gets \left(r_j \oplus Y_j[58:64]\right) +  64 \cdot \left(w_j \oplus Y_j[0:\ell]\right)$  \Comment{Truncated LCG output}
+    
+    \State $ T'_j \gets    T_j -  S'_i[58:64+\ell]$  \Comment{Shifted Truncated LCG output}
+    
+    \State $(U_0, U_1, U_2) \gets \left\lfloor (T'_0, T'_1, T'_2) \cdot 2^{58-\ell} \cdot \widetilde G_3^{-1} \right\rceil \cdot \widetilde G_3$ \Comment{CVP via Babai rounding}
+    
+    \State $ S_0[0:64] \gets  S'_0 + 2^{\ell} \cdot U_0[0:64-\ell]$ \Comment{Reconstruct $S_0$}
+    \State $ S_0[64:128] \gets S_0[0:64] \oplus Y_0$ 
+    
+    \State $ S_1 \gets a  S_0 + c$ \Comment{Check consistency of $X_1$}
+    \State $\widehat{Y}_1 =  S_1[0:64] \oplus  S_1[64:128]$
+    
+    \If{$\widehat {Y}_1 = Y_1$}
+    \State output $ S_0$ as a candidate internal state.
+    \EndIf
+    \EndFor
+    \EndFor
+    \EndProcedure
+  \end{algorithmic}
+  
+\begin{theorem}
+  Algorithm \textsc{ReconstructState} is correct (it always return the correct internal state).
+\end{theorem}
 
-\algstep K1. [Guess state] For each $0 \leq w < 2^{19}$, set $w_j = a^j w \bmod 2^{19}$ and do steps K2--K0.
-
-\algstep K2. [Guess rotations] For each $0 \leq r_0, r_1, r_2 < 64$, do steps K3--K9.
-
-\algstep K3. [Undo rotations] Set $Y_j \gets X_j \lll r_j$. % ($Y_j$ is the $j$-th output on which the rotation has been undone).
-
-\algstep K4. [Build $T$] Set $T_j \gets \left(r_j \oplus Y_j[58:64]\right) \oplus \bigl( 64 \cdot \left(w_j \oplus Y_j[0:19]\right)\bigr)$.
-
-\algstep K5. [Shift $T$] Set $T'_j \gets  T_j - (a^j w + c \sum_{k = 0}^j a^k)[58:83]$
-
-\algstep K6. [Truncated LCG] Set $(U_0, U_1, U_2) \gets \left\lfloor (T_0, T_1, T_2) \cdot 2^{39} \cdot \widetilde G^{-1} \right\rceil \cdot \widetilde G$.
-
-\algstep K7. [Reconstruct $S_0$] Set $\widehat S_0[0:64] \gets w + 2^{19} \cdot U_0[0:45]$ and $\widehat S_0[64:128] \gets S_0[0:64] \oplus Y_0$.
-
-\algstep K8. [Recompute $Y_1$] Set $\widehat S_1 \gets a \widehat S_0 + c$ and $\widehat Y_1 = \widehat S_1[0:64] \oplus \widehat S_1[64:128]$.
-
-\algstep K9. [Check] If $\widehat{Y}_1 = Y_1$, then output $\widehat S_0$ as a candidate internal state.
-\end{minipage}
-}
-\end{center}
-
-\subsection{preuve cas facile}
-
+\begin{proof} \todo{FIX ME!}
 The vector \(S'\) has been constructed such that it is in \(L(A,2^{128},n)\) and its \(\ell\) lower bits are zero.
 
 We call \(U\) the truncated vector : \(S'[\ell,64+\ell]\). We notice that \(U\) is in \(L(A,2^{64},n)\).
@@ -684,18 +716,79 @@ So, to be sure that our algorithm return the vector \(U\), we need to find sets 
 	
 	Hence, the smallest l such that the inequality is satisfied is \(\ell = 8\) %7 avec borne CVP
 \end{itemize}
+\end{proof}
 
-[insert here] attack predicting algo description.
-
-\begin{theorem}
-  The algorithm described above works with probability.... in time ...
-\end{theorem}
 
 \section{Predicting PCG with Unknown Increment}
-We can't use the same algorithm for the general case. We don't known $C$, so we used an other geometric reduction.
-$(\Delta S_{i+1}S_i)_i$ est un suite géométrique de raison $A$.
+\label{sec:Cunknown}
 
-On calcule préalablement les matrices $G$ et $G^{-1}$.
+The same algorithm does not apply directly to the general case where the value
+of $c$ is unknown. The global strategy to obtain a prediction algorithm is
+essentially the same (target a truncated version of the underlying linear
+congruential generator), but is a bit more complicated to implement.
+
+Set $\Delta S_i = S{i+1} - S_i$; it is easily checked that $\Delta S_i$ is a
+geometric progression of common ratio $a$. Therefore, reconstructing both $S_0$
+and $\Delta S_0$ is sufficient to compute all subsequent states (and recover the
+unknown increment $c$). The prediction algorithm proceeds in three phases:
+\begin{enumerate}
+\item Reconstruct $\Delta S_0[0:64+\ell]$ from $X_0, \dots, X_4$.
+\item Fully reconstruct $\Delta S_0$ from this partial knowledge and $X_0, \dots, X_{39}$.
+\item Reconstruct $S_0$ from $\Delta S_0$ and $X_0, \dots, X_{32}$.
+\end{enumerate}
+
+\noindent Only the first phase is computationally intensive. 
+
+\subsection{Phase 1: Partial Difference Reconstruction}
+
+In order to access to a part of $\Delta S_i$, we use the same strategy as in
+section~\ref{sec:Cknown}: we guess the least significant bits of $S_0$ and some
+rotations. The difference is that, in addition, to obtain the ``long-term
+advantage'' in the least significant bits of the states, we must also guess the
+least significant bits of $c$ as well. We must also guess one additional
+rotation to compute the differences $\Delta S_i$.
+
+Another problem is that of confirming that the guesses are correct. When $c$ is
+known, we could reconstruct the internal state; from there, filtering out the
+bad guesses is easy. When $c$ is unknown, a very strong consistency check can be
+implemented as follows: once we have found $\Delta S_0[0:64+\ell]$, we can
+compute $\Delta S_i[0:64+\ell]$ for any $i$; because we have guessed the first
+rotation and $\ell$ lest significant bits of the state, using~\eqref{eq:output}
+we gain access to $S_0[58:64+\ell]$; combined with the ``differences'', this
+reveals $S_i[58:64+\ell]$ for any $i$ (and we already had $S_i[0:\ell]$). This
+means that we can compute $S_i[0:\ell] \oplus S_i[64:64+\ell]$ for any $i$.
+
+Given a ``fresh'' output $X_i$, we can enumerate the 64 possible rotations
+$r_i$; for each one, we can check whether
+$(X_i \lll r_i)[0:\ell] = S_i[0:\ell] \oplus S_i[64:64+\ell]$. If none of the
+rotations yields a match, then the guesses made beforehand have to be wrong. As
+soon as $\ell \geq 6$, this test is efficient (and it can be done for any number
+of fresh $X_i$'s). As a consequence, bad guesses can be filtered deterministically.
+
+\begin{align*}
+  \mathbf{S} &= \LCG(S_0, c) \\
+             &= \LCG\left(S_0[0:\ell] + 2^\ell S_0[\ell:128], c[0:\ell] + 2^\ell c[\ell:128]\right) \\
+             &= \LCG\left(S_0[0:\ell], c[0:\ell]) + 2^\ell \LCG\left(S_0[\ell:128],  c[\ell:128]\right) \\
+  \Delta \mathbf{S} &= \LCG(S_1, c) - \LCG(S_0, c) \\
+             &= \LCG(S_1 - S_0, 0)
+\end{align*}
+
+\begin{algorithmic}[1]
+  \Procedure{ReconstructPartialDifference}{$X_0, \dots, X_9$}
+  \For{$0 \leq w_0 < 2^{\ell}$ and $0 \leq c < 2^{\ell - 1}$} \Comment{Guess least-significant bits}
+  \State $S'_j \gets a^j w_0 + (2c+1) \sum_{k = 0}^j a^k \bmod 2^{128}$ \Comment{Shifted states}
+  \For{$0 \leq r_0, r_1, r_2, r_3, r_4 < 64$} \Comment{Guess rotations}
+  \State $Y_j \gets X_j \lll r_j$ \Comment{Undo rotations}
+  \State $T_j \gets \left(r_j \oplus Y_j[58:64]\right) +  64 \cdot \left(w_j \oplus Y_j[0:\ell]\right)$ \Comment{Truncated LCG}
+  \State $T'_j \gets T_j -  S'_i[58:64+\ell]$ \Comment{Shifted truncated LCG}
+  \State $\Delta T'_j = T'_{j+1} - T'_j$  \Comment{Difference}
+  \State $(\Delta U_0, \Delta U_1, \Delta U_2, \Delta U_3) \gets \left\lfloor (\Delta T'_0, \Delta T'_1, \Delta T'_2, \Delta T'_3) \cdot 2^{39} \cdot \widetilde G_4^{-1} \right\rceil \cdot \widetilde G_4$ \Comment{CVP}
+  \State $\Delta S_0[0:64+\ell] \gets \left((w_1 - w_0) \bmod 2^{\ell}\right) + 2^{\ell} \cdot U_0[0:58-\ell]$
+  \State ...
+  \EndFor
+  \EndFor
+  \EndProcedure
+\end{algorithmic}
 
 \begin{tikzpicture}[yscale=0.66]
   \draw[red, use as bounding box] (-0.75, -3.75) rectangle (12.8, 2.25);
@@ -742,6 +835,9 @@ On calcule préalablement les matrices $G$ et $G^{-1}$.
 \end{tikzpicture}
 
 \subsection{Part 1 : Premier filtre}
+
+
+
 Pour tous les $r_i$, les $S_0[0 : \ell]$ et les $C[0 : \ell]$ possibles:
 \begin{enumerate}
   \item On récupère le $T$  correspondant à nos suppositions. On calcule $\Delta T$ :
