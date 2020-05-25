@@ -336,8 +336,7 @@ are obvious from the context).  It is easy to check that:
   \label{eq:lcg-additive}
   \LCG_{n,k}(x + y, c + d) &= \LCG_{n,k}(x, c) + \LCG_{n,k}(y, d),  \\
   \label{eq:lcg-scalar}
-  \LCG_{n,k}(\lamba x, \lambda c) = \lambda \LCG_{n,k}(x, c). 
-  
+  \LCG_{n,k}(\lambda x, \lambda c) &= \lambda \LCG_{n,k}(x, c).   
 \end{align}
 
 
@@ -766,17 +765,19 @@ we gain access to $S_0[58:64+\ell]$; combined with the ``differences'', this
 reveals $S_i[58:64+\ell]$ for any $i$ (and we already had $S_i[0:\ell]$). This
 means that we can compute $S_i[0:\ell] \oplus S_i[64:64+\ell]$ for any $i$.
 
-Given a ``fresh'' output $X_i$, we can enumerate the 64 possible rotations
-$r_i$; for each one, we can check whether
-$(X_i \lll r_i)[0:\ell] = S_i[0:\ell] \oplus S_i[64:64+\ell]$. If none of the
-rotations yields a match, then the guesses made beforehand have to be wrong. As
-soon as $\ell \geq 6$, this test is efficient (and it can be done for any number
-of fresh $X_i$'s). As a consequence, bad guesses can be filtered deterministically.
+Given a ``fresh'' output $X_i$, and assuming that the guesses are correct, then we should have:
+\[
+  S_i[0:\ell] \oplus S_i[64:64+\ell] \in \bigl\{ (X_i \lll r_i)[0:\ell]~|~r_i=0, 1, \dots, 63 \bigr\}.
+\]
+If none of the rotations yields a match, then the guesses made beforehand have
+to be wrong. As soon as $\ell \geq 6$, this test is efficient (and it can be
+done for any number of fresh $X_i$'s). As a consequence, bad guesses can be
+filtered deterministically.
 
 \begin{align*}
   \mathbf{S} &= \LCG(S_0, c) \\
              &= \LCG\left(S_0[0:\ell] + 2^\ell S_0[\ell:128], c[0:\ell] + 2^\ell c[\ell:128]\right) \\
-             &= \LCG\left(S_0[0:\ell], c[0:\ell]) + 2^\ell \LCG\left(S_0[\ell:128],  c[\ell:128]\right) \\
+             &= \LCG\left(S_0[0:\ell], c[0:\ell]\right) + 2^\ell \LCG\left(S_0[\ell:128],  c[\ell:128]\right) \\
   \Delta \mathbf{S} &= \LCG(S_1, c) - \LCG(S_0, c) \\
              &= \LCG(S_1 - S_0, 0)
 \end{align*}
