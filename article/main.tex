@@ -1,4 +1,5 @@
-\documentclass[nohyperref,preprint,svgnames]{iacrtrans}
+% !TeX spellcheck = en
+\documentclass[preprint,svgnames]{iacrtrans}
 
 \usepackage[utf8]{inputenc}
 \usepackage{amssymb, amsmath, amsfonts, amscd}
@@ -105,7 +106,7 @@ enough'' it is passes \emph{some} efficient statistical tests --- whereas the
 cryptographic notion of pseudo-randomness asks that it passes \emph{any}
 efficient test. There are \textit{de facto} statistical test suites (\todo{les
   mentionner}). The goal of designers then consists in designing the fastest
-possible generator that passes the day's favorite test suite.
+possible generator that passes the day's favourite test suite.
 
 \todo{Mentionner Ferrenberg 92}
 
@@ -132,7 +133,7 @@ computing package for \textsf{Python}.
 
 The internal state of the \textsf{PCG64} generator is made of a 128-bit
 ``state'' and a 128-bit ``increment'', whose intended use is to provide several
-pseudo-random streams with the same seed (just as the initialization vectors do
+pseudo-random streams with the same seed (just as the initialisation vectors do
 in stream ciphers). A default increment is provided in case the end-user just
 want one pseudo-random stream with a single 128-bit seed.
 
@@ -159,7 +160,7 @@ reveals the entire internal state if the guesses are correct.
 
 When the increment is unknown, things are a bit more complicated. This is the
 default situation in \textsf{NumPy}, where both the state and the increment are
-initialized using an external source of entropy. In this case, our prediction
+initialised using an external source of entropy. In this case, our prediction
 algorithm requires 3072 bits of pseudo-random stream ; it guesses between 51 and
 55 bits, then for each guess it solves and instance of CVP in dimension 4 (using
 about 75 arithmetic operations). This recovers 64 more bits of information about
@@ -216,7 +217,7 @@ generator are $X_0, X_1, \dots$ where:
   X_i =(S_i[0:64] \oplus S_i[64:128]) \ggg S_i[122:128].
 \end{equation}
 
-Figure~\ref{pcg128out} summarizes the process. The overall design strategy is
+Figure~\ref{pcg128out} summaries the process. The overall design strategy is
 similar to that of a filtered LFSR: the successive states of a weak internal
 generator with a strong algebraic structure are ``filtered'' by a non-linear
 function.
@@ -368,9 +369,33 @@ We want to find an element \(U\) in the lattice only knowing the most significan
 
 We decompose \(U = T + (T-U)\) where \(T\) contains only the upper bits and \(T-U\) the lowers one. There is no reason for \(T\) to be in the lattice, but as \(T-U\) is small, we know \(T\) is \emph{close} to \(U\).
 
-\subsection{A first way to find U : the Babai's rounding}
+ \subsection{A first way to find U : using an exact CVP solver}
 
-We compute \(G\) the LLL-reduction of the generating matrix of \(L(\alpha,M,n)\).
+Solving exactly the CVP is a hard computational problem. The algorithms used are costly, but we can afford to use them up to dimension 50.
+
+We know that \(U\) is in the lattice, \(T\) is usually not and \(|T-U|\) is small. Then we can hope for \(U\) to be the closet vector of \(T\) which is in the lattice : the vector \(U\) may be the solution of \(CVP(L(\alpha,M,n),T)\).
+
+What can we say about \(|CVP(L(\alpha,M,n),T)-U|\) ?
+
+\begin{align*}
+|CVP(L(\alpha,M,n),T)-U| &= |CVP(L(\alpha,M,n),T)-T+T-U|\\
+& \leqslant |CVP(L(\alpha,M,n),T)-T|+|T-U|\\
+\end{align*}
+
+But, as the vector \(U\) is in the lattice and by definition of the CVP, \(|CVP(L(\alpha,M,n),T)-T| \leqslant |T-U| \), hence 
+\[|CVP(L(\alpha,M,n),T)-U|\leqslant 2|T-U|\]
+
+If we can prove that the right side of the inequality is smaller than the SVP of the lattice, then wa have proved that \(CVP(L(\alpha,M,n),T)\) is indeed the vector we were searching for.
+
+\subsection{A second way to find U : the Babai's rounding}
+
+As using an exact CVP solver is costly, we'll try a cheaper but less effective way to find the closest vector.
+
+We compute \(G\) the LLL-reduction of the generating matrix of \(L(\alpha,M,n)\). We denote by  \(\rVert G \lVert\) the induced matrix norm :
+\[\rVert G \lVert =  \max_{x \in \mathbb{R}}\frac{\lVert Ax \rVert_2}{\lVert x \rVert_2}\]
+In the case of the \(\lVert\rVert_2\) norm, \(\rVert G \lVert = \sigma(G)\), where \(\sigma(G)\) is the largest singular value of \(G\). 
+
+\medskip
 
 As \(T\) is not an element of the lattice, \(TG^{-1}\) is not an integer vector.
 
@@ -392,26 +417,9 @@ Hence :
 & 	\leqslant \lVert U - T \rVert \times (1 +\lVert G^{-1} \rVert  \times \lVert G\rVert )\\
 \end{align*}
 
-If we can prove that the right side \todo{je confonds ma gauche et ma droite et je vous zut :p} of the inequality is smaller than the SVP of G, then wa have proved that \(rG\) is indeed the vector we were searching for.
+If we can prove that the right side of the inequality is smaller than the SVP of G, then wa have proved that \(rG\) is indeed the vector we were searching for.
 
- \subsection{A second way to find U : using an exact CVP solver}
-
-Solving exactly the CVP is a hard computational problem. But as we do not manipulate quantities too big, we still can use an exact CVP solver.
-
-We know that \(U\) is in the lattice, \(T\) is not and \(|T-U|\) is small. Then we can hope for \(U\) to be the closet vector of \(T\) which is in the lattice : the vector \(U\) may be the solution of \(CVP(L(\alpha,M,n),T)\).
-
-What can we say about \(|CVP(L(\alpha,M,n),T)-U|\) ?
-
-\begin{align*}
-|CVP(L(\alpha,M,n),T)-U| &= |CVP(L(\alpha,M,n),T)-T+T-U|\\
-& \leqslant |CVP(L(\alpha,M,n),T)-T|+|T-U|\\
-\end{align*}
-
-But, as the vector \(U\) is in the lattice and by definition of the CVP, \(|CVP(L(\alpha,M,n),T)-T| \leqslant |T-U| \), hence 
-\[|CVP(L(\alpha,M,n),T)-U|\leqslant 2|T-U|\]
-
-If we can prove that the right side of the inequality is smaller than the SVP of the lattice, then wa have proved that \(CVP(L(\alpha,M,n),T)\) is indeed the vector we were searching for.
-
+We see that  the right side of the inequality is often larger than in the first case. We will need to use larger parameters to find the vector we are looking for. But as the Babai rounding is largely cheaper than using an exact CVP solver, there will be cases where this method is far more practical. \todo{je trouve la formulation un peu moche}
 
 \section{Warm-up: A Prediction Algorithm for \textsf{PCG64} With Known Increment}
 \label{sec:Cknown}
@@ -653,13 +661,13 @@ Therefore, the algorithm that reconstructs the internal state of the
 \end{theorem}
 
 \begin{proof} \todo{FIX ME!}
-The vector \(S'\) has been constructed such that it is in \(L(A,2^{128},n)\) and its \(\ell\) lower bits are zero.
+The vector \(S'\) has been constructed such that it is in \(L(A,2^{128},n)\) and its \(\ell\) lower bits are zero. As \(S'\) is in \(L(A,2^{128},n)\), \(S' \mod [2^{64+\ell}]\) is in \(L(A,2^{64+\ell},n)\)
 
-We call \(U\) the truncated vector : \(S'[\ell,64+\ell]\). We notice that \(U\) is in \(L(A,2^{64},n)\).
+We call \(U\) the truncated vector : \(S'[\ell,64+\ell]\). As the \(\ell\) lower bits of \(S'\) are zero, we have \(S' \equiv U \times 2^\ell\ \mod [2^{64+\ell}]\). Hence \(U\) is in \(L(A,2^{64},n)\).
 
 We consider the case were we successfully guessed the 6 upper bits of each \(S_i\) and the \(\ell\) lower bits of \(S_0\). Then we know the \(6+\ell\) upper bits of \(U\).
 
-(maybe dessin)
+\todo{maybe dessin}
 
 
 We consider the vector \(T'\) computed in step (numerodelastepenquestion). To recover \(U\), we use the Babai's rounding explain in section (insererlasection) on \(T'\) and \(L(A,2^{64},n)\).
