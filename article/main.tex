@@ -635,7 +635,7 @@ Therefore, the algorithm that reconstructs the internal state of the
     \Procedure{ReconstructState${}_\ell$}{$X_0, X_1, X_2$}
     \For{$0 \leq w < 2^{\ell}$} \Comment{Guess least-significant bits of $S_0$}
     \State $w_j = a^j w \bmod 2^{\ell}$ \Comment{Propagate to $S_1, S_2$}
-    \State $S'_j \gets a^j w + c \sum_{k = 0}^j a^k \bmod 2^{128}$    \Comment{Shifted states}
+    \State $S'_j \gets a^j w + c (a^j - 1)(a-1)^{-1} \bmod 2^{128}$    \Comment{Shifted states}
     
     \For{$0 \leq r_0, r_1, r_2 < 64$} \Comment{Guess rotations}
     
@@ -645,7 +645,7 @@ Therefore, the algorithm that reconstructs the internal state of the
     
     \State $ T'_j \gets    T_j -  S'_i[58:64+\ell]$  \Comment{Shifted Truncated LCG output}
     
-    \State $(U_0, U_1, U_2) \gets \left\lfloor (T'_0, T'_1, T'_2) \cdot 2^{58-\ell} \cdot \widetilde G_3^{-1} \right\rceil \cdot \widetilde G_3$ \Comment{CVP via Babai rounding}
+    \State $(U_0, U_1, U_2) \gets \left\lfloor (T'_0, T'_1, T'_2) \cdot 2^{58-\ell} \cdot \widetilde G_3^{-1} \right\rceil \cdot \widetilde G_3$ \Comment{CVP (Babai rounding)}
     
     \State $ S_0[0:64] \gets  S'_0[0:64] + 2^{\ell} \cdot U_0[0:64-\ell]$ \Comment{Reconstruct $S_0$}
     \State $ S_0[64:128] \gets S_0[0:64] \oplus Y_0$ 
@@ -926,15 +926,9 @@ are unknown 122-bit quantities $x_i$ such that:
 
 Once all the rotations have be recovered and $\Delta S_0$ has been found
 entirely, the only thing that remain is to actually find the entire $S_0$. For
-this, we use again eq.~\eqref{eq:output}. For this we use the fact that there is
-an (unknown) \emph{carry} $0\leq \gamma_i \leq 1$ such that:
-\begin{align*}
-  S_i[0:64] &= S_0[0:64] \boxplus \nabla S_i[0:64] \\
-  S_i[64:128] &= S_0[64:128] \boxplus \nabla S_i[64:128] \boxplus \gamma_i \\
-\end{align*}
-This therefore gives:
+this, we use again eq.~\eqref{eq:output}, coupled with the ``differences'':
 \[
-  X_i  \lll r_i = \bigl(S_0[0:64] \boxplus \nabla S_i[0:64]\bigr) \oplus \bigl(S_0[64:128] \boxplus \nabla S_i[64:128] \boxplus \gamma_i\bigr).
+  X_i  \lll r_i = \bigl(S_0 \boxplus \nabla S_i)[0:64] \oplus \bigl(S_0 \boxplus \nabla S_i)[64:128].
 \]
 \section{Implementation and Practical Results}
 
