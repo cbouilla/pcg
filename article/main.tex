@@ -355,14 +355,17 @@ But, as the vector \(U\) is in the lattice and by definition of the CVP, \(|CVP(
 
 If we can prove that the right side of the inequality is smaller than first minimum of the lattice \(\lambda_1(L)\), then we have proved that \(CVP(L,T)\) is indeed the vector we were searching for.
 
-In this article, we will only use the Babai's rounding when \(k = 128-\ell\) and when we know the \(6\) upper bit of our Lehmer's generator. Hence \(\lVert T-U \rVert \leqslant \sqrt{n}2^{122-\ell} \). So, if we fix \(\ell\) we can search for the minimum \(n\) such that \[2\sqrt{n}2^{122-\ell} \leqslant \lambda_1(L(128-\ell,n))\].
+To compute \(\lambda_1(L)\), we find the shortest vector of L thanks to an exact SVP solver (SVP stands for Shortest Vector Problem) and we compute its norm.
 
-\begin{table}
+In this article, we will only use an exact CVP solver when \(k = 128-\ell\) and when we know the \(6\) upper bit of our Lehmer's generator. Hence \(\lVert T-U \rVert \leqslant \sqrt{n}2^{122-\ell} \). So, if we fix \(\ell\) we can search for the minimum \(n\) such that \[2\sqrt{n}2^{122-\ell} \leqslant \lambda_1(L(128-\ell,n))\].
+
+\begin{table}[htbp!]
   \centering
     \begin{tabular}{|c|c|}
 	\hline
 	\(\ell\)  & minimum \(n\) \\
 	\hline
+	0  & 42 \\
 	11 & 39 \\
 	12 & 38 \\
 	13 & 38 \\
@@ -406,18 +409,16 @@ If we can prove that the right side of the inequality is smaller than the minimu
 
 In this article, we will only use the Babai's rounding when \(k = 64\) and when we know the \(6+\ell\) upper bit of our Lehmer's generator. Hence \(\lVert T-U \rVert \leqslant \sqrt{n}2^{58-\ell} \). So, if we fix \(n\) we can search for the minimum \(\ell\) such that \[(1+\lVert G(n,64) \rVert \times \lVert G(n,64)^{-1} \rVert)\sqrt{n}2^{58-\ell} \leqslant \lambda_1(L(n,64))\]
 
-\bigskip
-
-\begin{table}
+\begin{table}[htbp!]
   \centering
   \begin{tabular}{|c|c|c|c|}
 	\hline
 	n & \(\lVert G(n,64) \rVert \times \lVert G(n,64)^{-1} \rVert\) & \( \lambda_1(L(n,64)) \) & minimum \(\ell\) \\
 	\hline
-	3 & 2.869065991049632 & \(4.08909120094543e^{12}\) & 19 \\
-	4 & 2.060717188416003 & \(2.43569932844650e^{14}\) & 13 \\
-	5 & 3.7692142154392747 & \(1.71669732658884e^{15}\) & 11 \\
-	6 & 2.6925925483728537 & \(1.02550589786192e^{16}\) & 8 \\
+	3 & 2.869065991049632 & \(4.08909120094543e^{12} \simeq 2^{42}\) & 19 \\
+	4 & 2.060717188416003 & \(2.43569932844650e^{14} \simeq 2^{48}\) & 13 \\
+	5 & 3.7692142154392747 & \(1.71669732658884e^{15}\simeq 2^{51}\) & 11 \\
+	6 & 2.6925925483728537 & \(1.02550589786192e^{16}\simeq 2^{53}\) & 8 \\
 	\hline
   \end{tabular}
   \caption{\todo{WRITE-ME}}
