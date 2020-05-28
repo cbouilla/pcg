@@ -415,10 +415,10 @@ In this article, we will only use the Babai's rounding when \(k = 64\) and when 
 	\hline
 	n & \(\lVert G(n,64) \rVert \times \lVert G(n,64)^{-1} \rVert\) & \( \lambda_1(L(n,64)) \) & minimum \(\ell\) \\
 	\hline
-	3 & 2.869065991049632 & \(4.08909120094543e^{12} \simeq 2^{42}\) & 19 \\
-	4 & 2.060717188416003 & \(2.43569932844650e^{14} \simeq 2^{48}\) & 13 \\
-	5 & 3.7692142154392747 & \(1.71669732658884e^{15}\simeq 2^{51}\) & 11 \\
-	6 & 2.6925925483728537 & \(1.02550589786192e^{16}\simeq 2^{53}\) & 8 \\
+	3 & 2.87 & \(4.09e^{12} \simeq 2^{41.9}\) & 19 \\
+	4 & 2.06 & \(2.44e^{14} \simeq 2^{47.8}\) & 13 \\
+	5 & 3.77 & \(1.72e^{15}\simeq 2^{50.6}\) & 11 \\
+	6 & 2.69 & \(1.03e^{16}\simeq 2^{53.2}\) & 8 \\
 	\hline
   \end{tabular}
   \caption{\todo{WRITE-ME}}
@@ -888,35 +888,6 @@ are unknown 122-bit quantities $x_i$ such that:
 \end{algorithm}
 
 
-% \subsection{preuve cas difficile}
-% \todo{À ranger au bon endroit}
-% % Babai ça marche pas (genre zero)
-
-% The vector \(S'\) has been constructed such that it is in \(L(A,2^{128},n)\) and its \(\ell\) lower bits are zero.
-
-% We call \(U\) the truncated vector : \(S'[\ell,128]\). We notice that \(U\) is in \(L(A,2^{128-\ell},n)\).
-
-% We consider the case were we successfully guessed the 6 upper bits of each \(S_i\) and the \(\ell\) lower bits of \(S_0\). Then we know the 6 upper bits of \(U\).
-
-% (maybe dessin)
-
-
-% We consider the vector \(T'\) computed in step (numerodelastepenquestion). To recover \(U\), we use an exact CVP solver as explain in  (insererlasection) on \(T'\) and \(L(A,2^{128-\ell},n)\).
-
-% As \(U\) and \(T'\) have exactly the same \(6\) upper bits  know that \(\lVert U-T \rVert \leqslant \sqrt{n2^{2(128-6-\ell)}}\).
-
-% So, to be sure that our algorithm return the vector \(U\), we need to find sets of parameters \((n,\ell)\) such that :	 
-
-% \[2\sqrt{n}^{(128-6-\ell)} \leqslant \lVert SVP(L(A,2^{128-\ell},n))\rVert \]
-
-% \begin{itemize}
-% 	\item For \(\ell=11\), the smallest \(n\) we need is 39.
-	
-% 	\item For \(\ell=12\), the smallest \(n\) we need is 38.
-	
-% 	\item For \(\ell=13\), the smallest \(n\) we need is again 38 .
-	
-% \end{itemize} 
 
 % \begin{theorem}
 %   The algorithm described above works with probability.... in time ...
