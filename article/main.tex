@@ -692,7 +692,7 @@ unknown increment $c$). Let us set:
 \begin{align*}
   \nabla S_i \stackrel{def}{=} S_i - S_0 \equiv \sum_{j=1}^i S_j - S_{j-1} \equiv \sum_{j=0}^{i-1} \Delta S_j \equiv \Delta S_0 \cdot \sum_{j=0}^{i-1} a^j \equiv \Delta S_0 \frac{a^i-1}{a-1} \mod 2^{128}
 \end{align*}
-Note that $\nabla S_0 = \Delta S_0$. The prediction algorithm we propose proceeds in three phases:
+Note that $\nabla S_1 = \Delta S_0$. The prediction algorithm we propose proceeds in three phases:
 \begin{enumerate}
 \item Reconstruct $\Delta S_0[0:64+\ell]$ from $X_0, \dots, X_{4}$, check consistency with $X_5, \dots, X_{39}$.
 \item Fully reconstruct $\Delta S_0$ from this partial knowledge and the outputs.
