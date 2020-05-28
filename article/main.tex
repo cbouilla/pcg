@@ -8,7 +8,7 @@
 \usepackage{url}
 \usepackage{xspace}
 \usepackage{subcaption}
-%\usepackage{algorithm2e}
+\usepackage{algorithm}
 \usepackage{tikz}
 \usepackage{cellspace}
 \usepackage{multirow}
@@ -25,7 +25,7 @@
 \DeclareMathOperator{\MCG}{MCG}
 
 \usepackage[noend]{algpseudocode}
-%\usepackage{algorithmicx}
+%\usepackage{algorithmic}
 
 % knuth-style algos
 % \newcommand{\slug}{\hbox{\kern1.5pt\vrule width2.5pt height6pt depth1.5pt\kern1.5pt}}
@@ -627,9 +627,10 @@ we guess $\ell = 19$ low-order bits of the state and three consecutive
 rotations.
 
 Therefore, the algorithm that reconstructs the internal state of the
-\textsf{PCG64} generator with known increment proceeds as follows:
+\textsf{PCG64} generator with known increment proceeds as shown in algorithm~\ref{algo:known}.
 
-  \begin{algorithmic}[1]
+\begin{algorithm}
+\begin{algorithmic}[1]
     \Procedure{ReconstructState${}_\ell$}{$X_0, X_1, X_2$}
     \For{$0 \leq w < 2^{\ell}$} \Comment{Guess least-significant bits of $S_0$}
     \State $w_j = a^j w \bmod 2^{\ell}$ \Comment{Propagate to $S_1, S_2$}
@@ -648,40 +649,49 @@ Therefore, the algorithm that reconstructs the internal state of the
     \State $ S_0[0:64] \gets  S'_0[0:64] + 2^{\ell} \cdot U_0[0:64-\ell]$ \Comment{Reconstruct $S_0$}
     \State $ S_0[64:128] \gets S_0[0:64] \oplus Y_0$ 
     
-    \State $ S_1 \gets a  S_0 + c$ \Comment{Check consistency of $X_1$}
+    \State $ S_1 \gets a  S_0 + c$ \Comment{Recompute $X_1$}
     \State $\widehat{Y}_1 =  S_1[0:64] \oplus  S_1[64:128]$
     
-    \If{$\widehat {Y}_1 = Y_1$}
+    \If{$\widehat {Y}_1 = Y_1$} \Comment{Check consistency}
     \State output $ S_0$ as a candidate internal state.
     \EndIf
     \EndFor
     \EndFor
     \EndProcedure
   \end{algorithmic}
+  \caption{State reconstruction Algorithm (case where $c$ is known)}
+  \label{algo:known}
+\end{algorithm}
+
+% \begin{theorem}
+%   Algorithm \textsc{ReconstructState} is correct (it always return the correct internal state).
+% \end{theorem}
+
+% \todo{avec la nouvelle partie 3 et le blabla au dessus de l'algo, y'a plus vraiment besoin de preuve}
+% Charles: je suis plutôt d'accord.
   
-\begin{theorem}
-  Algorithm \textsc{ReconstructState} is correct (it always return the correct internal state).
-\end{theorem}
-
-\todo{avec la nouvelle partie 3 et le blabla au dessus de l'algo, y'a plus vraiment besoin de preuve}
-
-\section{Predicting PCG with Unknown Increment}
+\section{Predicting PCG64 with Unknown Increment}
 \label{sec:Cunknown}
 
-The same algorithm does not apply directly to the general case where the value
-of $c$ is unknown. The global strategy to obtain a prediction algorithm is
-essentially the same (target a truncated version of the underlying linear
+The algorithm of section~\ref{sec:Cknown} does not apply directly to the general
+case where the value of $c$ is unknown. A ``baseline'' procedure would consist
+in guessing $S_0[64:128]$ and $S_1[64:128]$; using eq.~\eqref{eq:output}, this
+would reveal $S_0$ and $S_1$, from which the increment $c$ could be easily
+deduced. This would take $2^{128}$ iterations of a very simple procedure, but is
+completely infeasible.
+
+The global strategy to obtain a practical prediction algorithm is essentially
+the same as before (target a truncated version of the underlying linear
 congruential generator), but is a bit more complicated to implement.
 
 Set $\Delta S_i = S_{i+1} - S_i$; it is easily checked that $\Delta S_i$ is a
 geometric progression of common ratio $a$. Therefore, reconstructing both $S_0$
 and $\Delta S_0$ is sufficient to compute all subsequent states (and recover the
-unknown increment $c$). We note that
+unknown increment $c$). Let us set:
 \begin{align*}
-  S_i - S_0 \equiv \sum_{j=1}^i S_j - S_{j-1} \equiv \sum_{j=0}^{i-1} \Delta S_j \equiv \Delta S_0 \cdot \sum_{j=0}^{i-1} a^j \equiv \Delta S_0 \frac{a^i-1}{a-1} \mod 2^{128}
+  \nabla S_i \stackrel{def}{=} S_i - S_0 \equiv \sum_{j=1}^i S_j - S_{j-1} \equiv \sum_{j=0}^{i-1} \Delta S_j \equiv \Delta S_0 \cdot \sum_{j=0}^{i-1} a^j \equiv \Delta S_0 \frac{a^i-1}{a-1} \mod 2^{128}
 \end{align*}
-
-The prediction algorithm proceeds in three phases:
+Note that $\nabla S_0 = \Delta S_0$. The prediction algorithm we propose proceeds in three phases:
 \begin{enumerate}
 \item Reconstruct $\Delta S_0[0:64+\ell]$ from $X_0, \dots, X_{4}$, check consistency with $X_5, \dots, X_{39}$.
 \item Fully reconstruct $\Delta S_0$ from this partial knowledge and the outputs.
@@ -690,56 +700,85 @@ The prediction algorithm proceeds in three phases:
 
 \noindent Only the first phase is computationally intensive. 
 
-\subsection{Phase 1: Partial Difference Reconstruction}
+\subsection{Partial Difference Reconstruction}
 
-In order to access to a part of $\Delta S_i$, we use the same strategy as in
-section~\ref{sec:Cknown}: we guess the least significant bits of $S_0$ and some
-rotations. The difference is that, in addition, to obtain the ``long-term
-advantage'' in the least significant bits of the states, we must also guess the
-least significant bits of $c$ as well ($c$ is always odd; this makes one less
-bit to guess). We must also guess one additional rotation to compute the
-differences $\Delta S_i$.
+In order to access to a part of $\Delta S_i$, we use the same
+``guess-and-determine'' strategy as in section~\ref{sec:Cknown}: we guess the
+least significant bits of $S_0$ and some rotations, then check consistency. The
+difference is that, since $c$ is unknown, we must in addition guess the least
+significant bits of $c$ to obtain the same ``long-term advantage'' ($c$ is
+always odd; this makes one less bit to guess). We must also guess $k+1$
+successive rotation to get information on $k$ successive differences
+$\Delta S_i$.
 
-Another problem is that of confirming that the guesses are correct. When $c$ is
+Another problem is that of confirming that the guesses are correct. When $c$ was
 known, we could reconstruct the internal state; from there, filtering out the
-bad guesses is easy. When $c$ is unknown, a very strong consistency check can be
-implemented as follows: once we have found $\Delta S_0[0:64+\ell]$, we can
-compute $\Delta S_i[0:64+\ell]$ for any $i$; because we have guessed the first
-rotation and $\ell$ lest significant bits of the state, using~\eqref{eq:output}
-we gain access to $S_0[58:64+\ell]$; combined with the ``differences'', this
-reveals $S_i[58:64+\ell]$ for any $i$ (and we already had $S_i[0:\ell]$). This
-means that we can compute $S_i[0:\ell] \oplus S_i[64:64+\ell]$ for any $i$.
+bad guesses was easy. When $c$ is unknown, the same strategy does not work, but
+a very strong consistency check can still be implemented. The essential idea is
+the following: once $\nabla S_0[0:64+\ell]$ is known, then all the rotations can
+be determined accurately and with little computational effort. This in turn
+allows a consistency check between the partial information deduced from the
+guesses and the actual outputs.
+
+Once we have found $\nabla S_0[0:64+\ell]$, we can compute
+$\nabla S_i[0:64+\ell]$ for any $i$ (geometric progression); because we have
+guessed the first rotation and the $\ell$ least significant bits of the state,
+using~\eqref{eq:output} we gain access to $S_0[58:64+\ell]$; combined with the
+``differences'' $\nabla S_i$, this reveals $S_i[58:64+\ell]$ for any $i$ (and we
+already had $S_i[0:\ell]$). This allows us to compute
+$S_i[0:\ell] \oplus S_i[64:64+\ell]$ for any $i$.
 
 Given a ``fresh'' output $X_i$, and assuming that the guesses are correct, then we should have:
-\begin{equation}\label{eq:consistency}
-  S_i[0:\ell] \oplus S_i[64:64+\ell] \in \bigl\{ (X_i \lll r_i)[0:\ell]~|~r_i=0, 1, \dots, 63 \bigr\}.
+\begin{equation}\label{eq:find_rotation}
+  S_i[0:\ell] \oplus S_i[64:64+\ell] = (X_i \lll r_i)[0:\ell].
 \end{equation}
-If none of the rotations yields a match, then the guesses made beforehand have
-to be wrong. As soon as $\ell \geq 6$, this test is efficient (and it can be
-done for any number of fresh $X_i$'s). As a consequence, bad guesses can be
-filtered deterministically.
+If $X_i$ is known, then this gives a way to find the $i$-th rotation $r_i$ by
+trying the 64 possible values. As soon as $\ell \geq 6$, this should determine
+$r_i$ almost uniquely. In any case, if the guesses were correct, then we should have:
+\begin{equation}\label{eq:consistency}
+  S_i[0:\ell] \oplus S_i[64:64+\ell] \in \bigl\{ (X_i \lll r)[0:\ell]~|~0 \leq r < 64 \bigr\}.
+\end{equation}
+If none of the 64 possible rotations yields a match, then the guesses made
+beforehand have to be wrong. As a consequence, bad guesses can be filtered
+deterministically.
 
+More precisely, let us assume that we have guessed the $\ell$ least-significant
+bits of $S_0$ (we denote them by $w_0$) and the first rotation $r_0$. Set
+$Y_0 \stackrel{def}{=} X_0 \lll r_0$; there is an unknown value
+$x_0$ such that:
+\[
+  S_0 = w_0 + 2^\ell x + 2^{64} (w_0 \oplus Y_0[0:\ell]) + 2^{64+\ell} (x \oplus Y_0[\ell:64]) \qquad \left(0 \leq x < 2^{64-\ell}\right).
+\]
+The unknown value $x_0$ will not be recovered until the third phase of the whole
+procedure. We obtain the $i$-th state by
+$S_i \equiv \nabla S_i + S_0 \bmod 2^{64+\ell}$; however, because the ``middle''
+of $S_0$ is unknown, an unknown \emph{carry} may cross the 64-th during the
+addition and perturb $S_i[64:64+\ell]$. As a result, there are unknown
+quantities $0 \leq y_i < 2^{64-\ell}$ and $0 \leq z_i \leq 1$ such that:
+\begin{align*}
+  S_i[0:\ell] &\equiv \nabla S_i + w_0 \bmod 2^\ell \\
+  S_i[\ell:64] &\equiv y_i \\
+  S_i[64:64+\ell] &\equiv z_i + \nabla S_i[64:64+\ell] + (w_0 \oplus Y_0[0:\ell]) \bmod 2^\ell \\
+\end{align*}
+
+In algorithm~\ref{algo:unknown_1}, \textsc{ConsistencyCheck} uses
+eq.~\eqref{eq:consistency} combined with this observation to discard bad guesses.
+
+\begin{algorithm}
 \begin{algorithmic}[1]
   \Procedure{ConsistencyCheck}{$\Delta S_0, w_0, Y_0, X_5, \dots, X_k$}
-  \State // \emph{Implements the test given by eq.~\eqref{eq:consistency}}.
-  \State $x_0 = w_0 \oplus Y_0[0:\ell]$ \Comment{$x_0 = S_0[64:64+\ell]$}
+  \State $v_0 = w_0 \oplus Y_0[0:\ell]$ \Comment{$v_0 = S_0[64:64+\ell]$}
   \For{$i=5, \dots, k$}
-  \State $x_i = x_0 + \left(\Delta S_0 \frac{a^i-1}{a-1} \bmod 2^{64+\ell}\right)[64:64+\ell]$. \Comment{$x_i = S_i[64:64+\ell]$}
-%  \State $\Delta S_i[\ell:64+\ell] \gets a^i \Delta U_0 \bmod 2^{64}$
-  \State $\mathrm{Target} \gets S_i[0:\ell] \oplus x_i$
-  \If{$\mathrm{Target} \not\in \{ (X_i \lll r_i)[0:\ell]~|~ 0\leq r_i < 64\}$}
-  % \State $\mathrm{Found} \gets \mathbf{False}$
-  % \For{$0 \leq r_i < 64$}
-  % \State $Y_i \gets X_i \lll r_i$
-  % \If{$Y_i[0:\ell] = \mathrm{Target}$}
-  % \State $\mathrm{Found} \gets \mathbf{True}$ 
-  % \EndIf
-  % \EndFor
-  % \If{not Found}
+  \State $u_i \gets \Delta S_0 (a^i-1)(a-1)^{-1} \bmod 2^{64+\ell}$ \Comment{$u_i = \nabla S_i[0:64+\ell]$}
+  \State $w_i = w_0 + u_i[0:\ell] \bmod 2^{\ell}$ \Comment{$w_i = S_i[0:\ell]$}
+  \State $v_i = v_0 + u_i[64:64+\ell] \bmod 2^{\ell}$ \Comment{$S_i[64:64+\ell] \in \{v_i, v'_i\}$}
+  \State $v'_i = v_i + 1 \bmod 2^{\ell}$
+  \State $\mathcal{C} \gets \{ w_i \oplus (X_i \lll r_i)[0:\ell]~|~ 0\leq r_i < 64\}$ \Comment{Check eq.~\eqref{eq:consistency}}
+  \If{$\{v_i, v'_i\} \cap \mathcal{C} = \emptyset$}
   \State \Return \textbf{False} \Comment{Bad Guesses}
   \EndIf
   \EndFor
-  \State \Return \textbf{True} \Comment{Good  Guesses}
+  \State \Return \textbf{True} \Comment{No inconsistency}
   \EndProcedure
 
 \State 
@@ -761,24 +800,91 @@ filtered deterministically.
   \EndFor
   \EndProcedure
 \end{algorithmic}
+\caption{Partial difference reconstruction algorithm (when $c$ is unknown).}
+\label{algo:unknown_1}
+\end{algorithm}
+
+The heart of the algorithm is again the reconstruction of a truncated geometric
+progression. Looking at table~\ref{tab:babai}, we see that the best choice
+consists in guessing 5 consecutive rotations and $\ell=13$ least-significant
+bits. Therefore, \textsc{ReconstructPartialDifference} does $2^{55}$ iterations
+of the inner loop, and succeeds deterministically.
 
 
-\begin{theorem}
-  If $\ell \geq 13$, then algorithm \textsc{ReconstructPartialDifference} is
-  correct (it always returns the correct values).
-\end{theorem}
+% \begin{theorem}
+%   If $\ell \geq 13$, then algorithm \textsc{ReconstructPartialDifference} is
+%   correct (it always returns the correct values).
+% \end{theorem}
 
-\begin{proof}
-  \todo{WRITE-ME}
-  \begin{align*}
-  \mathbf{S} &= \LCG(S_0, c) \\
-             &= \LCG\left(S_0[0:\ell] + 2^\ell S_0[\ell:128], c[0:\ell] + 2^\ell c[\ell:128]\right) \\
-             &= \LCG\left(S_0[0:\ell], c[0:\ell]\right) + 2^\ell \LCG\left(S_0[\ell:128],  c[\ell:128]\right) \\
-  \Delta \mathbf{S} &= \LCG(S_1, c) - \LCG(S_0, c) \\
-             &= \LCG(S_1 - S_0, 0)
+% \begin{proof}
+%   \todo{WRITE-ME}
+%   \begin{align*}
+%   \mathbf{S} &= \LCG(S_0, c) \\
+%              &= \LCG\left(S_0[0:\ell] + 2^\ell S_0[\ell:128], c[0:\ell] + 2^\ell c[\ell:128]\right) \\
+%              &= \LCG\left(S_0[0:\ell], c[0:\ell]\right) + 2^\ell \LCG\left(S_0[\ell:128],  c[\ell:128]\right) \\
+%   \Delta \mathbf{S} &= \LCG(S_1, c) - \LCG(S_0, c) \\
+%              &= \LCG(S_1 - S_0, 0)
+% \end{align*}
+% \end{proof}
+
+\subsection{Full Difference Reconstruction}
+
+Knowing the values of $\Delta S_0[0:64+\ell]$ as well as the $\ell$
+least-significant bits of $S_0$ and $c$ is sufficient to get rid the nastier
+feature \textsf{PCG64}: armed with this knowledge, we can determine all the
+subsequent rotations deterministically, at negligible cost, using
+eq~\eqref{eq:find_rotation}.
+
+For each $i$, it suffices to try the $64$ possible values of $r_i$; only one
+should satisfy the equation. Using $X_0, \dots, X_{40}$, we thus recover the 6
+most-significant bits of $S_0, \dots, S_{40}$. We therefore compute the 6 most
+significant bits of the differences $\Delta S_i$ between consecutive states (up
+to missing carries), and we are faced with the problem of reconstructing a
+128-bit geometric progression using 39 consecutive outputs truncated to their 6
+most-significant bits. This can be done by solving an instance of CVP in
+dimension $\leq 40$. We use the off-the-shelf CVP solver embedded in
+\texttt{fplll}: it runs in no measurable time.
+
+More precisely, there are still details to be dealt with regarding
+carries. Indeed, the \textsc{ReconstructRotations} returns the 6 most
+significant bits of any number of $S_i$'s (denoted by $r_i$). Therefore, there
+are unknown 122-bit quantities $x_i$ such that:
+\begin{align*}
+  S_i &= 2^{122} r_i + x_i \\
+  \Delta S_i &\equiv 2^{122} (r_{i+1} - r_i) + (x_{i+1} - x_{i}) \bmod 2^{128}
 \end{align*}
-\end{proof}
 
+
+\begin{algorithm}
+\begin{algorithmic}[1]
+  \Function{ReconstructRotations}{$\Delta S_0, v_0, i, k$}
+ \State // \emph{Return a list of potential} $\texttt{[}r_i, r_{i+1}, \dots, r_k\texttt{]}$; \emph{assume that $v_0 = S_0[64:64+\ell]$}
+  \If{$i > k$}
+  \State \Return \texttt{[]} \Comment{End recursion}
+  \EndIf
+  \State $\mathcal{T} \gets \Call{ReconstructRotations}{\Delta S_0, v_0, i + 1, k}$ \Comment{Find all the $(r_{i+1}, \dots, r_{k})$}
+  \State $\mathcal{H} \gets \texttt{[]}$ \Comment{List of possible $r_i$'s}
+
+  \State $u_i \gets \Delta S_0 (a^i-1)(a-1)^{-1} \bmod 2^{64+\ell}$ \Comment{$u_i = \nabla S_i[0:64+\ell]$}
+  \State $w_i = w_0 + u_i[0:\ell] \bmod 2^{\ell}$ \Comment{$w_i = S_i[0:\ell]$}
+  \State $v_i = v_0 + u_i[64:64+\ell] \bmod 2^{\ell}$ \Comment{$S_i[64:64+\ell] \in \{v_i, v'_i\}$}
+  \State $v'_i = v_i + 1 \bmod 2^{\ell}$
+
+  %\State $x_i = x_0 + \left(\Delta S_0 \frac{a^i-1}{a-1} \bmod 2^{64+\ell}\right)[64:64+\ell]$. \Comment{$x_i = S_i[64:64+\ell]$}
+  \For{$0 \leq r < 64$} \Comment{Try all rotations}
+  \If{$w_i \oplus (X_i \lll r)[0:\ell] \in \left\{v_i, v'_i\right\}$} \Comment{Check eq.~\eqref{eq:find_rotation}}
+  \State $\mathcal{H} \gets r \texttt{::} \mathcal{H}$ \Comment{New candidate $r_i$}
+  \EndIf
+  \EndFor
+  \State \Return $\left\{ h\texttt{::} t~|~ h \in \mathcal{H}, t \in \mathcal{T} \right\}$ \Comment{Return $\mathcal{H} \times \mathcal{T}$}
+  \EndFunction
+  \State
+  \Function{ReconstructFullDifference}{...}
+  \State \todo{WRITEME}
+  \EndFunction
+\end{algorithmic}
+\caption{Rotations and full difference reconstruction algorithm}
+\end{algorithm}
 
 \subsection{Part 2 : Récupération de la différence complète et deuxième filtre}
 On calcule préalalement H matrice génératrice du réseau $\mathcal{L}(A,2^{128 - \ell},m)$ réduite par la méthode LLL.
@@ -834,7 +940,7 @@ So, to be sure that our algorithm return the vector \(U\), we need to find sets 
   The algorithm described above works with probability.... in time ...
 \end{theorem}
 
-\section{Implementation of the Predictor and Practical Results}
+\section{Implementation and Practical Results}
 
 \section{Conclusion}
 
