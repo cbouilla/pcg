@@ -355,7 +355,9 @@ But, as the vector \(U\) is in the lattice and by definition of the CVP, \(|CVP(
 
 If we can prove that the right side of the inequality is smaller than first minimum of the lattice \(\lambda_1(L)\), then we have proved that \(CVP(L,T)\) is indeed the vector we were searching for.
 
-In this article, we will only use the Babai's rounding when \(k = 128-\ell\) and when we know the \(6\) upper bit of our Lehmer's generator. Hence \(\lVert T-U \rVert \leqslant \sqrt{n}2^{122-\ell} \). So, if we fix \(\ell\) we can search for the minimum \(n\) such that \[2\sqrt{n}2^{122-\ell} \leqslant \lambda_1(L(128-\ell,n))\].
+To compute \(\lambda_1(L)\), we find the shortest vector of L thanks to an exact SVP solver (SVP stands for Shortest Vector Problem) and we compute its norm.
+
+In this article, we will only use an exact CVP solver when \(k = 128-\ell\) and when we know the \(6\) upper bit of our Lehmer's generator. Hence \(\lVert T-U \rVert \leqslant \sqrt{n}2^{122-\ell} \). So, if we fix \(\ell\) we can search for the minimum \(n\) such that \[2\sqrt{n}2^{122-\ell} \leqslant \lambda_1(L(128-\ell,n))\].
 
 \begin{table}
   \centering
@@ -363,6 +365,7 @@ In this article, we will only use the Babai's rounding when \(k = 128-\ell\) and
 	\hline
 	\(\ell\)  & minimum \(n\) \\
 	\hline
+	0  & 42 \\
 	11 & 39 \\
 	12 & 38 \\
 	13 & 38 \\
