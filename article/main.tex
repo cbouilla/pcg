@@ -886,60 +886,55 @@ are unknown 122-bit quantities $x_i$ such that:
 \caption{Rotations and full difference reconstruction algorithm}
 \end{algorithm}
 
-\subsection{Part 2 : Récupération de la différence complète et deuxième filtre}
-On calcule préalalement H matrice génératrice du réseau $\mathcal{L}(A,2^{128 - \ell},m)$ réduite par la méthode LLL.
-On a récupéré de la Part 1 une série de $S_0[0 : \ell]$, $r_i$ (i = 0, ..., n) et $C[0 : \ell]$ parmi lequels se trouve notre solution.
-\begin{enumerate}
-  \item recupérer toutes les $r_i$ possibles, pour $n \leq i \leq m$  par la même méthode que l'étape 3 de la Part 1, répétée $m-n$ fois. On garde en mémoire toutes les rotations possiles.
-  \item Pour chacune des $r$ possibles
-  \begin{enumerate}
-    \item We cumpute $r'$ et $\Delta r$ avec le même méthode que pour $\Delta T$ : 
-    \begin{align}
-      r'_i = r_i - (A^i*S_0[0 : \ell] + C[0 : \ell] * \sum_{j = 0}^i A^j)[64 - 6 : 64 + \ell])[122 : 128]
-      \Delta r_i &= r_{i+1} - r_i
-    \end{align}
 
-    \item We get the correspondant $\Delta S'_0S'_1$ ($S'$ dont on aurait retiré que la composante en $C[0 : \ell]$ et non en $C$ entier) computing $\texttt{CVP}(r * 2^{128 - \ell}, \mathcal{L}(A,2^{128 - \ell},m))$. We use the fpylll python library CVP function. On stocke le $DS_0S_1$ correspondant.
+% \subsection{preuve cas difficile}
+% \todo{À ranger au bon endroit}
+% % Babai ça marche pas (genre zero)
 
-    \item \todo{parler du problème de retenue étrange}
-    
-  \end{enumerate}
-\end{enumerate}
+% The vector \(S'\) has been constructed such that it is in \(L(A,2^{128},n)\) and its \(\ell\) lower bits are zero.
 
-\subsection{preuve cas difficile}
-\todo{À ranger au bon endroit}
-% Babai ça marche pas (genre zero)
+% We call \(U\) the truncated vector : \(S'[\ell,128]\). We notice that \(U\) is in \(L(A,2^{128-\ell},n)\).
 
-The vector \(S'\) has been constructed such that it is in \(L(A,2^{128},n)\) and its \(\ell\) lower bits are zero.
+% We consider the case were we successfully guessed the 6 upper bits of each \(S_i\) and the \(\ell\) lower bits of \(S_0\). Then we know the 6 upper bits of \(U\).
 
-We call \(U\) the truncated vector : \(S'[\ell,128]\). We notice that \(U\) is in \(L(A,2^{128-\ell},n)\).
-
-We consider the case were we successfully guessed the 6 upper bits of each \(S_i\) and the \(\ell\) lower bits of \(S_0\). Then we know the 6 upper bits of \(U\).
-
-(maybe dessin)
+% (maybe dessin)
 
 
-We consider the vector \(T'\) computed in step (numerodelastepenquestion). To recover \(U\), we use an exact CVP solver as explain in  (insererlasection) on \(T'\) and \(L(A,2^{128-\ell},n)\).
+% We consider the vector \(T'\) computed in step (numerodelastepenquestion). To recover \(U\), we use an exact CVP solver as explain in  (insererlasection) on \(T'\) and \(L(A,2^{128-\ell},n)\).
 
-As \(U\) and \(T'\) have exactly the same \(6\) upper bits  know that \(\lVert U-T \rVert \leqslant \sqrt{n2^{2(128-6-\ell)}}\).
+% As \(U\) and \(T'\) have exactly the same \(6\) upper bits  know that \(\lVert U-T \rVert \leqslant \sqrt{n2^{2(128-6-\ell)}}\).
 
-So, to be sure that our algorithm return the vector \(U\), we need to find sets of parameters \((n,\ell)\) such that :	 
+% So, to be sure that our algorithm return the vector \(U\), we need to find sets of parameters \((n,\ell)\) such that :	 
 
-\[2\sqrt{n}^{(128-6-\ell)} \leqslant \lVert SVP(L(A,2^{128-\ell},n))\rVert \]
+% \[2\sqrt{n}^{(128-6-\ell)} \leqslant \lVert SVP(L(A,2^{128-\ell},n))\rVert \]
 
-\begin{itemize}
-	\item For \(\ell=11\), the smallest \(n\) we need is 39.
+% \begin{itemize}
+% 	\item For \(\ell=11\), the smallest \(n\) we need is 39.
 	
-	\item For \(\ell=12\), the smallest \(n\) we need is 38.
+% 	\item For \(\ell=12\), the smallest \(n\) we need is 38.
 	
-	\item For \(\ell=13\), the smallest \(n\) we need is again 38 .
+% 	\item For \(\ell=13\), the smallest \(n\) we need is again 38 .
 	
-\end{itemize} 
+% \end{itemize} 
 
-\begin{theorem}
-  The algorithm described above works with probability.... in time ...
-\end{theorem}
+% \begin{theorem}
+%   The algorithm described above works with probability.... in time ...
+% \end{theorem}
 
+\subsection{Complete State Reconstruction}
+
+Once all the rotations have be recovered and $\Delta S_0$ has been found
+entirely, the only thing that remain is to actually find the entire $S_0$. For
+this, we use again eq.~\eqref{eq:output}. For this we use the fact that there is
+an (unknown) \emph{carry} $0\leq \gamma_i \leq 1$ such that:
+\begin{align*}
+  S_i[0:64] &= S_0[0:64] \boxplus \nabla S_i[0:64] \\
+  S_i[64:128] &= S_0[64:128] \boxplus \nabla S_i[64:128] \boxplus \gamma_i \\
+\end{align*}
+This therefore gives:
+\[
+  X_i  \lll r_i = \bigl(S_0[0:64] \boxplus \nabla S_i[0:64]\bigr) \oplus \bigl(S_0[64:128] \boxplus \nabla S_i[64:128] \boxplus \gamma_i\bigr).
+\]
 \section{Implementation and Practical Results}
 
 \section{Conclusion}
