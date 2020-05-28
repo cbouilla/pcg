@@ -786,7 +786,7 @@ eq.~\eqref{eq:consistency} combined with this observation to discard bad guesses
   
 \Procedure{ReconstructPartialDifference}{$X_0, \dots, X_k$}
   \For{$0 \leq w_0 < 2^{\ell}$ and $0 \leq c < 2^{\ell - 1}$} \Comment{Guess least-significant bits}
-  \State $S'_j \gets a^j w_0 + (2c+1) \sum_{k = 0}^j a^k \bmod 2^{128}$ \Comment{Shifted states}
+  \State $S'_j \gets a^j w_0 + (2c+1)(a^j - 1)(a-1)^{-1} \bmod 2^{128}$ \Comment{Shifted states}
   \For{$0 \leq r_0, r_1, r_2, r_3, r_4 < 64$} \Comment{Guess rotations}
   \State $Y_j \gets X_j \lll r_j$ \Comment{Undo rotations}
   \State $T_j \gets \left(r_j \oplus Y_j[58:64]\right) +  64 \cdot \left(w_j \oplus Y_j[0:\ell]\right)$ \Comment{Truncated LCG}
