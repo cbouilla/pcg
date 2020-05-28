@@ -357,7 +357,9 @@ If we can prove that the right side of the inequality is smaller than first mini
 
 In this article, we will only use the Babai's rounding when \(k = 128-\ell\) and when we know the \(6\) upper bit of our Lehmer's generator. Hence \(\lVert T-U \rVert \leqslant \sqrt{n}2^{122-\ell} \). So, if we fix \(\ell\) we can search for the minimum \(n\) such that \[2\sqrt{n}2^{122-\ell} \leqslant \lambda_1(L(128-\ell,n))\].
 
-\begin{tabular}{|c|c|}
+\begin{table}
+  \centering
+    \begin{tabular}{|c|c|}
 	\hline
 	\(\ell\)  & minimum \(n\) \\
 	\hline
@@ -366,6 +368,9 @@ In this article, we will only use the Babai's rounding when \(k = 128-\ell\) and
 	13 & 38 \\
 	\hline
 \end{tabular}
+  \caption{\todo{WRITE-ME}}
+  \label{tab:exact_cvp}
+\end{table}
 
 \subsection{A second way to find U : the Babai's rounding}
 
@@ -403,7 +408,9 @@ In this article, we will only use the Babai's rounding when \(k = 64\) and when 
 
 \bigskip
 
-\begin{tabular}{|c|c|c|c|}
+\begin{table}
+  \centering
+  \begin{tabular}{|c|c|c|c|}
 	\hline
 	n & \(\lVert G(n,64) \rVert \times \lVert G(n,64)^{-1} \rVert\) & \( \lambda_1(L(n,64)) \) & minimum \(\ell\) \\
 	\hline
@@ -412,7 +419,10 @@ In this article, we will only use the Babai's rounding when \(k = 64\) and when 
 	5 & 3.7692142154392747 & \(1.71669732658884e^{15}\) & 11 \\
 	6 & 2.6925925483728537 & \(1.02550589786192e^{16}\) & 8 \\
 	\hline
-\end{tabular}
+  \end{tabular}
+  \caption{\todo{WRITE-ME}}
+  \label{tab:babai}
+\end{table}
 
 \section{Warm-up: A Prediction Algorithm for \textsf{PCG64} With Known Increment}
 \label{sec:Cknown}
