@@ -273,11 +273,11 @@ relatively fast on these platforms.
     \draw (5.8, -3.6) rectangle +(1.2, -0.8);
     \draw[fill=black] (5.8, -4.1) -- (5.95, -4) -- (5.8, -3.9) -- cycle;
     
-    \draw (0.3, 1.1) -- (0.3, 1.5) -- (-1, 1.5) -- (-1, -4) -- (5.8, -4);
+    \draw (0.3, 1.1) -- (0.3, 1.5) -- (-1, 1.5) -- (-1, -4) -- node[above] {$r_i$} (5.8, -4);
     \draw (-1.1, -2.9) -- +(0.2, -0.2);
     \path (-0.9, -3) node[anchor=west] {6};
 
-    \draw[->] (x) -- +(0, -1.5);
+    \draw[->] (x) -- node[right] {$Y_i$} +(0, -1.5);
     \node at (6.4, -6.25) (xi) {$X_i$};
     \draw[->] (6.4, -4.4) -- (xi);
 
@@ -293,22 +293,33 @@ relatively fast on these platforms.
 \section{Reconstructing Truncated Geometric Sequences}
 \label{sec:geometric}
 
+
+This is a recurring theme is this paper, so we now state the problem in
+general. If $a, b$ are integers modulo $2^{128}$ and $0\leq i<j<128$, then there
+is a \emph{carry} $0 \leq \gamma \leq 1$ (resp. a \emph{borrow}
+$0 \leq 1 \leq \beta$) such that:
+\begin{align}
+  (a \boxplus b)[i:j]  &= a[i:j] \boxplus  b[i:j] \boxplus  \gamma, \label{eq:caryy}  \\
+  (a \boxminus b)[i:j] &= a[i:j] \boxminus b[i:j] \boxminus \beta.  \label{eq:borrow}
+\end{align}
+
 \subsection{Reconstructing Linear Congruential Generators}
 
 Given an integer \(k\), a fixed multiplier \(a\) and an increment \(c\), define the
 sequence \[u_0 = x, u_{i+1} = a u_i + c \bmod 2^k\] The sequence \(u\) form the
 successive internal states of a linear congruential generator (LCG). 
 
-Let $\LCG_{n,k}(x, c)$ denote the vector $(u_0, \dots, u_{n-1}) \in \mathbb{Z}_{2^k}$ (we will omit $n$ and $k$ when they are obvious from the context).  It is easy to check that:
+Let $\LCG_{k}(x, c)$ denote the vector $(u_0, u_1, u_2, \dots)$ of integers
+modulo $2^k$.  It is easy to check that:
 \begin{align}
 \label{eq:lcg-additive}
-\LCG_{n,k}(x + y, c + d) &= \LCG_{n,k}(x, c) + \LCG_{n,k}(y, d),  \\
+\LCG_{k}(x + y, c + d) &= \LCG_{k}(x, c) + \LCG_{k}(y, d),  \\
 \label{eq:lcg-scalar}
-\LCG_{n,k}(\lambda x, \lambda c) &= \lambda \LCG_{n,k}(x, c).   
+\LCG_{k}(\lambda x, \lambda c) &= \lambda \LCG_{k}(x, c).   
 \end{align}
 Hence those sets of vector have a lot of structure we can use.
 
-The LCG have been largely studied. This is why we know techniques to recover internal states knowing only upper or lower bits of the output, see \cite{Boyar1989}. A particular LCG is the Lehmer's generator \cite{Lehmer}, where the multiplier \(a\) is known and the increment is zero.
+The LCG have been largely studied. \todo{expand this} This is why we know techniques to recover internal states knowing only upper or lower bits of the output, see \cite{Boyar1989}. A particular LCG is the Lehmer's generator \cite{Lehmer}, where the multiplier \(a\) is known and the increment is zero.
 
 In our algorithm to predict the PCG, we need to reconstruct several truncated Lehmer's generator. For that, we will present a classical lattice-based reconstruction for a truncated Lehmer's generator, as presented in \cite{Frieze}. \todo{C'est pas exactement celle là, on dit quoi du coup ?}
 
@@ -317,25 +328,44 @@ In our algorithm to predict the PCG, we need to reconstruct several truncated Le
 We fix a multiplier \(a\), integers \(k\), \(n\) and we consider \(L(n,k)\) the set of \(\LCG_{n,k}(x, 0)\), for \(x\) in \(\mathbb{Z}_{2^k}\). Then
 
 \begin{itemize}
-	\item By \ref{eq:lcg-additive}, the vector \(\LCG(x_1,0) + \LCG(x_2,0) = \LCG(x_1+x_2,0)\), hence it is still in \(L(n,k)\).
-	\item By \ref{eq:lcg-scalar}, the vector \((-1)\times \LCG(x,0) = \LCG(-x,0)\) hence it is still in \(L(n,k)\).
+	\item By \eqref{eq:lcg-additive}, the vector \(\LCG(x_1,0) + \LCG(x_2,0) = \LCG(x_1+x_2,0)\), hence it is still in \(L(n,k)\).
+	\item By \eqref{eq:lcg-scalar}, the vector \((-1)\times \LCG(x,0) = \LCG(-x,0)\) hence it is still in \(L(n,k)\).
 \end{itemize}
 
 Hence \(L(n,k)\) is a lattice. We easily notice that \(L(n,k)\) is spawned by the lines of the following \(n\times n\) matrix :
 
-\[\begin{pmatrix}
-1&a&a^2&\dots&a^{n-1}\\
-0&2^k&0&\dots&0\\
-0&0&2^k&\dots&0\\
-\dots&\dots&\dots&\dots&\dots\\
-0&0&0&\dots&2^k\\
-\end{pmatrix}\]
+\[
+  \begin{pmatrix}
+    1 & a   & a^2 & \dots & a^{n-1} \\
+    0 & 2^k & 0   & \dots & 0 \\
+    0 & 0   & 2^k & \dots & 0 \\
+    \dots & \dots & \dots & \dots & \dots\\
+    0 & 0 & 0 & \dots & 2^k \\
+  \end{pmatrix}
+\]
 
 Once again, we will omit $n$ and $k$ when they are obvious from the context.
 
-We want to find an element \(U\) in the lattice only knowing the most significant bits of each of its coordinates. 
+\todo{NOTE: J'introduis $\ell$ ici. ATTENTION RETENUES MODULAIRES.}  We want to
+find an element \(U\) in the lattice only knowing the $\ell$ most significant
+bits of each of its coordinates.  More precisely, let $T_i = U_i[k-\ell:k]$
+denote the top $\ell$ bits of $U_i$. We assume that there is a ``noise vector''
+$N$ such that $N_i \in \{-1, 0, 1\}$, and we set
+$\widetilde{T}_i = T_i + N_i \bmod 2^{\ell}$. The problem we have is the
+following: recover $U$ from its noisy truncation $\widetilde{T}$.
 
-We decompose \(U = T + (T-U)\) where \(T\) contains only the upper bits and \(T-U\) the lowers one. There is no reason for \(T\) to be in the lattice, but as \(T-U\) is small, we know \(T\) is \emph{close} to \(U\).
+In principle, $2^{k-\ell} \widetilde{T}$ should be ``close'' to a Lattice
+point. \todo{Mais il faut se dire que $2^{k-\ell} T$ et
+  $2^{k-\ell} \widetilde{T}$ peuvent être éloignés, surtout si $T_i = 0$ et
+  $N_i=-1$, à cause du $\bmod 2^\ell$... L'argument de Julia était que dans ce
+  cas-là, $2^{k-\ell} \widetilde{T}$ est proche d'un \emph{autre} point du
+  réseau, en ajoutant un $2^k$ sur la $i$-ème composante.}
+
+Decompose $U = T + (T-U)$ where $T$ contains only the upper bits and $T-U$ the lowers one. There is no reason for \(T\) to be in the lattice, but as \(T-U\) is small, we know \(T\) is \emph{close} to \(U\).
+
+
+
+
 
 \subsection{A first way to find U : using an exact CVP solver}
 
@@ -357,6 +387,7 @@ If we can prove that the right side of the inequality is smaller than first mini
 
 To compute \(\lambda_1(L)\), we find the shortest vector of L thanks to an exact SVP solver (SVP stands for Shortest Vector Problem) and we compute its norm.
 
+\todo{En fait, on va juste utiliser $k=128$, donc établir $n=42$ est suffisant. Faire disparaître $\ell$.}
 In this article, we will only use an exact CVP solver when \(k = 128-\ell\) and when we know the \(6\) upper bit of our Lehmer's generator. Hence \(\lVert T-U \rVert \leqslant \sqrt{n}2^{122-\ell} \). So, if we fix \(\ell\) we can search for the minimum \(n\) such that \[2\sqrt{n}2^{122-\ell} \leqslant \lambda_1(L(128-\ell,n))\].
 
 \begin{table}[htbp!]
@@ -377,13 +408,15 @@ In this article, we will only use an exact CVP solver when \(k = 128-\ell\) and 
 
 \subsection{A second way to find U : the Babai's rounding}
 
-As using an exact CVP solver is costly, we'll try a cheaper but less precise way to find the closest vector.
+As using an exact CVP solver is costly, we will try a cheaper but less precise way to find the closest vector.
 
 We compute \(G(n,k)\) the LLL-reduction of the generating matrix of \(L(n,k)\). We denote by  \(\rVert G \lVert\) the induced matrix norm :
-\[\rVert G \lVert =  \max_{x \in \mathbb{R}}\frac{\lVert Gx \rVert_2}{\lVert x \rVert_2}\]
-In the case of the \(\lVert\rVert_2\) norm, \(\rVert G \lVert = \sigma(G)\), where \(\sigma(G)\) is the largest singular value of \(G\). 
+\[\rVert G \lVert =  \sup_{x \in \mathbb{R}^n}\frac{\lVert Gx \rVert_2}{\lVert x \rVert_2}\]
+In the case of the \(\lVert \cdot \rVert_2\) norm,
+\(\rVert G \lVert = \sigma(G)\), where \(\sigma(G)\) is the largest singular
+value of $G$ (equivalently, $\sigma(G)$ is the absolute value of the largest
+eigenvalue of $G^{t} G$ --- \todo{recheck this}).
 
-\medskip
 
 As \(T\) is not an element of the lattice, \(TG^{-1}\) is not an integer vector.
 
@@ -407,6 +440,7 @@ Hence :
 
 If we can prove that the right side of the inequality is smaller than the minimum of the lattice \(\lambda_1(L)\), then we have proved that \(rG\) is indeed the vector we were searching for.
 
+\todo{Ce serait beaucoup plus naturel à mon avis de dire qu'on connaît les $\ell$ bits de poids fort. A ce stade, rien ne vient justifier le ``+6''.}
 In this article, we will only use the Babai's rounding when \(k = 64\) and when we know the \(6+\ell\) upper bit of our Lehmer's generator. Hence \(\lVert T-U \rVert \leqslant \sqrt{n}2^{58-\ell} \). So, if we fix \(n\) we can search for the minimum \(\ell\) such that \[(1+\lVert G(n,64) \rVert \times \lVert G(n,64)^{-1} \rVert)\sqrt{n}2^{58-\ell} \leqslant \lambda_1(L(n,64))\]
 
 \begin{table}[htbp!]
@@ -424,6 +458,8 @@ In this article, we will only use the Babai's rounding when \(k = 64\) and when 
   \caption{\todo{WRITE-ME}}
   \label{tab:babai}
 \end{table}
+
+
 
 \section{Warm-up: A Prediction Algorithm for \textsf{PCG64} With Known Increment}
 \label{sec:Cknown}
@@ -470,7 +506,7 @@ possible by combining the following ingredients:
 \end{itemize}
 
 In figure~\ref{fig:Cknown}, we see that guessing $S_0[0:\ell]$ and a few 6-bit
-rotations give access to $S_i[58:64+\ell]$ for the corresponding
+rotations $r_i$ give access to $S_i[58:64+\ell]$ for the corresponding
 states. Therefore, looking at $S_i[\ell:64+\ell]$, we are facing a truncated
 linear congruential generator on $64$ bits, where we have access to the most
 $6+\ell$ bits of each state (denoted by $T$), for a few consecutive states. This
@@ -608,53 +644,73 @@ details follow.
 \label{fig:Cknown}
 \end{figure}
 
-We consider the first three internal states
-$\mathbf{S} = (S_0, S_1, S_2) = \LCG_{3, 128}(S_0, c)$. We will guess the $\ell$
+We consider the sequence of internal states
+$\mathbf{S} = (S_0, S_1, \dots) = \LCG_{128}(S_0, c)$. We will guess the $\ell$
 least-significant bits of $S_0$, therefore let us assume that their value is
-known and denote it by $w$. We define $\mathbf{S}' = \LCG_{3, 128}(S_0 - w,
-0)$. By~\eqref{eq:lcg-additive}, we have
-$\mathbf{S}' = \mathbf{S} - \LCG_{3, 128}(w, c)$. The point is that the elements
-of $\mathbf{S}'$ follow a geometric progression of common ratio $a$; in
-addition, the $\ell$ least significant bits of each components are zero. The
-crux of the reconstruction algorithm is to find $\mathbf{S}'$.
+known and denote it by $w$. We define $\mathbf{S}' = \LCG_{128}(S_0 - w, 0)$ and
+$\mathbf{K} = \LCG_{128}(w, c)$ (this is Known). By~\eqref{eq:lcg-additive}, we
+have $\mathbf{S}' = \mathbf{S} - \mathbf{K}$. The point is that the elements of
+$\mathbf{S}'$ follow a geometric progression of common ratio $a$; in addition,
+the $\ell$ least significant bits of each components are equal to zero. It
+follows that $\mathbf{S}'[\ell:64+\ell]$ follows a geometric progression of
+common ratio $a$, modulo $2^{64}$. The crux of the reconstruction algorithm is
+to find $\mathbf{S}'[\ell:64+\ell]$.
 
-For this, set $\mathbf{T}' = \left(\mathbf{S}' / 2^\ell\right) \bmod 2^{64}$
-(the division by $2^\ell$ is exact). It follows that the $\mathbf{T}'$ is also a
-geometric progression with common ratio $a$, and we have access to the $\ell+6$
-high order bits of $T'_i$ if we guess the $i$-th rotation. We have seen in
-section~\ref{sec:geometric} that 19 known bits on 3 consecutive outputs are
-sufficient for a deterministic reconstruction of the full sequence. Therefore,
-we guess $\ell = 19$ low-order bits of the state and three consecutive
-rotations.
+We know $K_i[58:64+\ell]$ for all $i$, and for each guessed rotation $r_i$ we
+have access to $T_i \stackrel{def}{=} S_i[58:64+\ell]$.  We want
+$T'_i \stackrel{def}{=} (S_i \boxminus K_i)[58:64+\ell]$, which is the
+truncation of $S'_i$. Thanks to~\eqref{eq:borrow}, we know that there is an
+unknown vector $\mathbf{B}$ of \emph{borrows}, whose components are either 0 or
+1, such that
+$\mathbf{T'} = \mathbf{S}[58:64+\ell] \boxminus \mathbf{K}[58:64+\ell] \boxminus
+\mathbf{B}$.
 
-Therefore, the algorithm that reconstructs the internal state of the
-\textsf{PCG64} generator with known increment proceeds as shown in algorithm~\ref{algo:known}.
+Because the borrow are unknown, we in fact compute
+$\widetilde{\mathbf{T}'} = \mathbf{S}[58:64+\ell] \boxminus
+\mathbf{K}[58:64+\ell]$, and clearly
+$\widetilde{\mathbf{T}'} = \mathbf{T}' \boxplus \mathbf{B}$.
+
+We will guess $n$ rotations and $\ell$ least-significant bits of the state, for
+a total of $2^{6n + \ell}$ guessed bits. Table~\ref{tab:babai} gives a
+lower-bound on $\ell$ given $n$, and we see that the total number of guessed
+bits reaches a minimum of $37$ when $n=3$ and $\ell=19$. Therefore, we guess
+$\ell = 19$ low-order bits of the state and three consecutive rotations.
+
+The algorithm that reconstructs the internal state of the \textsf{PCG64}
+generator with known increment proceeds as shown in
+algorithm~\ref{algo:known}. The point is that when the guesses are correct, then
+from the truncated geometric series $\mathbf{T'}$, the solution of the CVP
+instance reveals $U_j = S_j'[\ell:64+\ell]$. From there, the correction of the
+algorithm is easily established.
+
+The procedure is completely practical. More details are given in section~\ref{sec:implem}.
 
 \begin{algorithm}
 \begin{algorithmic}[1]
-    \Procedure{ReconstructState${}_\ell$}{$X_0, X_1, X_2$}
-    \For{$0 \leq w < 2^{\ell}$} \Comment{Guess least-significant bits of $S_0$}
-    \State $w_j = a^j w \bmod 2^{\ell}$ \Comment{Propagate to $S_1, S_2$}
-    \State $S'_j \gets a^j w + c (a^j - 1)(a-1)^{-1} \bmod 2^{128}$    \Comment{Shifted states}
+  \Procedure{ReconstructState${}_\ell$}{$X_0, X_1, X_2$}
+  \State // \emph{Statement involving $j$ must be repeated for $j=0, 1, 2$.}
+  \State $\ell \gets 19$
+  \For{$0 \leq w < 2^{\ell}$} \Comment{Guess least-significant bits of $S_0$}
+%    \State $w_j = a^j w \bmod 2^{\ell}$ \Comment{Propagate to $S_1, S_2$}
+    \State $K_j \gets a^j w + c (a^j - 1)(a-1)^{-1} \bmod 2^{128}$    \Comment{Known part}
     
     \For{$0 \leq r_0, r_1, r_2 < 64$} \Comment{Guess rotations}
     
     \State $Y_j \gets X_j \lll r_j$ \Comment{Undo rotations}
     
-    \State $ T_j \gets \left(r_j \oplus Y_j[58:64]\right) +  64 \cdot \left(w_j \oplus Y_j[0:\ell]\right)$  \Comment{Truncated LCG output}
+    \State $T_j \gets \left(r_j \oplus Y_j[58:64]\right) +  64 \cdot \left(K_j \oplus Y_j\right)[0:\ell]$  \Comment{Truncated LCG output}
     
-    \State $ T'_j \gets    T_j -  S'_i[58:64+\ell]$  \Comment{Shifted Truncated LCG output}
+    \State $\widetilde T'_j \gets T_j \boxminus K_j[58:64+\ell]$  \Comment{Truncated geometric series}
+    \State $(U_0, U_1, U_2) \gets \left\lfloor 2^{58-\ell} \cdot (\widetilde T'_0, \widetilde T'_1, \widetilde T'_2) \cdot  G_3^{-1} \right\rceil \cdot G_3$ \Comment{CVP (Babai rounding)}
+
+    \State $S_0[0:64] \gets  K_0[0:64] + 2^{\ell} \cdot U_0[0:64-\ell]$ \Comment{Reconstruct $S_0$}
+    \State $S_0[64:128] \gets S_0[0:64] \oplus Y_0$ 
     
-    \State $(U_0, U_1, U_2) \gets \left\lfloor (T'_0, T'_1, T'_2) \cdot 2^{58-\ell} \cdot \widetilde G_3^{-1} \right\rceil \cdot \widetilde G_3$ \Comment{CVP (Babai rounding)}
-    
-    \State $ S_0[0:64] \gets  S'_0[0:64] + 2^{\ell} \cdot U_0[0:64-\ell]$ \Comment{Reconstruct $S_0$}
-    \State $ S_0[64:128] \gets S_0[0:64] \oplus Y_0$ 
-    
-    \State $ S_1 \gets a  S_0 + c$ \Comment{Recompute $X_1$}
+    \State $S_1 \gets a  S_0 + c$ \Comment{Recompute $X_1$}
     \State $\widehat{Y}_1 =  S_1[0:64] \oplus  S_1[64:128]$
     
     \If{$\widehat {Y}_1 = Y_1$} \Comment{Check consistency}
-    \State output $ S_0$ as a candidate internal state.
+    \State output $S_0$ as a candidate internal state.
     \EndIf
     \EndFor
     \EndFor
@@ -663,13 +719,6 @@ Therefore, the algorithm that reconstructs the internal state of the
   \caption{State reconstruction Algorithm (case where $c$ is known)}
   \label{algo:known}
 \end{algorithm}
-
-% \begin{theorem}
-%   Algorithm \textsc{ReconstructState} is correct (it always return the correct internal state).
-% \end{theorem}
-
-% \todo{avec la nouvelle partie 3 et le blabla au dessus de l'algo, y'a plus vraiment besoin de preuve}
-% Charles: je suis plutôt d'accord.
   
 \section{Predicting PCG64 with Unknown Increment}
 \label{sec:Cunknown}
@@ -677,20 +726,25 @@ Therefore, the algorithm that reconstructs the internal state of the
 The algorithm of section~\ref{sec:Cknown} does not apply directly to the general
 case where the value of $c$ is unknown. A ``baseline'' procedure would consist
 in guessing $S_0[64:128]$ and $S_1[64:128]$; using eq.~\eqref{eq:output}, this
-would reveal $S_0$ and $S_1$, from which the increment $c$ could be easily
-deduced. This would take $2^{128}$ iterations of a very simple procedure, but is
-completely infeasible.
+would reveal $S_0$ and $S_1$; from there, the increment $c$ is easily to obtain,
+and every secret information has been reconstructed. This would take $2^{128}$
+iterations of a very simple procedure, which is completely infeasible.
 
-The global strategy to obtain a practical prediction algorithm is essentially
-the same as before (target a truncated version of the underlying linear
-congruential generator), but is a bit more complicated to implement.
+% The global strategy to obtain a practical prediction algorithm is essentially
+% the same as before (target a truncated version of the underlying linear
+% congruential generator), but is a bit more complicated to implement.
 
 Set $\Delta S_i = S_{i+1} - S_i$; it is easily checked that $\Delta S_i$ is a
 geometric progression of common ratio $a$. Therefore, reconstructing both $S_0$
 and $\Delta S_0$ is sufficient to compute all subsequent states (and recover the
-unknown increment $c$). Let us set:
+unknown increment $c$). The global ``guess-and-determine'' strategy is
+essentially the same as before: gaining access to a truncated version of
+$\Delta S_i$, solving a small SVP instance, reconstructing $\Delta S_0$, then
+checking consistency.
+
+Let us set:
 \begin{align*}
-  \nabla S_i \stackrel{def}{=} S_i - S_0 \equiv \sum_{j=1}^i S_j - S_{j-1} \equiv \sum_{j=0}^{i-1} \Delta S_j \equiv \Delta S_0 \cdot \sum_{j=0}^{i-1} a^j \equiv \Delta S_0 \frac{a^i-1}{a-1} \mod 2^{128}
+  \nabla S_i \stackrel{def}{=} S_i \boxminus S_0 = \sum_{j=1}^i S_j - S_{j-1} \equiv \sum_{j=0}^{i-1} \Delta S_j \equiv \Delta S_0 \cdot \sum_{j=0}^{i-1} a^j \equiv \Delta S_0 \frac{a^i-1}{a-1} \mod 2^{128}
 \end{align*}
 Note that $\nabla S_1 = \Delta S_0$. The prediction algorithm we propose proceeds in three phases:
 \begin{enumerate}
@@ -712,16 +766,16 @@ always odd; this makes one less bit to guess). We must also guess $k+1$
 successive rotation to get information on $k$ successive differences
 $\Delta S_i$.
 
-Another problem is that of confirming that the guesses are correct. When $c$ was
-known, we could reconstruct the internal state; from there, filtering out the
-bad guesses was easy. When $c$ is unknown, the same strategy does not work, but
-a very strong consistency check can still be implemented. The essential idea is
-the following: once $\nabla S_0[0:64+\ell]$ is known, then all the rotations can
+Confirming that the guesses are correct is less immediate. When $c$ was known,
+we could reconstruct the internal state; from there, filtering out the bad
+guesses was easy. When $c$ is unknown, the same strategy does not work, but a
+very strong consistency check can still be implemented. The essential idea is
+the following: once $\Delta S_0[0:64+\ell]$ is known, then all the rotations can
 be determined accurately and with little computational effort. This in turn
 allows a consistency check between the partial information deduced from the
 guesses and the actual outputs.
 
-Once we have found $\nabla S_0[0:64+\ell]$, we can compute
+Once we have found $\Delta S_0[0:64+\ell]$, we can compute
 $\nabla S_i[0:64+\ell]$ for any $i$ (geometric progression); because we have
 guessed the first rotation and the $\ell$ least significant bits of the state,
 using~\eqref{eq:output} we gain access to $S_0[58:64+\ell]$; combined with the
@@ -751,19 +805,20 @@ $x_0$ such that:
   S_0 = w_0 + 2^\ell x + 2^{64} (w_0 \oplus Y_0[0:\ell]) + 2^{64+\ell} (x \oplus Y_0[\ell:64]) \qquad \left(0 \leq x < 2^{64-\ell}\right).
 \]
 The unknown value $x_0$ will not be recovered until the third phase of the whole
-procedure. We obtain the $i$-th state by
-$S_i \equiv \nabla S_i + S_0 \bmod 2^{64+\ell}$; however, because the ``middle''
-of $S_0$ is unknown, an unknown \emph{carry} may cross the 64-th during the
-addition and perturb $S_i[64:64+\ell]$. As a result, there are unknown
-quantities $0 \leq y_i < 2^{64-\ell}$ and $0 \leq z_i \leq 1$ such that:
+procedure. We obtain the $i$-th state by $S_i \equiv \nabla S_i \boxplus S_0$;
+however, because the ``middle'' of $S_0$ is unknown, we have the same problem as
+in eq.~\eqref{eq:diff_borrow}: an unknown \emph{carry} may cross the 64-th bit
+during the addition and perturb $S_i[64:64+\ell]$. As a result, there is an
+unknown vector $\mathbf{C}$, whose components are either 0 or 1, such that such
+that:
 \begin{align*}
-  S_i[0:\ell] &\equiv \nabla S_i + w_0 \bmod 2^\ell \\
-  S_i[\ell:64] &\equiv y_i \\
-  S_i[64:64+\ell] &\equiv z_i + \nabla S_i[64:64+\ell] + (w_0 \oplus Y_0[0:\ell]) \bmod 2^\ell \\
+  S_i[64:64+\ell] &= C_i \boxplus \nabla S_i[64:64+\ell] \boxplus (w_0 \oplus Y_0[0:\ell]) \bmod 2^\ell \\
 \end{align*}
 
 In algorithm~\ref{algo:unknown_1}, \textsc{ConsistencyCheck} uses
 eq.~\eqref{eq:consistency} combined with this observation to discard bad guesses.
+
+
 
 \begin{algorithm}
 \begin{algorithmic}[1]
@@ -786,11 +841,12 @@ eq.~\eqref{eq:consistency} combined with this observation to discard bad guesses
   
 \Procedure{ReconstructPartialDifference}{$X_0, \dots, X_k$}
   \For{$0 \leq w_0 < 2^{\ell}$ and $0 \leq c < 2^{\ell - 1}$} \Comment{Guess least-significant bits}
-  \State $S'_j \gets a^j w_0 + (2c+1)(a^j - 1)(a-1)^{-1} \bmod 2^{128}$ \Comment{Shifted states}
+  \State $K_j \gets a^j w_0 + (2c+1)(a^j - 1)(a-1)^{-1} \bmod 2^{128}$ \Comment{Known part}
   \For{$0 \leq r_0, r_1, r_2, r_3, r_4 < 64$} \Comment{Guess rotations}
   \State $Y_j \gets X_j \lll r_j$ \Comment{Undo rotations}
-  \State $T_j \gets \left(r_j \oplus Y_j[58:64]\right) +  64 \cdot \left(w_j \oplus Y_j[0:\ell]\right)$ \Comment{Truncated LCG}
-  \State $T'_j \gets (T_j -  S'_i[58:64+\ell]) \bmod 2^{6+\ell}$ \Comment{Shifted truncated LCG}
+  \State $T_j \gets \left(r_j \oplus Y_j[58:64]\right) +  64 \cdot \left(K_j \oplus Y_j\right)[0:\ell]$ \Comment{Truncated LCG}
+  \State $T'_j \gets T_j \boxminus  K_i[58:64+\ell]$ \Comment{Truncated geometric series}
+  \State \todo{Attention double retenue : $\pm 1$.}
   \State $\Delta T'_j = (T'_{j+1} - T'_j) \bmod 2^{6 + \ell}$  \Comment{Difference}
   \State $(\Delta U_0, \dots, \Delta U_3) \gets \left\lfloor (\Delta T'_0, \dots, \Delta T'_3) \cdot 2^{58-\ell} \cdot \widetilde G_4^{-1} \right\rceil \cdot \widetilde G_4$ \Comment{CVP}
   \State $\Delta S_0[0:64+\ell] \gets \left((w_1 - w_0) \bmod 2^{\ell}\right) + 2^{\ell} \cdot \Delta U_0[0:58-\ell]$ \Comment{Check}
@@ -901,7 +957,9 @@ this, we use again eq.~\eqref{eq:output}, coupled with the ``differences'':
 \[
   X_i  \lll r_i = \bigl(S_0 \boxplus \nabla S_i)[0:64] \oplus \bigl(S_0 \boxplus \nabla S_i)[64:128].
 \]
+
 \section{Implementation and Practical Results}
+\label{sec:implem}
 
 \section{Conclusion}
 
