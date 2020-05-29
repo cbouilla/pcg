@@ -290,7 +290,7 @@ relatively fast on these platforms.
 \end{figure}
 
 
-\section{Reconstructing Truncated Geometric Sequences}
+\section{Reconstructing Truncated Geometric progressions}
 \label{sec:geometric}
 
 
@@ -323,7 +323,7 @@ The LCG have been largely studied. \todo{expand this} This is why we know techni
 
 In our algorithm to predict the PCG, we need to reconstruct several truncated Lehmer's generator. For that, we will present a classical lattice-based reconstruction for a truncated Lehmer's generator, as presented in \cite{Frieze}. \todo{C'est pas exactement celle là, on dit quoi du coup ?}
 
-\subsection{The lattice associated to a Lehmer's generator}
+\subsection{The lattice associated to a geometric progression}\label{lattice}
 
 We fix a multiplier \(a\), integers \(k\), \(n\) and we consider \(L(n,k)\) the set of \(\LCG_{n,k}(x, 0)\), for \(x\) in \(\mathbb{Z}_{2^k}\). Then
 
@@ -346,65 +346,67 @@ Hence \(L(n,k)\) is a lattice. We easily notice that \(L(n,k)\) is spawned by th
 
 Once again, we will omit $n$ and $k$ when they are obvious from the context.
 
-\todo{NOTE: J'introduis $\ell$ ici. ATTENTION RETENUES MODULAIRES.}  We want to
-find an element \(U\) in the lattice only knowing the $\ell$ most significant
-bits of each of its coordinates.  More precisely, let $T_i = U_i[k-\ell:k]$
-denote the top $\ell$ bits of $U_i$. We assume that there is a ``noise vector''
-$N$ such that $N_i \in \{-1, 0, 1\}$, and we set
-$\widetilde{T}_i = T_i + N_i \bmod 2^{\ell}$. The problem we have is the
-following: recover $U$ from its noisy truncation $\widetilde{T}$.
+We want to find an element \(U\) in the lattice only knowing the $\ell$ most significant bits of each of its coordinates.  More precisely, let $T_i = U_i[k-\ell:k]$ denote the top $\ell$ bits of $U_i$. We assume that there is a ``noise vector'' $N$ such that $N_i \in \{-1, 0, 1\}$, and we set $\widetilde{T}_i = T_i + N_i \bmod 2^{\ell}$. The problem we have is the  following: recover $U$ from its noisy truncation $\widetilde{T}$.
 
-In principle, $2^{k-\ell} \widetilde{T}$ should be ``close'' to a Lattice
-point. \todo{Mais il faut se dire que $2^{k-\ell} T$ et
-  $2^{k-\ell} \widetilde{T}$ peuvent être éloignés, surtout si $T_i = 0$ et
-  $N_i=-1$, à cause du $\bmod 2^\ell$... L'argument de Julia était que dans ce
-  cas-là, $2^{k-\ell} \widetilde{T}$ est proche d'un \emph{autre} point du
-  réseau, en ajoutant un $2^k$ sur la $i$-ème composante.}
+In principle, $2^{k-\ell} \widetilde{T}$ should be ``close'' to \(U\). We must distinguish three cases.
+\begin{itemize}
+	\item If for each \(i\) the integer \(\widetilde{T}_i\) satisfies \(1\leqslant\widetilde{T}_i\leqslant 2^{k-l}-2\) then \(\widetilde{T}_i = T_i + N_i\) (without modulo). So
+	
+	\begin{align*}
+	\lvert 2^{k-\ell}\widetilde{T}_i-U_i \rvert &=\lvert 2^{k-\ell}(T_i + N_i)-U_i \rvert \\
+	 &= \lvert 2^{k-\ell}N_i - U_i[0,k-\ell] \rvert\\
+	 &\leqslant \lvert 2^{k-\ell}N_i\rvert + \lvert U_i[0,k-\ell] \rvert \\
+	 &\leqslant 2^{k-\ell} + 2^{k-\ell}-1\\
+	 &\leqslant 2^{k-\ell +1 }- 1
+	\end{align*}
+	Hence \(\lVert U -2^{k-\ell} \widetilde{T} \rVert \leqslant \sqrt{n}(2^{k-\ell+1}-1) \)
+	
+	\item If there are indexes such that \(\widetilde{T}_i = 2^\ell-1\).
+	\begin{itemize}
+		\item If \(N_i \in \{0,1\}\), then \(\widetilde{T}_i = T_i + N_i\) (without modulo) and \[\lvert 2^{k-\ell}\widetilde{T}_i-U_i \rvert \leqslant \leqslant 2^{k-\ell +1 }- 1\]
+		\item If \(T_i = 0\) and \(N_i = -1\), then \(U_i=U_i[0,k-\ell]\) and  \[\lvert 2^{k-\ell}\widetilde{T}_i-(U_i + 2^k) \rvert =\lvert 2^{k-\ell}(2^\ell -1) -(U_i + 2^k) \rvert = \lvert 2^{k-\ell} + U_i[0,k-\ell]\rvert \leqslant 2^{k-\ell + 1} -1 \]
+	\end{itemize}
+	We need a new vector \(U'\) defined as follow.
+	\begin{itemize}
+		\item If \(T_i = 0\) and \(N_i = -1\), \(U'_i=U_i+2^k\).
+		\item Else \(U'_i=U_i\).
+	\end{itemize}
+	In both case \(\lVert U' -2^{k-\ell} \widetilde{T} \rVert \leqslant \sqrt{n}(2^{k-\ell+1}-1) \)
+	\item If there are indexes such that \(\widetilde{T}_i = 0\).
+	\begin{itemize}
+		\item  If  \(N_i \in \{-1,0\}\), then \(\widetilde{T}_i = T_i + N_i\) (without modulo) and \[\lvert 2^{k-\ell}\widetilde{T}_i-U_i \rvert \leqslant \leqslant 2^{k-\ell +1 }- 1\]
+		\item If \(N_i = 1\) we have a problem.
+	\end{itemize}
+	So, if there are indexes such that \(\widetilde{T}_i = 0\), we have to guess if \(N_i=1\) or not.
 
-Decompose $U = T + (T-U)$ where $T$ contains only the upper bits and $T-U$ the lowers one. There is no reason for \(T\) to be in the lattice, but as \(T-U\) is small, we know \(T\) is \emph{close} to \(U\).
-
-
-
+\end{itemize}
 
 
 \subsection{A first way to find U : using an exact CVP solver}
 
 Solving exactly the CVP is a hard computational problem. The algorithms used are costly, but we can afford to use them up to dimension 50.
 
-We know that \(U\) is in the lattice, \(T\) is usually not and \(|T-U|\) is small. Then we can hope for \(U\) to be the closet vector of \(T\) which is in the lattice : the vector \(U\) may be the solution of \(CVP(L,T)\).
+We define \(U'\) as in subsection \ref{lattice}. We want to know if \(CVP(L,2^{k-\ell}\widetilde{T})\) is indeed \(U'\).
 
-What can we say about \(|CVP(L,T)-U|\) ?
+What can we say about \(|CVP(L,2^{k-\ell}\widetilde{T})-U'|\) ?
 
 \begin{align*}
-|CVP(L,T)-U| &= |CVP(L,T)-T+T-U|\\
-& \leqslant |CVP(L,T)-T|+|T-U|\\
+|CVP(L,T)-U| &= |CVP(L,2^{k-\ell}\widetilde{T})-2^{k-\ell}\widetilde{T}+2^{k-\ell}\widetilde{T}-U'|\\
+& \leqslant |CVP(L,T)-2^{k-\ell}\widetilde{T}|+|2^{k-\ell}\widetilde{T}-U'|\\
 \end{align*}
 
-But, as the vector \(U\) is in the lattice and by definition of the CVP, \(|CVP(L,T)-T| \leqslant |T-U| \), hence 
-\[|CVP(L,T)-U|\leqslant 2|T-U|\]
+But, as the vector \(U'\) is in the lattice and by definition of the CVP, \(|CVP(L,2^{k-\ell}\widetilde{T})-2^{k-\ell}\widetilde{T}| \leqslant |2^{k-\ell}\widetilde{T}-U'| \), hence 
+\[|CVP(L,2^{k-\ell}\widetilde{T})-U'|\leqslant 2|2^{k-\ell}\widetilde{T}-U'|\]
 
-If we can prove that the right side of the inequality is smaller than first minimum of the lattice \(\lambda_1(L)\), then we have proved that \(CVP(L,T)\) is indeed the vector we were searching for.
+If we can prove that the right side of the inequality is smaller than first minimum of the lattice \(\lambda_1(L)\), then we have proved that \(CVP(L,2^{k-\ell}\widetilde{T})\) is indeed the vector we were searching for.
 
 To compute \(\lambda_1(L)\), we find the shortest vector of L thanks to an exact SVP solver (SVP stands for Shortest Vector Problem) and we compute its norm.
 
-\todo{En fait, on va juste utiliser $k=128$, donc établir $n=42$ est suffisant. Faire disparaître $\ell$.}
-In this article, we will only use an exact CVP solver when \(k = 128-\ell\) and when we know the \(6\) upper bit of our Lehmer's generator. Hence \(\lVert T-U \rVert \leqslant \sqrt{n}2^{122-\ell} \). So, if we fix \(\ell\) we can search for the minimum \(n\) such that \[2\sqrt{n}2^{122-\ell} \leqslant \lambda_1(L(128-\ell,n))\].
 
-\begin{table}[htbp!]
-  \centering
-    \begin{tabular}{|c|c|}
-	\hline
-	\(\ell\)  & minimum \(n\) \\
-	\hline
-	0  & 42 \\
-	11 & 39 \\
-	12 & 38 \\
-	13 & 38 \\
-	\hline
-\end{tabular}
-  \caption{\todo{WRITE-ME}}
-  \label{tab:exact_cvp}
-\end{table}
+In this article, we will only use an exact CVP solver when \(k = 128\) and \(\ell = 6\). As discussed in the previous subsection, we suppose we are never in the situation\(\widetilde{T} = 2^\ell-1\) and \(N_i=1\). Hence \(\lVert T-U \rVert \leqslant \sqrt{n}(2^{k-\ell+1}-1) \). So, if we fix \(\ell = 6\) we can search for the minimum \(n\) such that \[2\sqrt{n}2^{122} \leqslant \lambda_1(L(128,n))\].
+
+After computation, we find that the minimal \(n\) is 42. \todo{a vérifier (snif snif)}
+
 
 \subsection{A second way to find U : the Babai's rounding}
 
@@ -415,35 +417,34 @@ We compute \(G(n,k)\) the LLL-reduction of the generating matrix of \(L(n,k)\). 
 In the case of the \(\lVert \cdot \rVert_2\) norm,
 \(\rVert G \lVert = \sigma(G)\), where \(\sigma(G)\) is the largest singular
 value of $G$ (equivalently, $\sigma(G)$ is the absolute value of the largest
-eigenvalue of $G^{t} G$ --- \todo{recheck this}).
+eigenvalue of $G^{t} G$).
 
 
-As \(T\) is not an element of the lattice, \(TG^{-1}\) is not an integer vector.
+As \(2^{k-\ell}\widetilde{T}\) is not an element of the lattice, \(2^{k-\ell}\widetilde{T}G^{-1}\) is not an integer vector.
 
-We fix \(r = rounding(TG^{-1}) \), then \(rG\) is an element of the lattice. What can we say about the distance between \(rG\) and \(U\) ?
+We fix \(r = rounding(2^{k-\ell}\widetilde{T}G^{-1}) \), then \(rG\) is an element of the lattice. What can we say about the distance between \(rG\) and \(U'\) ?
 
 \begin{align*}
-\lVert U - rG \rVert &= \lVert U - (r-TG^{-1} + TG^{-1})G \rVert\\
-&= \lVert U - T + (r-TG^{-1})G \rVert\\
-&\leqslant \lVert U - T \rVert + \lVert(r-TG^{-1})\rVert \times \lVert G\rVert\\	
+\lVert U' - rG \rVert &= \lVert U - (r-2^{k-\ell}\widetilde{T}G^{-1} + 2^{k-\ell}\widetilde{T}G^{-1})G \rVert\\
+&= \lVert U' - 2^{k-\ell}\widetilde{T} + (r-2^{k-\ell}\widetilde{T}G^{-1})G \rVert\\
+&\leqslant \lVert U' - 2^{k-\ell}\widetilde{T} \rVert + \lVert(r-2^{k-\ell}\widetilde{T}G^{-1})\rVert \times \lVert G\rVert\\	
 \end{align*}
 
-By definition, \(r\) is the closest integer vector to \(TG^{-1}\). But as \(U\) is an element of the lattice, \(UG^{-1}\) is an integer vector. Thus \(r-TG^{-1}\) is shorter than \(UG^{-1}-TG^{-1}\).
+By definition, \(r\) is the closest integer vector to \(2^{k-\ell}\widetilde{T}G^{-1}\). But as \(U'\) is an element of the lattice, \(U'G^{-1}\) is an integer vector. Thus \(r-2^{k-\ell}\widetilde{T}G^{-1}\) is shorter than \(U'G^{-1}-2^{k-\ell}\widetilde{T}G^{-1}\).
 
 Hence :
 \begin{align*}
-\lVert U - rG \rVert &\leqslant \lVert U - T \rVert + \lVert(r-TG^{-1})\rVert \times \lVert G\rVert\\	
-&\leqslant \lVert U - T \rVert + \lVert(UG^{-1}-TG^{-1})\rVert \times \lVert G\rVert\\	
-&\leqslant \lVert U - T \rVert + \lVert(U-Y)\rVert \times \lVert G^{-1} \rVert  \times \lVert G\rVert\\
-& 	\leqslant \lVert U - T \rVert \times (1 +\lVert G^{-1} \rVert  \times \lVert G\rVert )\\
+\lVert U' - rG \rVert &\leqslant \lVert U' - 2^{k-\ell}\widetilde{T} \rVert + \lVert(r-2^{k-\ell}\widetilde{T}G^{-1})\rVert \times \lVert G\rVert\\	
+&\leqslant \lVert U' - 2^{k-\ell}\widetilde{T} \rVert + \lVert(U'G^{-1}-2^{k-\ell}\widetilde{T}G^{-1})\rVert \times \lVert G\rVert\\	
+&\leqslant \lVert U' - 2^{k-\ell}\widetilde{T} \rVert + \lVert(U'-2^{k-\ell}\widetilde{T})\rVert \times \lVert G^{-1} \rVert  \times \lVert G\rVert\\
+& 	\leqslant \lVert U' - 2^{k-\ell}\widetilde{T} \rVert \times (1 +\lVert G^{-1} \rVert  \times \lVert G\rVert )\\
 \end{align*}
 
 If we can prove that the right side of the inequality is smaller than the minimum of the lattice \(\lambda_1(L)\), then we have proved that \(rG\) is indeed the vector we were searching for.
 
-\todo{Ce serait beaucoup plus naturel à mon avis de dire qu'on connaît les $\ell$ bits de poids fort. A ce stade, rien ne vient justifier le ``+6''.}
-In this article, we will only use the Babai's rounding when \(k = 64\) and when we know the \(6+\ell\) upper bit of our Lehmer's generator. Hence \(\lVert T-U \rVert \leqslant \sqrt{n}2^{58-\ell} \). So, if we fix \(n\) we can search for the minimum \(\ell\) such that \[(1+\lVert G(n,64) \rVert \times \lVert G(n,64)^{-1} \rVert)\sqrt{n}2^{58-\ell} \leqslant \lambda_1(L(n,64))\]
+In this article, we will only use the Babai's rounding when \(k = 64\). Hence \(\lVert 2^{k-\ell}\widetilde{T}-U' \rVert \leqslant \sqrt{n}2^{64-\ell+1}-1 \). So, if we fix \(n\) we can search for the minimum \(\ell\)\todo{ATTENTION ici \(\ell\) c'est le nombre de bit devinés, donc l'ancien \(6+\ell\)} such that \[(1+\lVert G(n,64) \rVert \times \lVert G(n,64)^{-1} \rVert)\sqrt{n}2^{64-\ell+1}-1 \leqslant \lambda_1(L(n,64))\]
 
-\begin{table}[htbp!]
+\begin{table}[htbp!] \todo{a vérifier}
   \centering
   \begin{tabular}{|c|c|c|c|}
 	\hline
@@ -455,7 +456,7 @@ In this article, we will only use the Babai's rounding when \(k = 64\) and when 
 	6 & 2.69 & \(1.03e^{16}\simeq 2^{53.2}\) & 8 \\
 	\hline
   \end{tabular}
-  \caption{\todo{WRITE-ME}}
+  \caption{minimal \(\ell\) needed for a given \(n\)}
   \label{tab:babai}
 \end{table}
 
