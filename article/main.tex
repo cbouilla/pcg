@@ -1,5 +1,5 @@
 % !TeX spellcheck = en
-\documentclass[preprint,svgnames]{iacrtrans}
+\documentclass[submission,svgnames,journal=tosc]{iacrtrans}
 
 \usepackage[utf8]{inputenc}
 \usepackage{amssymb, amsmath, amsfonts, amscd}
@@ -15,38 +15,18 @@
 %\usepackage{parskip}
 \usetikzlibrary{patterns}
 
-%\usepackage[noend]{algpseudocode}
-
-%\usepackage[pdftex,bookmarks,bookmarksopen,bookmarksdepth=3]{hyperref}
-%\hypersetup{colorlinks=true,citecolor=red,linkcolor=red,urlcolor=black}
 
 \DeclareMathSymbol{:}{\mathord}{operators}{"3A}
 \DeclareMathOperator{\LCG}{LCG}
 \DeclareMathOperator{\MCG}{MCG}
+\DeclareMathOperator{\MAJ}{MAJ}
 
 \usepackage[noend]{algpseudocode}
-%\usepackage{algorithmic}
 
-% knuth-style algos
-% \newcommand{\slug}{\hbox{\kern1.5pt\vrule width2.5pt height6pt depth1.5pt\kern1.5pt}}
-% \def\xskip{\hskip 7pt plus 3pt minus 4pt}
-% \newdimen\algindent
-% \newif\ifitempar \itempartrue % normally true unless briefly set false
-% \def\algindentset#1{\setbox0\hbox{{\bf #1.\kern.25em}}\algindent=\wd0\relax}
-% \def\algbegin #1 #2{\algindentset{#21}\alg #1 #2} % when steps all have 1 digit
-% \def\aalgbegin #1 #2{\algindentset{#211}\alg #1 #2} % when 10 or more steps
-% \def\aaalgbegin #1 #2{\algindentset{#2111}\alg #1 #2} % when 10 or more steps
-% \def\alg#1(#2). {\medbreak % Usage: \algbegin Algorithm A (algname). This...
-%   \noindent{\bf#1}({\it#2\/}).\xskip\ignorespaces}
-% \def\algstep#1.{\ifitempar\smallskip\noindent\else\itempartrue
-%   \hskip-\parindent\fi
-%   \hbox to\algindent{\bf\hfil #1.\kern.25em}%
-%   \hangindent=\algindent\hangafter=1\ignorespaces}
-% end of borrowed macros
 
 \newcommand{\todo}[1]{\textcolor{red}{TODO:[#1]}}
 
-\title{Predicting the PCG PSeudo-Random Number Generator In Practice} 
+\title[Predicting the PCG Pseudo-Random Number Generator in Practice]{Predicting the (non-cryptographic) PCG Pseudo-Random Number Generator In Practice} 
 
 \author{Charles Bouillaguet\inst{1} \and Julia Sauvage\inst{2} \and Florette Martinez\inst{3}}
 
@@ -750,8 +730,9 @@ Let us set:
 Note that $\nabla S_1 = \Delta S_0$. The prediction algorithm we propose proceeds in three phases:
 \begin{enumerate}
 \item Reconstruct $\Delta S_0[0:64+\ell]$ from $X_0, \dots, X_{4}$, check consistency with $X_5, \dots, X_{39}$.
-\item Fully reconstruct $\Delta S_0$ from this partial knowledge and the outputs.
-\item Reconstruct $S_0$ from $\Delta S_0$ and the outputs.
+\item Reconstruct all rotations $r_i$ from this partial knowledge.
+\item Fully reconstruct $\Delta S_0$ from the rotations.
+\item Reconstruct $S_0$ from $\Delta S_0$ and the rotations.
 \end{enumerate}
 
 \noindent Only the first phase is computationally intensive. 
@@ -912,6 +893,7 @@ are unknown 122-bit quantities $x_i$ such that:
   \Delta S_i &\equiv 2^{122} (r_{i+1} - r_i) + (x_{i+1} - x_{i}) \bmod 2^{128}
 \end{align*}
 
+\todo{check indices nabla}
 
 \begin{algorithm}
 \begin{algorithmic}[1]
@@ -955,12 +937,102 @@ are unknown 122-bit quantities $x_i$ such that:
 Once all the rotations have be recovered and $\Delta S_0$ has been found
 entirely, the only thing that remain is to actually find the entire $S_0$. For
 this, we use again eq.~\eqref{eq:output}, coupled with the ``differences'':
+\begin{align*}
+  S_i &= S_0 \boxplus \nabla S_i \\
+  Y_i &= S_i[0:64] \oplus S_i[64:128].
+\end{align*}
+
+The $Y_i$ and $\nabla S_i$ are known, $\nabla S_0 = 0$, and the problem consists
+in recovering $S_0$. We could probably encode it as an instance of \textsf{SAT},
+feed it to a SAT-solver and be done with it.
+
+Nevertheless, here is a detailed recovery procedure which obtain all bits of
+$S_0$, from right to left, by exploiting the non-linearity of modular
+addition. It takes negligible time. Let $\mathcal{C}_i$ the vector of (incoming)
+carries generated during the addition of $S_0$ and $\nabla S_i$:
+\begin{align*}
+  S_i[j]           &= S_0[j] \oplus \nabla S_i[j] \oplus \mathcal{C}_i[j]\\
+  \mathcal{C}_i[j] &= \begin{cases}
+    0 &\text{if } j = 0 \\
+    \MAJ(S_0[j-1], \nabla S_i[j-1], \mathcal{C}_i[j-1]) &\text{if } j > 0
+  \end{cases}
+\end{align*}
+
+Combining all the above, we have:
+\begin{equation}\label{eq:master}
+  Y_i[j] = Y_0[j] \oplus \bigl( \nabla S_i[j] \oplus \nabla S_i[64+j] \bigr) \oplus \bigl(\mathcal{C}_i[j] \oplus \mathcal{C}_i[64+j]\bigr)\\
+\end{equation}
+This useful equation enables an induction process.
+
+\begin{itemize}
+\item When $j=0$, the $0$-th carries are zero, and therefore eq.~\eqref{eq:master}
+reveals the 64-th carries:
 \[
-  X_i  \lll r_i = \bigl(S_0 \boxplus \nabla S_i)[0:64] \oplus \bigl(S_0 \boxplus \nabla S_i)[64:128].
+  \mathcal{C}_i[64+j] = \bigl( Y_0[j] \oplus Y_i[j] \bigr)  \oplus \bigl( \nabla S_i[j] \oplus \nabla S_i[64+j] \bigr).
 \]
+
+\item Next, suppose that $\mathcal{C}_i[0:j]$, $S_0[0:j-1]$, $\mathcal{C}_i[64:64+j]$
+and $S_0[64:64+j-1]$ are known, for all $i$. We can compute
+$\mathcal{C}_i[j] \oplus \mathcal{C}_i[64+j]$ for any $i$ using
+eq.~\eqref{eq:master}. We then look a a specific index $\mathfrak{i} > 0$ such that
+\[
+   \nabla S_{\mathfrak{i}}[j-1] \neq \mathcal{C}_{\mathfrak{i}}[j-1] \quad \text{and} \quad \nabla S_{\mathfrak{i}}[64 + j-1] = \mathcal{C}_{\mathfrak{i}}[64 + j-1].
+\]
+The point is that, thanks to the majority functions,
+$\mathcal{C}_{\mathfrak{i}}[j] = S_0[j-1]$ and
+$\mathcal{C}_{\mathfrak{i}}[64+j] = \nabla S_{\mathfrak{i}}[64 + j-1]$. It follows
+that:
+\[
+  S_0[j-1] = Y_0[j-1] \oplus Y_{\mathfrak{i}}[j-1] \oplus \bigl( \nabla S_{\mathfrak{i}}[j-1] \oplus \nabla S_{\mathfrak{i}}[64+j-1] \oplus \nabla S_{\mathfrak{i}}[64 + j-1]\bigr)
+\]
+From there, we also have $S_0[64+j-1] = Y_0[64+j-1] \oplus S_0[j-1]$, and the
+$j$-th carry bits can be computed normally.
+\end{itemize}
+
+The whole procedure is shown in algorithm~\ref{algo:last}.
+
+\begin{algorithm}
+\begin{algorithmic}[1]
+  \Function{ReconstructState}{$\Delta S_0, r_0, \dots, r_k, X_0, \dots, X_k$}
+  \State \todo{check indices nabla}
+  \For{$i = 0, 1, \dots, k$} \Comment{Setup}
+  \State $\nabla S_i \gets \Delta S_0 (a^i-1)(a-1)^{-1} \bmod 2^{128}$
+  \State $Y_i \gets X_i \lll r_i$ \Comment{Undo rotations}
+  \State $\mathcal{C}_i[0] \gets 0$ \Comment{Bootstrap induction}
+  \State $\mathcal{C}_i[64] \gets \bigl( Y_i[0] \oplus Y_i[j] \bigr) \oplus \bigl( \nabla S_i[j] \oplus \nabla S_i[64+j]$
+  \EndFor
+  \For{$j=1, 2, \dots, 64$} \Comment{Induction}
+  \State $\mathfrak{i} \gets \bot$ \Comment{Find good index}
+  \For{$k = 1, 2, \dots, k$}
+  \If{$\nabla S_{k}[j-1] \neq \mathcal{C}_{k}[j-1] \wedge \nabla S_{k}[64 + j-1] = \mathcal{C}_{k}[64 + j-1]$}
+  \State $\mathfrak{i} \gets k$
+  \EndIf
+  \EndFor
+  \If{$\mathfrak{i} = \bot$} \Comment{No suitable indice found?}
+  \State \textbf{Abort} with Failure
+  \EndIf
+  \State  \Comment{Compute next state bit}
+  \State $S_0[j-1] \gets Y_0[j-1] \oplus Y_{\mathfrak{i}}[j-1] \oplus \bigl( \nabla S_{\mathfrak{i}}[j-1] \oplus \nabla S_{\mathfrak{i}}[64+j-1] \oplus \nabla S_{\mathfrak{i}}[64 + j-1]\bigr)$
+  \State $S_0[64 + j-1] \gets Y_0[64 + j-1] \oplus S_0[j-1]$
+  \For{$i = 0, 1, \dots, k$} \Comment{Compute next carries}
+  \State $\mathcal{C}_i[j] \gets \MAJ(S_0[j-1], \nabla S_i[j-1], \mathcal{C}_i[j-1])$
+  \State $\mathcal{C}_i[64 + j] \gets \MAJ(S_0[64+j-1], \nabla S_i[64+j-1], \mathcal{C}_i[64+j-1])$
+  \EndFor
+  \EndFor
+  \State \Return $S_0$
+  \EndFunction
+\end{algorithmic}
+\caption{Full state reconstruction algorithm}
+\label{algo:last}
+\end{algorithm}
 
 \section{Implementation and Practical Results}
 \label{sec:implem}
+
+We have implemented the state reconstruction algorithms described above using a
+mixture of \textsf{C} (for the computationally expensive parts) and
+\textsf{Python} (for the rest). We used the \texttt{fplll} library~\cite{fplll}
+to solve CVP instances exactly in dimension 40.
 
 \section{Conclusion}
 
