@@ -180,12 +180,16 @@ generator modulo~$2^{128}$. More precisely:
 \[
   S_{i+1} = a S_i + c \bmod 2^{128},
 \]
-Where $a = 47026247687942121848144207491837523525$ is a fixed 126-bit
-constant. The first initial state $S_0$ is the seed of the generator. The
-increment $c$ may be specified by the user of the PRNG to produce different
-output streams with the same seed (just as the IV acts in a stream cipher). If
-no value of $c$ is specified, then a default increment is provided:
-$c = 117397592171526113268558934119004209487$. Note that $c$ must be odd.
+
+Where is a fixed 126-bit constant. The first initial state $S_0$ is the seed of
+the generator. The increment $c$ may be specified by the user of the PRNG to
+produce different output streams with the same seed (just as the IV acts in a
+stream cipher). If no value of $c$ is specified, then a default increment is
+provided. Note that $c$ must be odd. The default values are:
+\begin{align*}
+  a &= \phantom{1}47026247687942121848144207491837523525 & \text{(fixed)}\\
+  c &= 117397592171526113268558934119004209487           & \text{(default value, user-definable)}
+\end{align*}
 
 Each time the PRNG is clocked, 64 output bits are extracted from the internal
 state using a non-linear function that makes use of data-dependent rotations, in
@@ -457,12 +461,12 @@ generator can also be clocked backwards if necessary, so that the seed can be
 easily reconstructed). We therefore focus on reconstructing $S_0$ (the seed)
 from $X_0, X_1, X_2, \dots$. A very simple strategy could be the following:
 \begin{enumerate}
-\item Guess the 64 upper bits of $S_0$.
+\item Guess the 64 upper bits of $S_0$ (this includes the rotation).
 \item Compute the missing 64 lower bits using~\eqref{eq:output}, with:
 \[
    S_0[0:64] = S_0[64:128] \oplus (X_0  \lll S[122:128]).
 \]
-\item If $X_1$ is computed correctly, then output $S_0$.
+\item Compute $S_1$ then extract $X_1$; if $X_1$ is correct, then output $S_0$.
 \end{enumerate}
 
 This ``baseline'' procedure requires $2^{64}$ iterations of a loop that does a
@@ -479,8 +483,8 @@ possible by combining the following ingredients:
   \begin{equation}\label{eq:lcg}
     S_{i+1} = aS_i + c \bmod 2^\ell, \qquad \text{for all } 0 \leq \ell \leq 128
   \end{equation}
-  Therefore, guessing low-order bits of $S_0$ yields a ``long-term advantage''
-  that holds for all subsequent states.
+  Therefore, guessing the least-significant bits of $S_0$ yields a ``long-term
+  advantage'' that holds for all subsequent states.
 
 \item Guessing a 6-bit rotation gives access to the XOR of the two halves of the
   internal state. If a part of the state is known, then this transfers existing
@@ -647,7 +651,7 @@ unknown vector $\mathbf{B}$ of \emph{borrows}, whose components are either 0 or
 $\mathbf{T'} = \mathbf{S}[58:64+\ell] \boxminus \mathbf{K}[58:64+\ell] \boxminus
 \mathbf{B}$.
 
-Because the borrow are unknown, we in fact compute
+Because the borrows are unknown, we in fact compute
 $\widetilde{\mathbf{T}'} = \mathbf{S}[58:64+\ell] \boxminus
 \mathbf{K}[58:64+\ell]$, and clearly
 $\widetilde{\mathbf{T}'} = \mathbf{T}' \boxplus \mathbf{B}$.
@@ -682,7 +686,7 @@ The procedure is completely practical. More details are given in section~\ref{se
     
     \State $T_j \gets \left(r_j \oplus Y_j[58:64]\right) +  64 \cdot \left(K_j \oplus Y_j\right)[0:\ell]$  \Comment{Truncated LCG output}
     
-    \State $\widetilde T'_j \gets T_j \boxminus K_j[58:64+\ell]$  \Comment{Truncated geometric series}
+    \State $\widetilde T'_j \gets T_j \boxminus K_j[58:64+\ell]$  \Comment{Truncated geometric series on $6+\ell$ bits}
     \State $(U_0, U_1, U_2) \gets \left\lfloor 2^{58-\ell} \cdot (\widetilde T'_0, \widetilde T'_1, \widetilde T'_2) \cdot  G_3^{-1} \right\rceil \cdot G_3$ \Comment{CVP (Babai rounding)}
 
     \State $S_0[0:64] \gets  K_0[0:64] + 2^{\ell} \cdot U_0[0:64-\ell]$ \Comment{Reconstruct $S_0$}
@@ -712,11 +716,7 @@ would reveal $S_0$ and $S_1$; from there, the increment $c$ is easily to obtain,
 and every secret information has been reconstructed. This would take $2^{128}$
 iterations of a very simple procedure, which is completely infeasible.
 
-% The global strategy to obtain a practical prediction algorithm is essentially
-% the same as before (target a truncated version of the underlying linear
-% congruential generator), but is a bit more complicated to implement.
-
-Set $\Delta S_i = S_{i+1} - S_i$; it is easily checked that $\Delta S_i$ is a
+Set $\Delta S_i = S_{i+1} \boxminus S_i$; it is easily checked that $\Delta S_i$ is a
 geometric progression of common ratio $a$. Therefore, reconstructing both $S_0$
 and $\Delta S_0$ is sufficient to compute all subsequent states (and recover the
 unknown increment $c$). The global ``guess-and-determine'' strategy is
@@ -725,10 +725,10 @@ $\Delta S_i$, solving a small SVP instance, reconstructing $\Delta S_0$, then
 checking consistency.
 
 Let us set:
-\begin{align*}
-  \nabla S_i \stackrel{def}{=} S_i \boxminus S_0 = \sum_{j=1}^i S_j - S_{j-1} \equiv \sum_{j=0}^{i-1} \Delta S_j \equiv \Delta S_0 \cdot \sum_{j=0}^{i-1} a^j \equiv \Delta S_0 \frac{a^i-1}{a-1} \mod 2^{128}
-\end{align*}
-Note that $\nabla S_1 = \Delta S_0$. The prediction algorithm we propose proceeds in three phases:
+\begin{equation}\label{eq:nabla}
+  \nabla S_i \stackrel{def}{=} S_i - S_0 = \sum_{j=1}^i S_j - S_{j-1} \equiv \sum_{j=0}^{i-1} \Delta S_j \equiv \Delta S_0 \cdot \sum_{j=0}^{i-1} a^j \equiv \Delta S_0 \frac{a^i-1}{a-1} \mod 2^{128}
+\end{equation}
+Note that $\nabla S_0 = 0$ and $\nabla S_1 = \Delta S_0$. The prediction algorithm we propose proceeds in three phases:
 \begin{enumerate}
 \item Reconstruct $\Delta S_0[0:64+\ell]$ from $X_0, \dots, X_{4}$, check consistency with $X_5, \dots, X_{39}$.
 \item Reconstruct all rotations $r_i$ from this partial knowledge.
@@ -736,7 +736,7 @@ Note that $\nabla S_1 = \Delta S_0$. The prediction algorithm we propose proceed
 \item Reconstruct $S_0$ from $\Delta S_0$ and the rotations.
 \end{enumerate}
 
-\noindent Only the first phase is computationally intensive. 
+\noindent Only the first phase is computationally intensive. The four steps are discussed in the next four subsections.
 
 \subsection{Partial Difference Reconstruction}
 
@@ -752,41 +752,42 @@ $\Delta S_i$.
 Confirming that the guesses are correct is less immediate. When $c$ was known,
 we could reconstruct the internal state; from there, filtering out the bad
 guesses was easy. When $c$ is unknown, the same strategy does not work, but a
-very strong consistency check can still be implemented. The essential idea is
-the following: once $\Delta S_0[0:64+\ell]$ is known, then all the rotations can
-be determined accurately and with little computational effort. This in turn
-allows a consistency check between the partial information deduced from the
-guesses and the actual outputs.
+very strong consistency check can still be implemented. % The essential idea is
+% the following: once $\Delta S_0[0:64+\ell]$ is known, then all the rotations can
+% be determined accurately and with little computational effort. This in turn
+% allows a consistency check between the partial information deduced from the
+% guesses and the actual outputs.
 
 Once we have found $\Delta S_0[0:64+\ell]$, we can compute
-$\nabla S_i[0:64+\ell]$ for any $i$ (geometric progression); because we have
-guessed the first rotation and the $\ell$ least significant bits of the state,
-using~\eqref{eq:output} we gain access to $S_0[58:64+\ell]$; combined with the
-``differences'' $\nabla S_i$, this reveals $S_i[58:64+\ell]$ for any $i$ (and we
-already had $S_i[0:\ell]$). This allows us to compute
-$S_i[0:\ell] \oplus S_i[64:64+\ell]$ for any $i$.
-
-Given a ``fresh'' output $X_i$, and assuming that the guesses are correct, then we should have:
+$\nabla S_i[0:64+\ell]$ for any $i$ because eq.~\eqref{eq:nabla} holds modulo
+$2^{64+\ell}$; because we have guessed the first rotation and the $\ell$ least
+significant bits of the state, using~\eqref{eq:output} we gain access to
+$S_0[58:64+\ell]$; combined with the ``differences'' $\nabla S_i$, this reveals
+$S_i[58:64+\ell]$ for any $i$ (and we already had $S_i[0:\ell]$). This allows us
+to compute $S_i[0:\ell] \oplus S_i[64:64+\ell]$ for any $i$. Given a ``fresh''
+output $X_i$, and assuming that the guesses are correct, then we should have:
 \begin{equation}\label{eq:find_rotation}
   S_i[0:\ell] \oplus S_i[64:64+\ell] = (X_i \lll r_i)[0:\ell].
 \end{equation}
-If $X_i$ is known, then this gives a way to find the $i$-th rotation $r_i$ by
-trying the 64 possible values. As soon as $\ell \geq 6$, this should determine
-$r_i$ almost uniquely. In any case, if the guesses were correct, then we should have:
+% If $X_i$ is known, then this gives a way to find the $i$-th rotation $r_i$ by
+% trying the 64 possible values. As soon as $\ell \geq 6$, this should determine
+% $r_i$ almost uniquely. 
+In particular, if the guesses were correct, then we should have for any $i$:
 \begin{equation}\label{eq:consistency}
   S_i[0:\ell] \oplus S_i[64:64+\ell] \in \bigl\{ (X_i \lll r)[0:\ell]~|~0 \leq r < 64 \bigr\}.
 \end{equation}
 If none of the 64 possible rotations yields a match, then the guesses made
-beforehand have to be wrong. As a consequence, bad guesses can be filtered
-deterministically.
+beforehand have to be wrong. As a consequence, bad guesses can be filtered with
+an arbitrarily low probability of false positives, by trying several indices
+$i$.
 
-More precisely, let us assume that we have guessed the $\ell$ least-significant
-bits of $S_0$ (we denote them by $w_0$) and the first rotation $r_0$. Set
-$Y_0 \stackrel{def}{=} X_0 \lll r_0$; there is an unknown value
-$x_0$ such that:
-\[
-  S_0 = w_0 + 2^\ell x + 2^{64} (w_0 \oplus Y_0[0:\ell]) + 2^{64+\ell} (x \oplus Y_0[\ell:64]) \qquad \left(0 \leq x < 2^{64-\ell}\right).
-\]
+A few details still need to be fleshed out. To be precise, let us assume that we
+have guessed the $\ell$ least-significant bits of $S_0$ (we denote them by
+$w_0$) and the first rotation $r_0$. Set $Y_0 = X_0 \lll r_0$. % there is an
+% unknown value $x_0$ such that:
+% \[
+%   S_0 = w_0 + 2^\ell x + 2^{64} (w_0 \oplus Y_0[0:\ell]) + 2^{64+\ell} (x \oplus Y_0[\ell:64]) \qquad \left(0 \leq x < 2^{64-\ell}\right).
+% \]
 The unknown value $x_0$ will not be recovered until the third phase of the whole
 procedure. We obtain the $i$-th state by $S_i \equiv \nabla S_i \boxplus S_0$;
 however, because the ``middle'' of $S_0$ is unknown, we have the same problem as
