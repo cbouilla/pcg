@@ -3,7 +3,6 @@
 #include <stdio.h>
 #include <time.h>
 
-// avec ICC, ce truc ne marche pas sur ppti-gpu-1 si on met -xHost (zmm?). Il faut investiguer...
 
 void result_found(pcg128_t S, double start)
 {
@@ -38,9 +37,7 @@ int main()
     u64 done = 0;
     
     #pragma omp parallel for
-    for (u64 W0 = 0; W0 < (1<<known_low) ; W0++){
-	
-	/*Variables privées*/
+    for (u64 W0 = 0; W0 < (1<<known_low) ; W0++){	
 	pcg128_t S[nbiter];
 	int rot[nbiter] = {0, 0, 0};
 	struct task_t task;
@@ -53,7 +50,7 @@ int main()
 
 
 	for (int r = 0 ; r < 1 << (nbiter*6) ; r++) {
-	    /***** Modification de rot et unrotX *****/
+		/* bump rotations */
 	    rot[0] = (rot[0] + 1) % 64;
 	    int i = 0;
 	    while (rot[i] == 0 && i < nbiter) {
@@ -63,7 +60,6 @@ int main()
 	    if (i > 0)
 	    	refresh_task(rot, &task);
 
-	    /***** Résolution *****/
 	    if (solve(S, rot, &task))
 		result_found(S[0], start);
 	}
