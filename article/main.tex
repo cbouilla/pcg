@@ -89,17 +89,45 @@ efficient test. There are \textit{de facto} statistical test suites (\todo{les
   mentionner}). The goal of designers then consists in designing the fastest
 possible generator that passes the day's favourite test suite.
 
-\todo{Mentionner Ferrenberg 92}
+Failures in cryptographic pseudo-random generators have catastrophic security
+implications. Let us mention for instance the well-known problem in Debian
+Linux, where a bug in the OpenSSL package led to insufficient entropy gathering
+and to practical attacks on the SSH and SSL protocols (the only remaining source
+of entropy comes from the PID of the process, i.e. 16 bits or less of effective
+entropy)~\cite{YilekRSES09}.
+
+However, problems in non-cryptographic random number generators can also have
+problematic consequences (barring the obvious case where they are used in lieu
+of their cryptographic counterparts). When they are used in scientific computing
+for Monte-Carlo simulations, their defects have the potential to alter the
+results of the simulations. Ferrenberg et al.~\cite{Ferrenberg92} ran a
+classical Ferromagnetism Ising model Monte-Carlo simulation, in a special case
+where the exact results could be computed analytically, and compared the results
+of the simulation with the ``true'' answer. They used several conventional
+pseudo-random generators: a 32-bit linear congruential generator, two LFSRs,
+various combinations thereof, etc. They observed that changing the source of
+random numbers significantly altered the outcome of the physical
+simulation. Different generators produced different biases: in particular a
+given LFSRs yielded energy levels that were systematically too low and critical
+temperatures that were always too high, while another kind of generator yielded
+the opposite.
 
 The scientific computing community also realized that the need for fast
 \emph{parallel} random number generation could be satisfied by the use of block
 ciphers in counter mode~\cite{Salmon11}. The need for speed then leads to the
-use of weakened cryptographic primitives.
+use of weakened cryptographic primitives (round-reduced AES or custom and
+presumably weak block-ciphers)
 
-In most cases, it is easy to see that a non-cryptographic PRG does not meet the
-cryptographic notion of pseudo-randomness, and there are few exceptions. In this
-paper, we study the \textsf{PCG} family of non-cryptographic pseudo-random
-generators~\cite{melissapaper,melissaweb}.
+In most cases, it is fairly easy to see that a specific non-cryptographic PRG
+does not meet the cryptographic notion of pseudo-randomness, and there are few
+exceptions. Most are fairly easy to predict, meaning that after having observed
+a prefix of the output, it is easy to produce the next ``pseudo-random''
+bits.
+
+In this paper, we study the \textsf{PCG} family of non-cryptographic
+pseudo-random generators~\cite{melissapaper,melissaweb}. Its designer claimed
+that predicting it ought to be ``challenging'', even though cryptographic
+strength is not claimed.
 
 \textsf{PCG} stands for ``Permuted Congruential Generator'': it essentially
 consists in applying a non-linear filtering function on top of a (fairly weak)
@@ -121,9 +149,14 @@ want one pseudo-random stream with a single 128-bit seed.
 \paragraph{Contribution.} We describe an algorithm that reconstructs the full
 internal state of the strongest member of the \textsf{PCG} family. This allows
 to predict the pseudo-random stream deterministically and clock the generator
-backwards. The original seeds can also easily be reconstructed. The algorithm is
-practical and we have executed it in practice. It follows that predicting the
-output of the \textsf{PCG} should not be considered challenging anymore.
+backwards. The original seeds can also easily be reconstructed. The state
+reconstruction algorithm is practical and we have executed it in practice. It
+follows that predicting the output of the \textsf{PCG} should not be considered
+challenging anymore.
+
+While the \textsf{PCG} pseudo-random generator is not meant as a cryptographic
+primitive, obtaining an actual prediction algorithm requires the use of (fairly
+conventional) cryptanalytic techniques.
 
 Our algorithm reconstruct the internal state using the ``guess-and-determine''
 technique: some bits of the internal state are guessed ; assuming the guesses
@@ -143,7 +176,7 @@ When the increment is unknown, things are a bit more complicated. This is the
 default situation in \textsf{NumPy}, where both the state and the increment are
 initialised using an external source of entropy. In this case, our prediction
 algorithm requires 3072 bits of pseudo-random stream ; it guesses between 51 and
-55 bits, then for each guess it solves and instance of CVP in dimension 4 (using
+55 bits, then for each guess it solves an instance of CVP in dimension 4 (using
 about 75 arithmetic operations). This recovers 64 more bits of information about
 the difference between two successive states, and this is enough to filter the
 bad guesses. This information can then be used in a subsequent and comparably
@@ -154,7 +187,13 @@ We implemented the algorithms in \textsf{C}, then asked the designer of the PCG
 family to send us ``challenge'' pseudo-random streams ; we ran our code and
 emailed back the seeds used to generate the challenge streams the next day.
 
-\paragraph{Related Work.} \todo{Mentionner Knuth et les LCG + Frieze + Boyar + Stern...}
+\paragraph{Related Work.} Knuth considered the problem of recovering the
+internal state of a truncated linear congruential generator
+$x_{i+1} = ax_i + c \bmod 2^k$ when $a$ and $c$ are unknown~\cite{Knuth85}; he
+gave an algorithm exponential in the number of truncated bits.
+
+
+\todo{Mentionner Knuth et les LCG + Frieze + Boyar + Stern...}
 
 \todo{mentionner Vigna ?}
 
@@ -1045,11 +1084,15 @@ present practical results. Our codes are available online at:
 \]
 (and in the supplementary material).
 
-The designer of \textsf{PCG} was kind enough to send us challenge inputs. She
-generated random seeds and provided us with the first outputs of the
-pseudo-random generator. We were able to reconstruct the seed with an extremely
-high confidence level, because they re-generate the same outputs. We emailed
-back the seeds and received confirmation that they were indeed correct.
+The designer of \textsf{PCG} was kind enough to send us two sets challenge
+inputs: one with the default (known) increment and one with a random secret
+increment. She generated random seeds and provided us with the first outputs of
+the pseudo-random generator. We were able to reconstruct the seed with an
+extremely high confidence level, because they re-generate the same outputs. We
+emailed back the seeds and received confirmation that they were indeed correct.
+
+We have therefore successfully taken the challenge of predicting the output of
+the \textsf{PCG64} generator.
 
 \subsection{Known Increment}
 
