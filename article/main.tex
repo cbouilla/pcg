@@ -10,6 +10,7 @@
 \usepackage{subcaption}
 \usepackage{algorithm}
 \usepackage{tikz}
+\usepackage{minted}
 \usepackage{cellspace}
 \usepackage{multirow}
 %\usepackage{parskip}
@@ -811,8 +812,8 @@ eq.~\eqref{eq:consistency} combined with this observation to discard bad guesses
   \State $w_i = w_0 + u_i[0:\ell] \bmod 2^{\ell}$ \Comment{$w_i = S_i[0:\ell]$}
   \State $v_i = v_0 + u_i[64:64+\ell] \bmod 2^{\ell}$ \Comment{$S_i[64:64+\ell] \in \{v_i, v'_i\}$}
   \State $v'_i = v_i + 1 \bmod 2^{\ell}$
-  \State $\mathcal{C} \gets \{ w_i \oplus (X_i \lll r_i)[0:\ell]~|~ 0\leq r_i < 64\}$ \Comment{Check eq.~\eqref{eq:consistency}}
-  \If{$\{v_i, v'_i\} \cap \mathcal{C} = \emptyset$}
+  \State $\mathcal{C}_i \gets \{ w_i \oplus (X_i \lll r_i)[0:\ell]~|~ 0\leq r_i < 64\}$ \Comment{Check eq.~\eqref{eq:consistency}}
+  \If{$\{v_i, v'_i\} \cap \mathcal{C}_i = \emptyset$}
   \State \Return \textbf{False} \Comment{Bad Guesses}
   \EndIf
   \EndFor
@@ -924,6 +925,7 @@ are unknown 122-bit quantities $x_i$ such that:
   \EndFunction
 \end{algorithmic}
 \caption{Rotations and full difference reconstruction algorithm}
+\label{algo:unknown_2}
 \end{algorithm}
 
 
@@ -1032,7 +1034,154 @@ The whole procedure is shown in algorithm~\ref{algo:last}.
 We have implemented the state reconstruction algorithms described above using a
 mixture of \textsf{C} (for the computationally expensive parts) and
 \textsf{Python} (for the rest). We used the \texttt{fplll} library~\cite{fplll}
-to solve CVP instances exactly in dimension 40.
+to solve CVP instances exactly in dimension 42.
+
+In this section, we briefly outline important aspects of our implementations and
+present practical results. Our codes are available online at:
+\[
+  % \url{https://github.com/cbouilla/pcg/}
+  \verb|[----REDACTED FOR PEER REVIEW----]|
+\]
+(and in the supplementary material).
+
+The designer of \textsf{PCG} was kind enough to send us challenge inputs. She
+generated random seeds and provided us with the first outputs of the
+pseudo-random generator. We were able to reconstruct the seed with an extremely
+high confidence level, because they re-generate the same outputs. We emailed
+back the seeds and received confirmation that they were indeed correct.
+
+\subsection{Known Increment}
+
+When the increment $c$ is known, algorithm~\ref{algo:known} is all it takes to
+reconstruct the internal state of the generator and predict it (or output the
+seed). We implemented it in \textsf{C}, using \textsf{OpenMP} to parallelize the
+outer loop that guess the least-significant bits of the state. This yields a
+simple multi-core implementation. We used the \texttt{gcc 8.3.0} compiler.
+
+We ran it on a server equipped with two 16-core \textsf{Intel Xeon Gold 6130 CPU
+  @ 2.10GHz} ``\emph{Skylake}'' CPUs. The inner loop does $2^{37}$ iterations
+and terminates in 42.3s, which makes 23 core minutes.
+
+These processors operate at a different frequency depending on the number of
+cores used and the type of instructions executed. Our code uses only scalar
+instructions, so the CPUs runs at the highest frequency tier when executing
+it. Using a single software thread per physical core (each core presents two
+hardware execution contexts, commercially called \emph{HyperThreads}) allows the
+CPU to run at 2.8Ghz, the maximum ``Turbo'' frequency on all cores. Using one
+software thread per hardware thread reduces the frequency to $\approx$ 2.6Ghz,
+but allows to better saturate the execution units of the CPU and yields a nearly
+20\% speedup overall.
+
+Therefore the algorithm requires $2^{41.67}$ CPU cycles in total; this makes
+less than 5 cycles per iteration of the inner loop. We used several
+implementation tricks to reach this level of efficiency:
+
+\begin{itemize}
+\item We used the \verb|__uint128_t| type provided by most \textsf{C} compilers
+  to do 128-bit arithmetic when computing $S_1$ from $S_0$. Apart from that, the
+  algorithm has been designed to do mostly 64-bit arithmetic, for the sake of
+  efficiency.
+  
+\item Looking at the algorithm, it is clear that $U_1$ and $U_2$ are actually
+  not needed, so we just don't compute them.
+  
+\item $\widetilde{T}_J$ is a function of $w, j$ and $r_J$ (with
+  $j=0,1,2$). therefore, for each new value of $w$, we precompute once and for
+  all an array indexed by $(J, R_J)$ of the 192 possible values of
+  $\widetilde{T}_J$.
+
+\item Pushing the same idea a bit further, we precompute parts of the
+  matrix-vector product inside the rounding: this computes a linear combination
+  of the rows of $G_3^{-1}$, in which $\widetilde{T}_j$ is the coefficient of
+  the $j$-th row. So we precompute the 576 possible products $\widetilde{T}_j \cdot G_3^{-1}[j, k]$.
+
+\item We enumerate the possible rotations in lexicographic order. This means
+  that $\widetilde{T}_0$ changes in each iteration while $\widetilde{T}_1$ (resp
+  $\widetilde{T}_2$) changes every 64 (resp 4096) iterations. Therefore, in 98\%
+  of the iterations, two-thirds of the matrix-vector product inside the rounding
+  are the same as from the previous iteration. Therefore, we fully compute the
+  matrix-vector product only when $r_1$ changes and only update it when $r_0$
+  changes.
+
+\item The rounding operation, when done naively by writing
+  $\texttt{llround(x)}$, is actually a bottleneck: it calls a library function
+  that accounted for about 20\% of the total running time. We instead used the
+  following technique, which correctly returns $\lfloor x \rceil$ whenever
+  $|x| < 2^{51}$:
+  \begin{minted}{C}
+long long fast_round(double x)
+{
+    union { double d; long long l; } magic; 
+    magic.d = x + 6755399441055744.0;
+    magic.l <<= 13; 
+    magic.l >>= 13;
+    return magic.l;
+}
+\end{minted}
+This hack exploits the IEEE754 representation of double-precision floats: the
+mantissa lies in bits $[0:52]$ while the sign bit and the exponents take the 12
+most significant bits. Adding $2^{52}+2^{51}$ forces the mantissa to shift to
+the correct position and inserts an extra 1 bit at position 51. The two shifts
+clear the extra bit and the exponent, while correctly expanding the sign bit.
+\end{itemize}
+
+\subsection{Unknown Increment}
+
+When the increment $c$ is known, the internal state of \textsf{PCG64} can be
+practically reconstructed from $X_0, \dots, X_{42}$ using the algorithms shows
+in section~\ref{sec:Cunknown}. Only algorithm~\ref{algo:unknown_1} is
+computationally expensive; we implemented it in \textsf{C}, while we implemented
+algorithms~\ref{algo:unknown_2} and~\ref{algo:last} in \textsf{Python}.
+
+We have shown that algorithm~\ref{algo:unknown_1} is correct when $\ell=13$. In
+fact, we empirically observed that it returns the right result with probability
+$\approx 66\%$ when $\ell=11$ and with probability $99\%$ when
+$\ell=12$. Decrementing $\ell$ reduces the workload by a factor of 4. Therefore,
+if $T$ denotes the running time when $\ell=13$, we actually used the following
+strategy:
+\begin{enumerate}
+\item Run with $\ell=11$ (if it succeeds, stop).
+\item Run with $\ell=11$ with different inputs.
+\item Run with $\ell=11$ with different inputs.
+\item Run with $\ell=12$.
+\item Run with $\ell=13$.
+\end{enumerate}
+It is not difficult to check that the expected running time of this procedure is
+$\frac{1079}{10800} T \approx 0.1 T$. In our implementation, $T = 200,000$ CPU
+hours, so the expected running time of the reconstruction procedure is about
+$20,000$ CPU hours. In fact we were lucky: on the challenge input, the first
+attempt with $\ell=11$ succeeded and took only $12,500$ CPU hours.
+
+The whole process actually ran in 35 wall-clock minutes using 512 cluster nodes,
+each equipped with two 20-cores \textsf{Intel Xeon Gold 6248 @ 2.5Ghz}
+(``\emph{Cascade Lake}''). The actual machine is the
+\verb|[----REDACTED FOR PEER REVIEW----]| located at the
+\verb|[----ALSO REDACTED----]| computation center. Note that on this particular
+parallel computer, running the algorithm with $\ell=13$ would take 10 hours
+using the same amount of resources, so the whole procedure \emph{is} practical,
+even in the absolute worst case.
+
+The outer loop of algorithm~\ref{algo:unknown_1} makes $2^{2\ell - 1}$
+iterations while the inner loop makes $2^{30}$ iterations. Using a single
+hardware execution context, we measured that one of the outer loop takes between
+41.5s and 44s (apparently not all nodes of the cluster are running at exactly
+the same speed, potentially because of ``turbo boost'' adjustments and thermal
+constraints; most of the time, they take exactly... 42 seconds). Because of this
+variability, we implemented a master-slave work distribution pattern, in which a
+master process dispatches iterations of the outer loop to slave processes. This
+also made checkpointing very easy. We used \textsf{MPI} for inter-process
+communication.
+
+With $\ell=11$, the whole process took $2^{56.74}$ CPU cycles, which makes less
+than 6 cycles per iteration of the inner loop. We used essentially the same
+implementation tricks discussed above. However, this time we had to additionally
+implement the \textsc{ConsistencyCheck} procedure, which is called in the inner
+loop. We observed that the set of possible candidate values $\mathcal{C}$ only
+depends on $w_0$ (the variable of the outer loop). Therefore, before entering
+the inner loop, we precompute a bit field of size $2^\ell$ describing
+$\mathcal{C}_i$. To simplify the implementation, we flatten them by computing
+$\mathcal{C} = \cup_i \mathcal{C}_i$. This slightly increase the probability of
+false positives.
 
 \section{Conclusion}
 
