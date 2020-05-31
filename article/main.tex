@@ -343,9 +343,15 @@ modulo $2^k$.  It is easy to check that:
 \end{align}
 Hence those sets of vector have a lot of structure we can use.
 
-The LCG have been largely studied. \todo{expand this} This is why we know techniques to recover internal states knowing only upper or lower bits of the output, see \cite{Boyar1989}. A particular LCG is the Lehmer's generator \cite{Lehmer}, where the multiplier \(a\) is known and the increment is zero.
+The LCG have been largely studied, and considered as cryptographically insecure. 
 
-In our algorithm to predict the PCG, we need to reconstruct several truncated Lehmer's generator. For that, we will present a classical lattice-based reconstruction for a truncated Lehmer's generator, as presented in \cite{Frieze}. \todo{C'est pas exactement celle là, on dit quoi du coup ?}
+A reconstruction algorithm has been proposed by D. Knuth in 1985\cite{Knuth85}. The LCG he considered revealed only the upper bits of each internal state. The modulus \(2^k\) was known while the multiplier \(a\) and the increment \(c\) weren't. This algorithm could reconstruct the LCG in \(\mathcal{O}(2^l)\) where \(l\) is the number of non revealed bit of each internal state.
+
+In 1989, J. Boyar improve the result in a first way \cite{Boyar1989}. He presented an algorithm which could predict a LCG where all the parameters (multiplier, increment and initial state) where unknown under the condition that the number of bit unrevealed was really small in comparison to the modulus.
+
+In 1988, A. Frieze \textit{et al} \cite{Frieze} improve the result in a second way. They supposed that the multiplier \(a\) and the modulus \(2^k\) were known and used lattice-based technique to recover the LCG more efficiently.
+
+Here we will use techniques presented in \cite{Frieze} to reconstruct some Lehmer's generator (LCG where the increment \(c\) is zero) \cite{Lehmer}.
 
 \subsection{The lattice associated to a geometric progression}\label{lattice}
 
