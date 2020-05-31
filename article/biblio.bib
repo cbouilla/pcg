@@ -1,3 +1,47 @@
+@book{Knuth,
+   author = "Donald E. Knuth",
+   title = "Seminumerical Algorithms",
+   volume = 2,
+   series = "The Art of Computer Programming",
+   publisher = "Addison-Wesley",
+   address = "Reading, Massachusetts",
+   edition = "Second",
+   month = "10~" # jan,
+   year = "1998",
+}
+
+@article{MatsumotoN98,
+  author    = {Makoto Matsumoto and
+               Takuji Nishimura},
+  title     = {Mersenne Twister: {A} 623-Dimensionally Equidistributed Uniform Pseudo-Random
+               Number Generator},
+  journal   = {{ACM} Trans. Model. Comput. Simul.},
+  volume    = {8},
+  number    = {1},
+  pages     = {3--30},
+  year      = {1998},
+  url       = {https://doi.org/10.1145/272991.272995},
+  doi       = {10.1145/272991.272995},
+  timestamp = {Wed, 28 Nov 2018 12:57:16 +0100},
+  biburl    = {https://dblp.org/rec/journals/tomacs/MatsumotoN98.bib},
+  bibsource = {dblp computer science bibliography, https://dblp.org}
+}
+
+@incollection{vonNeumann1951,
+title     = {Various Techniques Used in Connection with Random Digits},
+author    = {von Neumann, John},
+booktitle = {Monte Carlo Method},
+editor    = {Householder, A.~S. and Forsythe, G.~E. and Germond, H.~H.},
+series    = {National Bureau of Standards Applied Mathematics Series},
+volume    = {12},
+chapter   = {13},
+pages     = {36--38},
+year      = {1951},
+publisher = {US Government Printing Office},
+address   = {Washington, DC},
+note      = {Available online at \url{https://mcnp.lanl.gov/pdf_files/nbs_vonneumann.pdf}}
+}
+
 @article{Marsaglia03,
    author = {George Marsaglia},
    title = {{X}orshift {RNG}s},
@@ -6,7 +50,6 @@
    number = {14},
    year = {2003},
    keywords = {},
-   abstract = {Description of a class of simple, extremely fast random number generators (RNGs) with periods 2k - 1 for k = 32, 64, 96, 128, 160, 192. These RNGs seem to pass tests of randomness very well.},
    issn = {1548-7660},
    pages = {1--6},
    doi = {10.18637/jss.v008.i14},
@@ -140,7 +183,7 @@
     title     = "PCG, A Family of Better Random Number Generators",
     url       = "http://www.pcg-random.org/",
     year      = {2014},
-    note      = "Last accessed [19-03-2019]. Last updated [02-07-2018]"
+    note      = "\url{http://www.pcg-random.org/}"
 }
 
 @techreport{melissapaper,
@@ -152,21 +195,7 @@
     year = "2014",
     month = Sep,
     url = "https://www.cs.hmc.edu/tr/hmc-cs-2014-0905.pdf",
-}
-
-@misc{vignaweb,
-    author    = "Sebastiano Vigna",
-    title     = "The wrap-up on PCG generators",
-    url       = "http://pcg.di.unimi.it/pcg.php",
-    note      = "Last accessed [02-03-2019]."
-}
-
-@misc{vignacode,
-    author    = "Sebastiano Vigna",
-    title     = "predpcg.c",
-    year      = "2018",
-    url       = "http://pcg.di.unimi.it/predpcg.c",
-    note      = "Last accessed [01-03-2019]."
+    note = "Available online at \url{https://www.cs.hmc.edu/tr/hmc-cs-2014-0905.pdf}",
 }
 
 @Article{Boyar1989,
@@ -204,29 +233,14 @@
     address    = {Philadelphia, PA, USA},
 } 
 
-@article{survey,
-  author    = {Kamalika Bhattacharjee and
-               Krishnendu Maity and
-               Sukanta Das},
-  title     = {A Search for Good Pseudo-random Number Generators : Survey and Empirical
-               Studies},
-  journal   = {CoRR},
-  volume    = {abs/1811.04035},
-  year      = {2018},
-  url       = {http://arxiv.org/abs/1811.04035},
-  archivePrefix = {arXiv},
-  eprint    = {1811.04035},
-  timestamp = {Fri, 23 Nov 2018 12:43:51 +0100},
-  biburl    = {https://dblp.org/rec/bib/journals/corr/abs-1811-04035},
-  bibsource = {dblp computer science bibliography, https://dblp.org}
+@misc{LemireLehmer,
+    author    = "Daniel Lemire",
+    title     = "The fastest conventional random number generator that can pass {B}ig {C}rush?",
+    year      = "2019",
+    url       = "https://lemire.me/blog/2019/03/19/the-fastest-conventional-random-number-generator-that-can-pass-big-crush/",
+    note      = "Blog entry. Last accessed [31-05-2020]. Available online at \url{https://lemire.me/blog/2019/03/19/the-fastest-conventional-random-number-generator-that-can-pass-big-crush/}"
 }
-@misc{LLLstack,
-    author    = "Samuel Neves",
-    title     = "Problem with LLL reduction on truncated LCG schemes",
-    year      = "2016",
-    url       = "https://crypto.stackexchange.com/questions/37836/problem-with-lll-reduction-on-truncated-lcg-schemes",
-    note      = "Last accessed [25-05-2019]."
-}
+
 
 @inproceedings{LLLpastack,
   title={An Introduction to Lenstra-Lenstra-Lovasz Lattice Basis Reduction Algorithm},
