@@ -11,6 +11,7 @@
 \usepackage{algorithm}
 \usepackage{tikz}
 \usepackage{minted}
+\usepackage{epigraph}
 \usepackage{cellspace}
 \usepackage{multirow}
 %\usepackage{parskip}
@@ -55,7 +56,9 @@ LIP6, CNRS, SU ? \\
 
 \section{Introduction} %ce qu'on avait écrit pour le projet, peut-être pas incroyable...
 
-\todo{Ca, c'est du blabla...}
+\epigraph{Any one who considers arithmetical methods of producing random digits is, of course, in a state of sin.}{John von Neumann, 1949}
+
+%\todo{Ca, c'est du blabla...}
 
 Pseudo-random generators (PRG) are well-studied primitives in symmetric
 cryptography. A PRG is an efficient deterministic algorithm that stretch a small
@@ -85,9 +88,83 @@ to implement the \texttt{rand} function.
 In the realm of non-cryptographic random generators, a PRG is deemed ``good
 enough'' it is passes \emph{some} efficient statistical tests --- whereas the
 cryptographic notion of pseudo-randomness asks that it passes \emph{any}
-efficient test. There are \textit{de facto} statistical test suites (\todo{les
-  mentionner}). The goal of designers then consists in designing the fastest
-possible generator that passes the day's favourite test suite.
+efficient test. There are \textit{de facto} statistical test suites; an initial
+battery of randomness tests for RNGs was suggested by Knuth in the 1969 first
+edition of The Art of Computer Programming. In 1996, Knuth's tests were then
+supplanted by Marsaglia's \texttt{Diehard} tests. In 2007, L'Ecuyer proposed
+the \texttt{TestU01}~\cite{LEcuyerS07} library, whose ``BigCrush'' test is
+considered state-of-the-art by the relevant community, to the best of our
+knowledge. In 2010, the NIST proposed its own statistical test suite (Special
+Publication 800-22), to which improvements were later
+suggested~\cite{ZhuMLZJ16}. We understand that the \texttt{PractRand} test suite
+also has a good reputation.
+
+In any case, The goal of designers then consists in designing the simplest and
+fastest possible pseudo-random generator that passes the day's favourite test
+suite. A few selected ones are shown in Fig.~\ref{fig:prngs}. Deterministic
+pseudo-random generators can be traced back to the work of Von Neumann
+
+Lehmer proposed
+linear congruential generators in 1949 for use on the ENIAC computer~\cite{Lehmer}
+
+\texttt{Xorshift}~\cite{Marsaglia03},
+\texttt{Xorshift128+}~\cite{Vigna17}.
+
+\begin{figure}
+  \begin{minipage}[t]{5cm}
+\begin{minted}[fontsize=\small,frame=single]{C}
+u128 a;
+u64 m = 0xda942042e4dd58b5;
+
+u64_t lehmer64() 
+{
+    a *= m;
+    return a >> 64;
+}
+\end{minted}
+  \end{minipage}
+    \begin{minipage}[t]{4cm}
+% 128-bit LFSR
+\begin{minted}[fontsize=\small,frame=single]{C}
+u32 a, b, c, d;
+
+u32 xorshift128()
+{
+    u32 t = d;
+    u32 s = a;
+    d = c;
+    c = b;
+    b = s;
+    t ^= t << 11;
+    t ^= t >> 8;
+    s ^= s >> 19;
+    a = t ^ s;
+    return a;
+}
+\end{minted}
+    \end{minipage}
+    \begin{minipage}[t]{4cm}
+    % xorshift128+ (as in google's V8)
+\begin{minted}[fontsize=\small,frame=single]{C}
+u64 a, b;
+
+u64 xorshift128plus()
+{
+    u64 s1 = a
+    u64 s0 = b;
+    a = s0;
+    s1 ^= s1 << 23;        
+    s1 ^= s1 >> 17;        
+    s1 ^= s0;        
+    s1 ^= s0 >> 26;
+    b = s1;
+    return a + b;
+}
+\end{minted}
+    \end{minipage}
+    \caption{Some conventional pseudo-random generators, designed for speed and simplicity.}
+    \label{fig:prngs}
+  \end{figure}
 
 Failures in cryptographic pseudo-random generators have catastrophic security
 implications. Let us mention for instance the well-known problem in Debian
@@ -97,10 +174,10 @@ of entropy comes from the PID of the process, i.e. 16 bits or less of effective
 entropy)~\cite{YilekRSES09}.
 
 However, problems in non-cryptographic random number generators can also have
-problematic consequences (barring the obvious case where they are used in lieu
-of their cryptographic counterparts). When they are used in scientific computing
-for Monte-Carlo simulations, their defects have the potential to alter the
-results of the simulations. Ferrenberg et al.~\cite{Ferrenberg92} ran a
+dire consequences (barring the obvious case where they are used in lieu of their
+cryptographic counterparts). When they are used in scientific computing for
+Monte-Carlo simulations, their defects have the potential to alter the results
+of the numerical simulation. Ferrenberg et al.~\cite{Ferrenberg92} ran a
 classical Ferromagnetism Ising model Monte-Carlo simulation, in a special case
 where the exact results could be computed analytically, and compared the results
 of the simulation with the ``true'' answer. They used several conventional
@@ -110,7 +187,7 @@ random numbers significantly altered the outcome of the physical
 simulation. Different generators produced different biases: in particular a
 given LFSRs yielded energy levels that were systematically too low and critical
 temperatures that were always too high, while another kind of generator yielded
-the opposite.
+the opposite (in many, repeated, trials).
 
 The scientific computing community also realized that the need for fast
 \emph{parallel} random number generation could be satisfied by the use of block
@@ -156,7 +233,8 @@ challenging anymore.
 
 While the \textsf{PCG} pseudo-random generator is not meant as a cryptographic
 primitive, obtaining an actual prediction algorithm requires the use of (fairly
-conventional) cryptanalytic techniques.
+conventional) cryptanalytic techniques. Making it practical requires in addition
+a non-trivial implementation effort.
 
 Our algorithm reconstruct the internal state using the ``guess-and-determine''
 technique: some bits of the internal state are guessed ; assuming the guesses
@@ -166,11 +244,11 @@ tested. The problem actually come in two distinct flavors.
 
 When the increment is known (for instance when it is the default value), a
 simplified prediction algorithm recovers the internal state from 192 bits of
-pseudo-random stream. The process runs in 20 CPU minutes (on a single core of a
-server processor). It guesses 36 bits of the internal state, then solves an
-instance of the \textsc{Closest Vector Problem} (CVP) in a 3-dimensional
-euclidean lattice. This requires about 50 arithmetic operations in total and
-reveals the entire internal state if the guesses are correct.
+pseudo-random stream. The process runs in 20 CPU minutes. It guesses 37 bits of
+the internal state, then solves an instance of the \textsc{Closest Vector
+  Problem} (CVP) in a 3-dimensional euclidean lattice. This requires about 50
+arithmetic operations in total and reveals the entire internal state if the
+guesses are correct.
 
 When the increment is unknown, things are a bit more complicated. This is the
 default situation in \textsf{NumPy}, where both the state and the increment are
