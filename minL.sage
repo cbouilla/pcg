@@ -16,7 +16,7 @@ def normeG(n,M):
 
     matrice = mat(n,M)
     
-    matrice=matrice.BKZ(block_size=20)
+    matrice=matrice.BKZ(block_size=n)
     short=vector(matrice[0,:]) 
     normv=norm(short)
     normG = norm(matrice) 
@@ -38,7 +38,8 @@ def min_m_CVP():
     normv = 0
     while 2*delta >= normv :
         n=n+1
-        delta = sqrt(n)*2**(128-6)
+        delta = sqrt(n)*2**(128-6+1)
         cond,normv = normeG(n,2**(128))
+        print(n)
     return(n)
 
