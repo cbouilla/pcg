@@ -461,27 +461,35 @@ In principle, $2^{k-\ell} \widetilde{T}$ should be ``close'' to \(U\). We must d
 	 &\leqslant 2^{k-\ell} + 2^{k-\ell}-1\\
 	 &\leqslant 2^{k-\ell +1 }- 1
 	\end{align*}
-	Hence \(\lVert U -2^{k-\ell} \widetilde{T} \rVert \leqslant \sqrt{n}(2^{k-\ell+1}-1) \)
 	
 	\item If there are indexes such that \(\widetilde{T}_i = 2^\ell-1\).
 	\begin{itemize}
 		\item If \(N_i \in \{0,1\}\), then \(\widetilde{T}_i = T_i + N_i\) (without modulo) and \[\lvert 2^{k-\ell}\widetilde{T}_i-U_i \rvert \leqslant \leqslant 2^{k-\ell +1 }- 1\]
-		\item If \(T_i = 0\) and \(N_i = -1\), then \(U_i=U_i[0,k-\ell]\) and  \[\lvert 2^{k-\ell}\widetilde{T}_i-(U_i + 2^k) \rvert =\lvert 2^{k-\ell}(2^\ell -1) -(U_i + 2^k) \rvert = \lvert 2^{k-\ell} + U_i[0,k-\ell]\rvert \leqslant 2^{k-\ell + 1} -1 \]
+		\item If \(N_i = -1\), then \(U_i=U_i[0,k-\ell]\) and  \[\lvert 2^{k-\ell}\widetilde{T}_i-(U_i + 2^k) \rvert =\lvert 2^{k-\ell}(2^\ell -1) -(U_i + 2^k) \rvert = \lvert 2^{k-\ell} + U_i[0,k-\ell]\rvert \leqslant 2^{k-\ell + 1} -1 \]
 	\end{itemize}
-	We need a new vector \(U'\) defined as follow.
-	\begin{itemize}
-		\item If \(T_i = 0\) and \(N_i = -1\), \(U'_i=U_i+2^k\).
-		\item Else \(U'_i=U_i\).
-	\end{itemize}
-	In both case \(\lVert U' -2^{k-\ell} \widetilde{T} \rVert \leqslant \sqrt{n}(2^{k-\ell+1}-1) \)
+
 	\item If there are indexes such that \(\widetilde{T}_i = 0\).
 	\begin{itemize}
 		\item  If  \(N_i \in \{-1,0\}\), then \(\widetilde{T}_i = T_i + N_i\) (without modulo) and \[\lvert 2^{k-\ell}\widetilde{T}_i-U_i \rvert \leqslant \leqslant 2^{k-\ell +1 }- 1\]
-		\item If \(N_i = 1\) we have a problem.
+		\item If \(N_i = 1\) , then \(U_i= 2^k-2^(k-l) + U_i[0,k-\ell]\) and  \[\lvert 2^{k-\ell}\widetilde{T}_i-(U_i - 2^k) \rvert =\lvert 0 -(U_i - 2^k) \rvert = \lvert 2^k-2^(k-l) + U_i[0,k-\ell] - 2^k\rvert \leqslant 2^{k-\ell + 1} -1 \]
 	\end{itemize}
-	So, if there are indexes such that \(\widetilde{T}_i = 0\), we have to guess if \(N_i=1\) or not.
-
 \end{itemize}
+	We need a new vector \(U'\) defined as follow.
+\begin{itemize}
+	\item If \(T_i = 0\) and \(N_i = -1\), \(U'_i=U_i+2^k\).
+	\item If \(T_i = 2^\ell - 1\) and \(N_i = +1\), \(U'_i=U_i-2^k\).
+	\item Else \(U'_i=U_i\).
+\end{itemize}
+In all this cases \(\lVert U' -2^{k-\ell} \widetilde{T} \rVert \leqslant \sqrt{n}(2^{k-\ell+1}-1) \), and \(U' \equiv U \mod 2^k \).
+
+\todo{C'est un lemme mais pour l'instant y'a pas de commande lemme}
+\begin{theorem}
+	If $\widetilde{T}$ is the noisy truncation of \(U\) of \(\ell\) bits, then there exists \(U'\) such that :
+	\begin{itemize}
+		\item \(U'\equiv U \mod 2^k\)
+		\item \(\lVert U' -2^{k-\ell} \widetilde{T} \rVert \leqslant \sqrt{n}(2^{k-\ell+1}-1) \)
+	\end{itemize}
+\end{theorem}
 
 
 \subsection{A first way to find U : using an exact CVP solver}
@@ -505,9 +513,9 @@ If we can prove that the right side of the inequality is smaller than first mini
 To compute \(\lambda_1(L)\), we find the shortest vector of L thanks to an exact SVP solver (SVP stands for Shortest Vector Problem) and we compute its norm.
 
 
-In this article, we will only use an exact CVP solver when \(k = 128\) and \(\ell = 6\). As discussed in the previous subsection, we suppose we are never in the situation\(\widetilde{T} = 2^\ell-1\) and \(N_i=1\). Hence \(\lVert T-U \rVert \leqslant \sqrt{n}(2^{k-\ell+1}-1) \). So, if we fix \(\ell = 6\) we can search for the minimum \(n\) such that \[2\sqrt{n}2^{122} \leqslant \lambda_1(L(128,n))\].
+In this article, we will only use an exact CVP solver when \(k = 128\) and \(\ell = 6\). So, if we fix \(\ell = 6\) we can search for the minimum \(n\) such that \[2\sqrt{n}(2^{128-6+1}-1) \leqslant \lambda_1(L(128,n))\].
 
-After computation, we find that the minimal \(n\) is 42. \todo{a vérifier (snif snif)}
+After computation, we find that the minimal \(n\) is 63.
 
 
 \subsection{A second way to find U : the Babai's rounding}
@@ -546,16 +554,16 @@ If we can prove that the right side of the inequality is smaller than the minimu
 
 In this article, we will only use the Babai's rounding when \(k = 64\). Hence \(\lVert 2^{k-\ell}\widetilde{T}-U' \rVert \leqslant \sqrt{n}2^{64-\ell+1}-1 \). So, if we fix \(n\) we can search for the minimum \(\ell\)\todo{ATTENTION ici \(\ell\) c'est le nombre de bit devinés, donc l'ancien \(6+\ell\)} such that \[(1+\lVert G(n,64) \rVert \times \lVert G(n,64)^{-1} \rVert)\sqrt{n}2^{64-\ell+1}-1 \leqslant \lambda_1(L(n,64))\]
 
-\begin{table}[htbp!] \todo{a vérifier}
+\begin{table}[htbp!]
   \centering
   \begin{tabular}{|c|c|c|c|}
 	\hline
 	n & \(\lVert G(n,64) \rVert \times \lVert G(n,64)^{-1} \rVert\) & \( \lambda_1(L(n,64)) \) & minimum \(\ell\) \\
 	\hline
-	3 & 2.87 & \(4.09e^{12} \simeq 2^{41.9}\) & 19 \\
-	4 & 2.06 & \(2.44e^{14} \simeq 2^{47.8}\) & 13 \\
-	5 & 3.77 & \(1.72e^{15}\simeq 2^{50.6}\) & 11 \\
-	6 & 2.69 & \(1.03e^{16}\simeq 2^{53.2}\) & 8 \\
+	3 & 2.87 & \(4.09e^{12} \simeq 2^{41.9}\) & 26 \\
+	4 & 2.06 & \(2.44e^{14} \simeq 2^{47.8}\) & 20 \\
+	5 & 3.77 & \(1.72e^{15}\simeq 2^{50.6}\) & 18 \\
+	6 & 2.69 & \(1.03e^{16}\simeq 2^{53.2}\) & 15 \\
 	\hline
   \end{tabular}
   \caption{minimal \(\ell\) needed for a given \(n\)}
