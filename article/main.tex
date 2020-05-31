@@ -11,6 +11,7 @@
 \usepackage{algorithm}
 \usepackage{tikz}
 \usepackage{minted}
+\usepackage{epigraph}
 \usepackage{cellspace}
 \usepackage{multirow}
 %\usepackage{parskip}
@@ -55,7 +56,9 @@ LIP6, CNRS, SU ? \\
 
 \section{Introduction} %ce qu'on avait écrit pour le projet, peut-être pas incroyable...
 
-\todo{Ca, c'est du blabla...}
+\epigraph{Any one who considers arithmetical methods of producing random digits is, of course, in a state of sin.}{John von Neumann, 1949}
+
+%\todo{Ca, c'est du blabla...}
 
 Pseudo-random generators (PRG) are well-studied primitives in symmetric
 cryptography. A PRG is an efficient deterministic algorithm that stretch a small
@@ -67,50 +70,127 @@ by asking that no efficient algorithm is capable of predicting the next
 pseudo-random bit with non-negligible accuracy. The two definitions are in fact
 equivalent.
 
-\todo{mentioner stream ciphers}
+It is well-known that pseudo-random generators can be turned into symmetric
+encryption algorithm, by generating ``random'' masks to be used in the one-time
+pad. This is precisely what stream ciphers do.
 
 Not all pseudo-random generators are of cryptographic strength. In some
 applications, it is not necessarily necessary: to be used in Monte-Carlo
-simulations or generate random choices in games, a relaxed, non-cryptographic
-notion of pseudo-randomness may be sufficient. This allows for faster
-algorithms. For instance, the \texttt{Math.Random} function in Google's V8
-open-source JavaScript engine uses the \textsf{XorShift128} generator, which is
-a Linear Feedback Shift Register tailored for high software speed. On 64-bit
-processors, it produces 64 pseudo-random bits with 3 shifts and 4 XORs
-instructions. The \textsf{python} standard library's \texttt{random} module uses
-the Mersenne Twister. The \textsf{C} library that comes along \texttt{gcc} (the
-\texttt{glibc}) uses a (poor) truncated linear congruential generator by default
-to implement the \texttt{rand} function.
+numerical simulations or generate random choices in games, a relaxed,
+non-cryptographic notion of pseudo-randomness may be sufficient. This allows for
+faster algorithms. For instance, \textsf{python} standard library's
+\texttt{random} module uses the Mersenne Twister~\cite{MatsumotoN98}. The
+\textsf{C} library that comes along \texttt{gcc} (the \texttt{glibc}) uses a
+(poor) truncated linear congruential generator by default to implement the
+\texttt{rand} function.
 
 In the realm of non-cryptographic random generators, a PRG is deemed ``good
 enough'' it is passes \emph{some} efficient statistical tests --- whereas the
 cryptographic notion of pseudo-randomness asks that it passes \emph{any}
-efficient test. There are \textit{de facto} statistical test suites (\todo{les
-  mentionner}). The goal of designers then consists in designing the fastest
-possible generator that passes the day's favourite test suite.
+efficient test. There are \textit{de facto} statistical test suites; an initial
+battery of randomness tests for RNGs was suggested by Knuth in the 1969 first
+edition of The Art of Computer Programming. In 1996, Knuth's tests were then
+supplanted by Marsaglia's \texttt{Diehard} tests. In 2007, L'Ecuyer proposed
+the \texttt{TestU01}~\cite{LEcuyerS07} library, whose ``BigCrush'' test is
+considered state-of-the-art by the relevant community, to the best of our
+knowledge. In 2010, the NIST proposed its own statistical test suite (Special
+Publication 800-22), to which improvements were later
+suggested~\cite{ZhuMLZJ16}. We understand that the \texttt{PractRand} test suite
+also has a good reputation.
 
+In any case, designers of conventional pseudo-random generators try to obtain
+the simplest and fastest algorithm that passes the day's favourite test suite. A
+few selected ones are shown in Fig.~\ref{fig:prngs}. \texttt{Lehmer64} is a
+truncated linear congruential generator, touted as ``the fastest PRNG that
+passes \texttt{BigCrush}''~\cite{LemireLehmer}. \texttt{Xorshift128} is a clever
+implementation of a 128-bit LFSR with period $2^{128} - 1$ due to
+Marsaglia~\cite{Marsaglia03}, using only a few simple 32-bit
+operations. \texttt{Xorshift128+} is a improved version due to
+Vigna~\cite{Vigna17} that returns the sum of two consecutive outputs of a
+Xorshift LFSR; it passes the ``BigCrush'' test suite and is the default PRNG in
+many Javascript implementations, including that in Google's V8 engine (Chrome),
+Firefox and Safari.
+
+\begin{figure}
+  \begin{minipage}[t]{5cm}
+\begin{minted}[fontsize=\small,frame=single]{C}
+u128 a;
+u64 m = 0xda942042e4dd58b5;
+
+u64_t lehmer64() 
+{
+    a *= m;
+    return a >> 64;
+}
+\end{minted}
+  \end{minipage}
+    \begin{minipage}[t]{4cm}
+% 128-bit LFSR
+\begin{minted}[fontsize=\small,frame=single]{C}
+u32 a, b, c, d;
+
+
+u32 xorshift128()
+{
+    u32 t = d;
+    u32 s = a;
+    d = c;
+    c = b;
+    b = s;
+    t ^= t << 11;
+    t ^= t >> 8;
+    s ^= s >> 19;
+    a = t ^ s;
+    return a;
+}
+\end{minted}
+    \end{minipage}
+    \begin{minipage}[t]{4cm}
+    % xorshift128+ (as in google's V8)
+\begin{minted}[fontsize=\small,frame=single]{C}
+u64 a, b;
+
+
+u64 xorshift128plus()
+{
+    u64 s1 = a
+    u64 s0 = b;
+    a = s0;
+    s1 ^= s1 << 23;        
+    s1 ^= s1 >> 17;        
+    s1 ^= s0;        
+    s1 ^= s0 >> 26;
+    b = s1;
+    return a + b;
+}
+\end{minted}
+    \end{minipage}
+    \caption{Some conventional pseudo-random generators, designed for speed and simplicity.}
+    \label{fig:prngs}
+  \end{figure}
+  
 Failures in cryptographic pseudo-random generators have catastrophic security
 implications. Let us mention for instance the well-known problem in Debian
-Linux, where a bug in the OpenSSL package led to insufficient entropy gathering
-and to practical attacks on the SSH and SSL protocols (the only remaining source
-of entropy comes from the PID of the process, i.e. 16 bits or less of effective
-entropy)~\cite{YilekRSES09}.
+Linux from 2008, where a bug in the OpenSSL package led to insufficient
+entropy gathering and to practical attacks on the SSH and SSL protocols (the
+only remaining source of entropy comes from the PID of the process,
+\textit{i.e.} 16 bits or less of effective entropy)~\cite{YilekRSES09}.
 
 However, problems in non-cryptographic random number generators can also have
-problematic consequences (barring the obvious case where they are used in lieu
-of their cryptographic counterparts). When they are used in scientific computing
-for Monte-Carlo simulations, their defects have the potential to alter the
-results of the simulations. Ferrenberg et al.~\cite{Ferrenberg92} ran a
-classical Ferromagnetism Ising model Monte-Carlo simulation, in a special case
-where the exact results could be computed analytically, and compared the results
-of the simulation with the ``true'' answer. They used several conventional
+dire consequences (barring the obvious case where they are used in lieu of their
+cryptographic counterparts). When they are used in scientific computing for
+Monte-Carlo methods, their defects have the potential to alter the results of
+numerical simulations. Ferrenberg et al.~\cite{Ferrenberg92} ran a classical
+Ferromagnetism Ising model Monte-Carlo simulation, in a special case where the
+exact results could be computed analytically, and compared the results of the
+simulation with the ``true'' answer. They used several conventional
 pseudo-random generators: a 32-bit linear congruential generator, two LFSRs,
 various combinations thereof, etc. They observed that changing the source of
-random numbers significantly altered the outcome of the physical
+random numbers significantly altered the outcome of the numerical
 simulation. Different generators produced different biases: in particular a
 given LFSRs yielded energy levels that were systematically too low and critical
 temperatures that were always too high, while another kind of generator yielded
-the opposite.
+the opposite (in many, repeated, trials).
 
 The scientific computing community also realized that the need for fast
 \emph{parallel} random number generation could be satisfied by the use of block
@@ -122,21 +202,20 @@ In most cases, it is fairly easy to see that a specific non-cryptographic PRG
 does not meet the cryptographic notion of pseudo-randomness, and there are few
 exceptions. Most are fairly easy to predict, meaning that after having observed
 a prefix of the output, it is easy to produce the next ``pseudo-random''
-bits.
+bits. This makes a good source of exercises for cryptography students.
 
 In this paper, we study the \textsf{PCG} family of non-cryptographic
-pseudo-random generators~\cite{melissapaper,melissaweb}. Its designer claimed
-that predicting it ought to be ``challenging'', even though cryptographic
-strength is not claimed.
+pseudo-random generators proposed by O'Neil~\cite{melissapaper,melissaweb}. She
+did not claim that the algorithm has cryptographic strength, but that predicting
+its output ought to be ``challenging''. We therefore took up the challenge.
 
 \textsf{PCG} stands for ``Permuted Congruential Generator'': it essentially
-consists in applying a non-linear filtering function on top of a (fairly weak)
-linear congruential generator (in a way reminiscent to the venerable filtered
-LFSRs). The resulting combination is fast and passes current test suites. Its
-designer claimed that distinguishing the pseudo-random stream produced would be
-``challenging''. The \textsf{PCG} family contains many members, but we focus on
-its strongest member, named either \textsf{PCG64} or \textsf{PCG-XSL-RR}. It has
-a 128-bit internal state and produces 64 bits when clocked. It is the default
+consists in applying a non-linear filtering function on top of a linear
+congruential generator (in a way reminiscent to the venerable filtered
+LFSRs). The resulting combination is fast and passes current statistical test
+suites. The \textsf{PCG} family contains many members, but we focus on the
+strongest one, named either \textsf{PCG64} or \textsf{PCG-XSL-RR}. It has a
+128-bit internal state and produces 64 bits when clocked. It is the default
 pseudo-random number generator in the popular \textsf{NumPy} scientific
 computing package for \textsf{Python}.
 
@@ -155,22 +234,23 @@ follows that predicting the output of the \textsf{PCG} should not be considered
 challenging anymore.
 
 While the \textsf{PCG} pseudo-random generator is not meant as a cryptographic
-primitive, obtaining an actual prediction algorithm requires the use of (fairly
-conventional) cryptanalytic techniques.
+primitive, obtaining an actual prediction algorithm requires the use of
+cryptanalytic techniques. Making it practical requires in addition a non-trivial
+implementation effort.
 
-Our algorithm reconstruct the internal state using the ``guess-and-determine''
-technique: some bits of the internal state are guessed ; assuming the guesses
-are correct, some other information is computed ; a consistency check discards
-bad guesses early on ; then candidate internal states are computed and fully
+Our algorithm reconstruct the internal state using a ``guess-and-determine''
+approach: some bits of the internal state are guessed ; assuming the guesses are
+correct, some other information is computed ; a consistency check discards bad
+guesses early on ; then candidate internal states are computed and fully
 tested. The problem actually come in two distinct flavors.
 
 When the increment is known (for instance when it is the default value), a
 simplified prediction algorithm recovers the internal state from 192 bits of
-pseudo-random stream. The process runs in 20 CPU minutes (on a single core of a
-server processor). It guesses 36 bits of the internal state, then solves an
-instance of the \textsc{Closest Vector Problem} (CVP) in a 3-dimensional
-euclidean lattice. This requires about 50 arithmetic operations in total and
-reveals the entire internal state if the guesses are correct.
+pseudo-random stream. The process runs in 20 CPU minutes. It guesses 37 bits of
+the internal state, then solves an instance of the \textsc{Closest Vector
+  Problem} (CVP) in a 3-dimensional euclidean lattice. This requires about 50
+arithmetic operations in total and reveals the entire internal state if the
+guesses are correct.
 
 When the increment is unknown, things are a bit more complicated. This is the
 default situation in \textsf{NumPy}, where both the state and the increment are
@@ -187,28 +267,27 @@ We implemented the algorithms in \textsf{C}, then asked the designer of the PCG
 family to send us ``challenge'' pseudo-random streams ; we ran our code and
 emailed back the seeds used to generate the challenge streams the next day.
 
-\paragraph{Related Work.} Knuth considered the problem of recovering the
-internal state of a truncated linear congruential generator
-$x_{i+1} = ax_i + c \bmod 2^k$ when $a$ and $c$ are unknown~\cite{Knuth85}; he
-gave an algorithm exponential in the number of truncated bits.
+\paragraph{Related Work.} Deterministic pseudo-random generators can be traced
+back to the work of Von Neumann and Metropolis on the ENIAC
+computer~\cite{vonNeumann1951}; they suggested around 1946 to use the
+``middle-square'' method: if $u_n$ is a $k$-digit number, form $u_{n+1}$ by
+taking the square of the $\frac{k}{2}$ middle digits of $u_n$. This is a
+venerable precursor of the Blum-Blum-Shub ``provably secure'' PRNG. The main
+problem of this method is that it produces sequences that quickly enters short
+cycles.
 
+Lehmer later proposed linear congruential generators in 1949, also for use on
+the ENIAC computer~\cite{Lehmer}. He gave the sequence defined by
+$u_0 = 47594118, u_{n+1} = 23 u_n \bmod 10^8 + 1$ and proved that it had period
+5882353, a clear improvement compared to the middle-square approach. More
+details on early pseudo-random generators can be found in~\cite{Knuth}.
+
+Knuth considered the problem of recovering the internal state of a truncated
+linear congruential generator $x_{i+1} = ax_i + c \bmod 2^k$ when $a$ and $c$
+are unknown~\cite{Knuth85}; he gave an algorithm exponential in the number of
+truncated bits.
 
 \todo{Mentionner Knuth et les LCG + Frieze + Boyar + Stern...}
-
-\todo{mentionner Vigna ?}
-
-% The combination between being highly commended (it achieved 5th place out of 29
-% in a recent performance test survey\cite{survey}) and a well presented
-% website\cite{melissaweb} giving an feeling of professionalism can lead to the
-% impression that PCG is a sufficiently secure family of generators.
-
-% Some attacks against PCG have been carried out by Sebastiano
-% Vigna\cite{vignaweb}, but this didn't yield any significant results, given that
-% he only tried to break an incomplete version in a fairly straightforward way. He
-% worked on a very specific version of PCG. He considers the result without
-% modulo, which is a big simplification. Moreover, he didn't study the 128 bits
-% long generator, but only the 64 bits long\cite{vignacode}.
-
 
 \section{The PCG Pseudo-Random Number Generator Family}
 
@@ -1197,13 +1276,13 @@ $\approx 66\%$ when $\ell=11$ and with probability $99\%$ when
 $\ell=12$. Decrementing $\ell$ reduces the workload by a factor of 4. Therefore,
 if $T$ denotes the running time when $\ell=13$, we actually used the following
 strategy:
-\begin{enumerate}
-\item Run with $\ell=11$ (if it succeeds, stop).
-\item Run with $\ell=11$ with different inputs.
-\item Run with $\ell=11$ with different inputs.
-\item Run with $\ell=12$.
-\item Run with $\ell=13$.
-\end{enumerate}
+\begin{algorithmic}[1]
+\State Run with $\ell=11$ (if it succeeds, stop).
+\State Run with $\ell=11$ with different inputs.
+\State Run with $\ell=11$ with different inputs.
+\State Run with $\ell=12$.
+\State Run with $\ell=13$.
+\end{algorithmic}
 It is not difficult to check that the expected running time of this procedure is
 $\frac{1079}{10800} T \approx 0.1 T$. In our implementation, $T = 200,000$ CPU
 hours, so the expected running time of the reconstruction procedure is about
@@ -1213,7 +1292,7 @@ attempt with $\ell=11$ succeeded and took only $12,500$ CPU hours.
 The whole process actually ran in 35 wall-clock minutes using 512 cluster nodes,
 each equipped with two 20-cores \textsf{Intel Xeon Gold 6248 @ 2.5Ghz}
 (``\emph{Cascade Lake}''). The actual machine is the
-\verb|[----REDACTED FOR PEER REVIEW----]| located at the
+\verb|[----REDACTED FOR PEER REVIEW----]| computer located at the
 \verb|[----ALSO REDACTED----]| computation center. Note that on this particular
 parallel computer, running the algorithm with $\ell=13$ would take 10 hours
 using the same amount of resources, so the whole procedure \emph{is} practical,
@@ -1239,7 +1318,7 @@ depends on $w_0$ (the variable of the outer loop). Therefore, before entering
 the inner loop, we precompute a bit field of size $2^\ell$ describing
 $\mathcal{C}_i$. To simplify the implementation, we flatten them by computing
 $\mathcal{C} = \cup_i \mathcal{C}_i$. This slightly increase the probability of
-false positives.
+false positives, but makes our code slightly simpler.
 
 \section{Conclusion}
 
