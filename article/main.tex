@@ -47,11 +47,11 @@
 % Symbol definition
 \DeclareMathDelimiter{\vvvert}{0}{matha}{"7E}{mathx}{"17}
 
-\newcommand{\todo}[1]{\textcolor{red}{TODO:[#1]}}
+%\newcommand{\todo}[1]{\textcolor{red}{TODO:[#1]}}
 
-\title[Predicting the PCG Pseudo-Random Number Generator in Practice]{Predicting the (non-cryptographic) PCG Pseudo-Random Number Generator In Practice} 
+\title{Predicting the PCG Pseudo-Random Number Generator In Practice} 
 
-\author{Charles Bouillaguet\inst{1} \and Julia Sauvage\inst{2} \and Florette Martinez\inst{3}}
+\author{Charles Bouillaguet\inst{1} \and Florette Martinez\inst{3} \and Julia Sauvage\inst{2}}
 
 
 \institute{% 
@@ -72,7 +72,23 @@ LIP6, CNRS, SU ? \\
 \keywords{Pseudo-random number generator, guess-and-determine attack, truncated congruential generator, euclidean lattices, closest vector problem, practical attack}
 
 \begin{abstract}
-  \todo{blabla}
+  The Permuted Congruential Generators (\textsf{PCG}) are popular conventional
+  (non-cryptographic) pseudo-random generators designed in 2014. They are used
+  by default in the \texttt{NumPy} scientific computing package. Even though
+  they are not of cryptographic strength, their designer stated that predicting
+  their output should be nevertheless be "challenging".
+
+  In this article, we present a practical algorithm that recovers all the hidden
+  parameters and reconstructs the successive internal states of the
+  generator. This enables us to predict the next ``random'' numbers, and output
+  the seeds of the generator. We have successfully executed the reconstruction
+  algorithm using 512 bytes of challenge input; in the worst case, the process
+  takes 20 000 CPU hours.
+
+  This reconstruction algorithm makes use of cryptanalytic techniques, both
+  symmetric and lattice-based. In particular, the most computationally expensive
+  part is a guess-and-determine procedure that solves about $2^{52}$ instances
+  of the \textsc{Closest Vector Problem} on a very small lattice.
 \end{abstract}
 
 
