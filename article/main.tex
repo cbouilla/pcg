@@ -75,11 +75,9 @@ LIP6, CNRS, SU ? \\
   \todo{blabla}
 \end{abstract}
 
-\section{Introduction} %ce qu'on avait écrit pour le projet, peut-être pas incroyable...
+\section{Introduction} 
 
 \epigraph{Any one who considers arithmetical methods of producing random digits is, of course, in a state of sin.}{John von Neumann, 1949}
-
-%\todo{Ca, c'est du blabla...}
 
 Pseudo-random generators (PRG) are well-studied primitives in symmetric
 cryptography. A PRG is an efficient deterministic algorithm that stretch a small
@@ -96,7 +94,7 @@ encryption algorithm, by generating ``random'' masks to be used in the one-time
 pad. This is precisely what stream ciphers do.
 
 Not all pseudo-random generators are of cryptographic strength. In some
-applications, it is not necessarily necessary \todo{lourd}: to be used in Monte-Carlo
+applications, they are simply not necessary: to be used in Monte-Carlo
 numerical simulations or generate random choices in games, a relaxed,
 non-cryptographic notion of pseudo-randomness may be sufficient. This allows for
 faster algorithms. For instance, \textsf{python} standard library's
@@ -121,12 +119,12 @@ also has a good reputation.
 
 In any case, designers of conventional pseudo-random generators try to obtain
 the simplest and fastest algorithm that passes the day's favourite test suite. A
-few selected ones are shown in Fig.~\ref{fig:prngs}. \texttt{Lehmer64} is a
+few selected ones are shown in Fig.~\ref{fig:prngs}. \texttt{lehmer64} is a
 truncated linear congruential generator, touted as ``the fastest PRNG that
-passes \texttt{BigCrush}''~\cite{LemireLehmer}. \texttt{Xorshift128} is a clever
+passes \texttt{BigCrush}''~\cite{LemireLehmer}. \texttt{xorshift128} is a clever
 implementation of a 128-bit LFSR with period $2^{128} - 1$ due to
 Marsaglia~\cite{Marsaglia03}, using only a few simple 32-bit
-operations. \texttt{Xorshift128+} is a improved version due to
+operations. \texttt{xorshift128+} is a improved version due to
 Vigna~\cite{Vigna17} that returns the sum of two consecutive outputs of a
 Xorshift LFSR; it passes the ``BigCrush'' test suite and is the default PRNG in
 many Javascript implementations, including that in Google's V8 engine (Chrome),
@@ -237,8 +235,8 @@ LFSRs). The resulting combination is fast and passes current statistical test
 suites. The \textsf{PCG} family contains many members, but we focus on the
 strongest one, named either \textsf{PCG64} or \textsf{PCG-XSL-RR}. It has a
 128-bit internal state and produces 64 bits when clocked. It is the default
-pseudo-random number generator in the popular \textsf{NumPy} scientific
-computing package for \textsf{Python}.
+pseudo-random number generator in the popular \textsf{NumPy}~\cite{Numpy}
+scientific computing package for \textsf{Python}.
 
 The internal state of the \textsf{PCG64} generator is made of a 128-bit
 ``state'' and a 128-bit ``increment'', whose intended use is to provide several
@@ -276,7 +274,7 @@ guesses are correct.
 When the increment is unknown, things are a bit more complicated. This is the
 default situation in \textsf{NumPy}, where both the state and the increment are
 initialised using an external source of entropy. In this case, our prediction
-algorithm requires 3072 bits of pseudo-random stream ; it guesses between 51 and
+algorithm requires 4096 bits of pseudo-random stream ; it guesses between 51 and
 55 bits, then for each guess it solves an instance of CVP in dimension 4 (using
 about 75 arithmetic operations). This recovers 64 more bits of information about
 the difference between two successive states, and this is enough to filter the
@@ -284,9 +282,10 @@ bad guesses. This information can then be used in a subsequent and comparably
 inexpensive phase to recover the entire internal state. On average, the whole
 process requires a bit less than 20 000 CPU hours to complete.
 
-We implemented the algorithms in \textsf{C}, then asked the designer of the PCG
-family to send us ``challenge'' pseudo-random streams ; we ran our code and
-emailed back the seeds used to generate the challenge streams the next day.\todo{et on avait tout juste, enfin j'espère}
+We implemented the algorithms in \textsf{C}, then asked the designer of the
+\textsf{PCG} family to send us ``challenge'' pseudo-random streams ; we ran our
+code and emailed back the (correct) seeds used to generate the challenge streams the next
+day.
 
 \paragraph{Related Work.} Deterministic pseudo-random generators can be traced
 back to the work of Von Neumann and Metropolis on the ENIAC
@@ -303,16 +302,28 @@ $u_0 = 47594118, u_{n+1} = 23 u_n \bmod 10^8 + 1$ and proved that it had period
 5882353, a clear improvement compared to the middle-square approach. More
 details on early pseudo-random generators can be found in~\cite{Knuth}.
 
-Knuth considered the problem of recovering the internal state of a truncated
-linear congruential generator $x_{i+1} = ax_i + c \bmod 2^k$ when $a$ and $c$
-are unknown~\cite{Knuth85}; he gave an algorithm exponential in the number of
-truncated bits.
+Knuth discussed whether \emph{truncated} linear congruential generators could be
+good stream ciphers; he therefore studied the problem of recovering the internal
+state of a truncated linear congruential generator
+$x_{i+1} = ax_i + c \bmod 2^k$ when $a$ and $c$ are unknown~\cite{Knuth85}; he
+gave an algorithm exponential in the number of truncated bits.
 
-In 1989, J. Boyar studied further the problem \cite{Boyar1989}. She presented an algorithm which could predict a LCG where all the parameters (multiplier, increment and initial state) where unknown under the condition that the number of bit unrevealed was really small in comparison to the modulus.
+Boyar studied further the problem~\cite{Boyar1989} and presented an algorithm
+which could predict a linear congruential generator when all the parameters
+(multiplier, increment, modulus and initial state) are unknown; she extended her
+idea to the case of truncated linear congruential generators, under the
+condition that the number of bit unrevealed is really small in comparison to the
+size of the modulus.
 
-In 1988, A. Frieze \textit{et al} \cite{Frieze} improved the efficiency of reconstruction algorithms in simpler cases. They supposed that the multiplier $a$ and the modulus $2^k$ were known and used lattice-based technique to recover the LCG more efficiently.
+Frieze \textit{et al}~\cite{Frieze} improved the efficiency of reconstruction
+algorithms in simpler cases. They supposed that the multiplier $a$ and the
+modulus $2^k$ were known and used lattice-based techniques to recover a
+truncated linear congruential generator more efficiently, with more truncated
+bits.  more efficiently.
 
-Here we will use techniques presented in \cite{Frieze} to reconstruct some Lehmer's generator (LCG where the increment $c$ is zero) \cite{Lehmer}.
+Later on, Joux and Stern extended this result to the case where the multiplier
+$a$ and the modulus $2^k$ are unknown, also using lattice
+techniques~\cite{JouxS98}.
 
 \section{The PCG Pseudo-Random Number Generator Family}
 
@@ -338,7 +349,7 @@ congruential generator modulo~$2^{128}$. More precisely:
 \[
   S_{i+1} = a S_i + c \bmod 2^{128},
 \]
-Where \todo{il manque une lettre, je suppose que c'est a} is a fixed 126-bit constant. The first initial state $S_0$ is the seed of
+Where the ``multiplier'' $a$ is a fixed 126-bit constant. The first initial state $S_0$ is the seed of
 the generator. The increment $c$ may be specified by the user of the PRNG to
 produce different output streams with the same seed (just as the IV acts in a
 stream cipher). If no value of $c$ is specified, then a default increment is
@@ -442,7 +453,7 @@ In the rest of this paper, we often perform arithmetic operations on integers
 where only some bits are known. This leads to generation of unknown carries. If
 $a, b$ are integers modulo $2^{128}$ and $0\leq i<j<128$, then there is a
 \emph{carry} $0 \leq \gamma \leq 1$ (resp. a \emph{borrow}
-$0 \leq 1 \leq \beta$ \todo{je pense pas que ce soit ça}) such that:
+$0 \leq \beta \leq 1$) such that:
 \begin{align}
   (a \boxplus b)[i:j]  &= a[i:j] \boxplus  b[i:j] \boxplus  \gamma, \label{eq:caryy}  \\
   (a \boxminus b)[i:j] &= a[i:j] \boxminus b[i:j] \boxminus \beta.  \label{eq:borrow}
@@ -478,7 +489,7 @@ following $n\times n$ matrix:
 \]
 This lattice contains all $n$-terms geometric progressions of common ratio $a$
 modulo $2^k$; therefore the first $n$ terms of the sequence $\LCG_{k}(x, 0)$
-give the coordinates of a point of this lattice.
+give the coordinates of a vector in this lattice.
 
 Reconstructing the state of a truncated linear congruential generator can
 generally be seen as the problem of finding a point of this lattice given only
@@ -661,7 +672,10 @@ shorter than $U'G^{-1}-2^{k-\ell}\widetilde{T}G^{-1}$. Hence :
                         & 	\leq \left\| U' - 2^{k-\ell}\widetilde{T} \right\| \times \left(1 + \vvvert H^{-1} \vvvert  \times \vvvert H \vvvert \right).
 \end{align*}
 
-If we can prove that the right side of the inequality is smaller than the first
+Note that $\vvvert H^{-1} \vvvert \times \vvvert H \vvvert$ is the condition
+number of the matrix $H$. Lattice reduction has the side effect of reducing the
+condition number, therefore it makes sense to use an LLL-reduced basis. If we
+can prove that the right side of the inequality is smaller than the first
 minimum of the lattice, then we would have proved that $RH$ is indeed the
 closest vector we were searching for. Because we have fixed $k = 64$, by
 lemma~\ref{thm:close} we have
@@ -716,7 +730,7 @@ def reconstruct(X):
     return state
 \end{minted}
 
-But enough fooling around; let's go back to \textsf{PCG64}.
+%\noindent But enough fooling around; let's go back to \textsf{PCG64}.
 
 \section{State Reconstruction for \textsf{PCG64} With Known Increment}
 \label{sec:Cknown}
@@ -982,7 +996,7 @@ reduced success probablity).
   \label{algo:known}
 \end{algorithm}
   
-\section{Predicting PCG64 with Unknown Increment}
+\section{State Reconstruction for \textsf{PCG64} With Secret Increment}
 \label{sec:Cunknown}
 
 The algorithm of section~\ref{sec:Cknown} does not apply directly to the general
@@ -1295,7 +1309,6 @@ $c \gets S_1 \boxminus a S_0$. This complete the reconstruction procedure for
 \begin{algorithm}
 \begin{algorithmic}[1]
   \Function{ReconstructState}{$\Delta S_0, r_0, \dots, r_k, X_0, \dots, X_k$}
-  \State \todo{check indices nabla}
   \For{$i = 0, 1, \dots, k$} \Comment{Setup}
   \State $\nabla S_i \gets \Delta S_0 (a^i-1)(a-1)^{-1} \bmod 2^{128}$
   \State $Y_i \gets X_i \lll r_i$ \Comment{Undo rotations}
@@ -1492,11 +1505,11 @@ hours.
 
 It actually ran in 35 wall-clock minutes using 512 cluster nodes, each equipped
 with two 20-cores \textsf{Intel Xeon Gold 6248 @ 2.5Ghz} (``\emph{Cascade
-  Lake}''). The actual machine is the \verb|[----REDACTED FOR PEER REVIEW----]|
-computer located at the \verb|[----ALSO REDACTED----]| computation center. Note
-that on this particular parallel computer, running the algorithm with $\ell=13$
-would take 10 hours using the same amount of resources, so the whole procedure
-\emph{is} practical, even in the absolute worst case.
+  Lake}''). The actual machine is the \verb|[----REDACTED----]| computer located
+at the \verb|[----ALSO REDACTED----]| computation center. Note that on this
+particular parallel computer, running the algorithm with $\ell=13$ would take 10
+hours using the same amount of resources, so the whole procedure \emph{is}
+practical, even in the absolute worst case.
 
 The outer loop of algorithm~\ref{algo:unknown_1} makes $2^{2\ell - 1}$
 iterations while the inner loop makes $2^{30}$ iterations. Using a single
@@ -1520,7 +1533,23 @@ $\mathcal{C} = \cup_i \mathcal{C}_i$. This slightly increase the probability of
 false positives, but makes our code slightly simpler.
 
 \section{Conclusion}
-\todo{y'a pas de conclusion}
+
+We have presented a practical state reconstruction algorithm for the
+\textsf{PCG64} conventional pseudo-random number generator, the default in the
+\texttt{NumPy} library. In the worst case, we recovers all the secret
+information using 512 consecutive output bytes, using 2.3 CPU years of
+computation. We have executed the algorithm in practice using a large parallel
+computer. The \textsf{PCG64} generator is fast and not intended for
+cryptographic purposes; we have shown that, in practice, this comes at the price
+of strong pseudo-randomness. It should absolutely not be used when
+unpredictability of the random numbers is required, for fear of practical
+attacks.
+
+On the other hand, our results do not mean that \textsf{PCG64} should be
+deprecated for scientific computing. But they do mean that its output has
+detectable properties. Whether these properties may affect the results of
+Monte-Carlo numerical simulations is another matter entirely.
+
 % pas dans la version anonyme.
 % \paragraph{Acknowledgements.} The authors thank Damien Vergnaud and Vincent
 % Zucca for helpful discussions. We also thank Léo Ducas for helping with the
@@ -1528,8 +1557,6 @@ false positives, but makes our code slightly simpler.
 
 \bibliographystyle{alpha}
 \bibliography{biblio}
-
-%\appendix
 
 \end{document}
 
