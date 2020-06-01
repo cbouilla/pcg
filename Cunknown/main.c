@@ -128,12 +128,12 @@ void do_task(u64 current, struct task_t *task, const u64 (*X)[nboutput])
     u64 WC = 1 + 2 * (current % (1 << (known_low - 1)));
     
     prepare_task(X, W0, WC, task);
-    for (u64 r = 0; r < 1 << (nbiter * known_up); r++) {
-	task->rot[0] = (task->rot[0] + 1) % k;
+    for (u64 r = 0; r < 1 << (nbiter * 6); r++) {
+	task->rot[0] = (task->rot[0] + 1) % 64;
 	int i = 0;
 	while (task->rot[i] == 0 && i < nbiter) {
 	    i++;
-	    task->rot[i] = (task->rot[i] + 1) % k;
+	    task->rot[i] = (task->rot[i] + 1) % 64;
 	}
 	if (solve_isgood(task))
 	    result_found(X, W0, WC, r);

@@ -11,7 +11,7 @@ typedef long long          i64;
 typedef unsigned long long u64;
 
 /***** Macro et Variables globales *****/
-#define known_low 11 //à relancer 3 fois, sur des X differents (X0 - X4 ,X5 - X9,...) puis lancer avec 12 et enfin 13
+#define known_low 10 //à relancer 3 fois, sur des X differents (X0 - X4 ,X5 - X9,...) puis lancer avec 12 et enfin 13
 #define nbiter 5
 #define nbtest 4
 #define nboutput (nbiter + nbtest)
@@ -27,7 +27,7 @@ struct task_t {
     u64 lowSumPol[nbiter + nbtest];
     u64 sumPolY[nbiter];
     u64 sumPolTest[nbtest];
-    u64 tabTmp[k * nbiter];
+    u64 tabTmp[64 * nbiter];
     int rot[nbiter];
     char *goodY;
 };
