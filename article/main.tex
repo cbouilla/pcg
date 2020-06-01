@@ -1006,7 +1006,7 @@ checking consistency.
 
 Let us set:
 \begin{equation}\label{eq:nabla}
-  \nabla S_i \stackrel{def}{=} S_i - S_0 = \sum_{j=1}^i S_j - S_{j-1} \equiv \sum_{j=0}^{i-1} \Delta S_j \equiv \Delta S_0 \cdot \sum_{j=0}^{i-1} a^j \equiv \Delta S_0 \frac{a^i-1}{a-1} \mod 2^{128}
+  \nabla S_i \stackrel{def}{=} S_i - S_0 \equiv \sum_{j=0}^{i-1} \Delta S_j \equiv \Delta S_0 \cdot \sum_{j=0}^{i-1} a^j \equiv \Delta S_0 \frac{a^i-1}{a-1} \mod 2^{128}
 \end{equation}
 Note that $\nabla S_0 = 0$ and $\nabla S_1 = \Delta S_0$. Therefore, knowledge
 of $\Delta_0$ entails that of the whole sequence of $\nabla S_i$. The prediction
@@ -1149,12 +1149,12 @@ eq.~\eqref{eq:consistency} combined with this observation to discard bad guesses
   \State $Y_j \gets X_j \lll r_j$ \Comment{Undo rotations}
   \State $T_j \gets \left(r_j \oplus Y_j[58:64]\right) +  64 \cdot \left(K_j \oplus Y_j\right)[0:\ell]$ \Comment{Truncated LCG}
   \State $\widetilde{T}'_j \gets T_j \boxminus  K_i[58:64+\ell]$ \Comment{Cancel known part}
-  \State $\widetilde{\Delta T'}_j = \widetilde{T'}_{j+1} \boxminus \widetilde{T}'_j$  \Comment{Difference (truncated geom. seq.)}
-  \State $(\Delta U_0, \dots, \Delta U_3) \gets \left\lfloor (\Delta T'_0, \dots, \Delta T'_3) \cdot 2^{58-\ell} \cdot \widetilde H^{-1} \right\rceil \cdot \widetilde H$ \Comment{CVP}
+  \State $\Delta \widetilde{T}'_j = \widetilde{T}'_{j+1} \boxminus \widetilde{T}'_j$  \Comment{Difference (truncated geom. seq.)}
+  \State $(\Delta U_0, \dots, \Delta U_3) \gets \left\lfloor (\Delta \widetilde{T}'_0, \dots, \Delta \widetilde{T}'_3) \cdot 2^{58-\ell} \cdot \widetilde H^{-1} \right\rceil \cdot \widetilde H$ \Comment{CVP}
   \State $\Delta S_0[0:64+\ell] \gets \left(K_1 \boxminus K_0\right)[0:\ell]
   + 2^{\ell} \cdot \Delta U_0[0:64]$ \Comment{Check}
   \If{$\Call{ConsistencyCheck}{\Delta_0, w_0, Y_0, X_5, \dots, X_k}$}
-  \State \Return $(w_0, c, r_0, \dots, r_4, \Delta_0)$.
+  \State \Return $(w_0, c_0, r_0, \dots, r_4, \Delta S_0)$.
   \EndIf
   \EndFor
   \EndFor
@@ -1290,7 +1290,11 @@ From there, we also have $S_0[64+j-1] = Y_0[64+j-1] \oplus S_0[j-1]$, and the
 $j$-th carry bits can be computed normally.
 \end{itemize}
 
-The whole procedure is shown in algorithm~\ref{algo:last}.
+The whole procedure is shown in algorithm~\ref{algo:last}. Note that once $S_0$
+has been found, then all subsequent states can be computed with error using
+$S_i = S_0 \boxplus \nabla S_i$. In particular, computing $S_1$ gives $c$ by
+$c \gets S_1 \boxminus a S_0$. This complete the reconstruction procedure for
+\textsf{PCG64}.
 
 \begin{algorithm}
 \begin{algorithmic}[1]
@@ -1333,16 +1337,15 @@ The whole procedure is shown in algorithm~\ref{algo:last}.
 We have implemented the state reconstruction algorithms described above using a
 mixture of \textsf{C} (for the computationally expensive parts) and
 \textsf{Python} (for the rest). We used the \texttt{fplll} library~\cite{fplll}
-to solve CVP instances exactly in dimension 42.
+to solve CVP instances exactly in dimension 63.
 
 In this section, we briefly outline important aspects of our implementations and
-present practical results. Our codes are available online at:
+present practical results. Our codes are available in the supplementary material
+as well as online at:
 \[
   % \url{https://github.com/cbouilla/pcg/}
   \verb|[----REDACTED FOR PEER REVIEW----]|
 \]
-(and in the supplementary material).
-
 The designer of \textsf{PCG} was kind enough to send us two sets challenge
 inputs: one with the default (known) increment and one with a random secret
 increment. She generated random seeds and provided us with the first outputs of
