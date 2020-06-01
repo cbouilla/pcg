@@ -551,6 +551,7 @@ solve these problems. We first claim that $2^{k-\ell} \widetilde{T}$ is
 \end{proof}
 
 \subsection{Reconstruction in ``High'' Dimension Using an Exact CVP Solver}
+\label{sec:cvp_big}
 
 Lemma~\ref{thm:close} tells us that the approximation of a geometric sequence
 obtained by dropping least-significant bits cannot be arbitrarily far from a
@@ -614,8 +615,8 @@ $n\geq 63, k=128$ and $\ell=6$, any CVP oracle will return a vector congruent to
 the original $U$ when given $\widetilde{T}$.
 
 
-
 \subsection{Reconstruction in Low Dimension Using Babai's Rounding}
+\label{sec:cvp_small}
 
 In sections~\ref{sec:Cknown} and~\ref{sec:cvp_small_2} we will need to
 reconstruct billions of noisy truncated geometric series modulo $2^{64}$ with
@@ -928,7 +929,7 @@ $\widetilde{T'} = S[58:64+\ell] \boxminus K[58:64+\ell]$, and clearly
 $\widetilde{T'} = T' \boxplus B$. We are thus in the context of the problem
 discussed in section~\ref{sec:geometric}, namely reconstructing a geometric
 sequence given $6+\ell$ (noisy) most-significant bits. The ``noise'' is the
-unknown vector $B$ of borrows.
+unknown vector $B$ of borrows. %Notice that the noise is asymmetric.
 
 We will guess $n$ rotations and $\ell$ least-significant bits of the state, for
 a total of $2^{6n + \ell}$ guessed bits. Table~\ref{tab:babai} gives a
@@ -940,9 +941,9 @@ consecutive rotations.
 The algorithm that reconstructs the internal state of the \textsf{PCG64}
 generator with known increment proceeds as shown in
 algorithm~\ref{algo:known}. The point is that when the guesses are correct, then
-from the truncated geometric series $\mathbf{T'}$, the solution of the CVP
-instance reveals $U_j = S_j'[\ell:64+\ell]$. From there, the correction of the
-algorithm is easily established.
+from the truncated geometric series $T'$, the solution of the CVP instance
+reveals $U_j = S_j'[\ell:64+\ell]$. From there, the correction of the algorithm
+is easily established.
 
 The procedure is completely practical. More details are given in
 section~\ref{sec:implem}. Let us just mention that the procedure often works
@@ -1040,14 +1041,47 @@ very strong consistency check can still be implemented. % The essential idea is
 % allows a consistency check between the partial information deduced from the
 % guesses and the actual outputs.
 
+We consider again the sequence of internal states
+$S = (S_0, S_1, \dots) = \LCG_{128}(S_0, c)$. We will guess the $\ell$
+least-significant bits of $S_0$ and of $c$, therefore let us assume that their
+value is known and denote it by $w_0$ and $c_0$. We define
+$S' = \LCG_{128}(S_0 - w, c - c_0)$ and $K = \LCG_{128}(w_0, c_0)$ --- again,
+$K$ is Known and $S' = S - K$. This time, the components of $S'$ do \emph{not}
+follow a geometric progression; but we still have that the $\ell$ least
+significant bits of each $S'_i$ are zero. Set
+$\Delta S'_i \stackrel{def}{=} S'_{i+1} - S'_i$; $\Delta S'[\ell:64+\ell]$
+follows a geometric progression of common ratio $a$ modulo $2^{64}$
+(again). This time, we have to find $\Delta S'_0[\ell:64+\ell]$.
+
+As in section~\ref{sec:Cknown}, we have access to
+$T_i \stackrel{def}{=} S_i[58:64+\ell]$. We want to subtract the known part to
+obtain $T'_i \stackrel{def}{=} (S_i \boxminus K_i)[58:64+\ell]$, which is the
+truncation of $S'_i$. This again introduces an unknown vector $B$ of
+\emph{borrows}, and in fact we can only compute
+$\widetilde{T'} = S[58:64+\ell] \boxminus K[58:64+\ell]$, with
+$\widetilde{T'} = T' \boxplus B$. As explained above, to access a geometric
+sequence, we would like to obtain
+$\Delta T'_i \stackrel{def}{=} T'_{i+1} - T'_i$, but we can only compute:
+\[
+  \Delta \widetilde{T}'_i \stackrel{def}{=} \widetilde{T}'_{i+1} - \widetilde{T}'_i
+  =  (T'_{i+1} \boxminus T'_{i}) \boxplus (B_{i+1} \boxminus B_{i})
+\]
+
+We are thus still in the context of the problem discussed in
+section~\ref{sec:geometric}, but this time the ``noise'' caused by the carries
+is given by $B_{i+1} - B_i$. When the guesses are correct, then Babai's rounding
+will reconstruct $\Delta \widetilde{S}'[\ell:64+\ell]$ from
+$\Delta \widetilde{T}'$. This in turn yields $\Delta S_0[0:64+\ell]$.
+
 Once we have found $\Delta S_0[0:64+\ell]$, we can compute
 $\nabla S_i[0:64+\ell]$ for any $i$ because eq.~\eqref{eq:nabla} holds modulo
 $2^{64+\ell}$; because we have guessed the first rotation and the $\ell$ least
 significant bits of the state, using~\eqref{eq:output} we gain access to
 $S_0[58:64+\ell]$; combined with the ``differences'' $\nabla S_i$, this reveals
 $S_i[58:64+\ell]$ for any $i$ (and we already had $S_i[0:\ell]$). This allows us
-to compute $Y_i[0:\ell] = S_i[0:\ell] \oplus S_i[64:64+\ell]$ for any $i$. Given a ``fresh''
-output $X_i$, and assuming that the guesses are correct, then we should have:
+to compute $Y_i[0:\ell] = S_i[0:\ell] \oplus S_i[64:64+\ell]$ for any $i$. Given
+a ``fresh'' output $X_i$, and assuming that the guesses are correct, then we
+should have:
 \begin{equation}\label{eq:find_rotation}
   S_i[0:\ell] \oplus S_i[64:64+\ell] = (X_i \lll r_i)[0:\ell].
 \end{equation}
@@ -1078,7 +1112,7 @@ cross the 64-th bit during the addition and perturb $S_i[64:64+\ell]$. As a
 result, there is an unknown vector $C$, whose components are either 0 or 1, such
 that such that:
 \begin{align*}
-  S_i[64:64+\ell] &= C_i \boxplus \nabla S_i[64:64+\ell] \boxplus (w_0 \oplus Y_0[0:\ell]) \\
+  S_i[64:64+\ell] &= C_i \boxplus \nabla S_i[64:64+\ell] \boxplus (\underbrace{w_0 \oplus Y_0[0:\ell]}_{S_0[64:64+\ell]}) \\
 \end{align*}
 
 In algorithm~\ref{algo:unknown_1}, \textsc{ConsistencyCheck} uses
@@ -1092,9 +1126,9 @@ eq.~\eqref{eq:consistency} combined with this observation to discard bad guesses
   \State $v_0 = w_0 \oplus Y_0[0:\ell]$ \Comment{$v_0 = S_0[64:64+\ell]$}
   \For{$i=5, \dots, k$}
   \State $u_i \gets \Delta S_0 (a^i-1)(a-1)^{-1} \bmod 2^{64+\ell}$ \Comment{$u_i = \nabla S_i[0:64+\ell]$}
-  \State $w_i = w_0 + u_i[0:\ell] \bmod 2^{\ell}$ \Comment{$w_i = S_i[0:\ell]$}
-  \State $v_i = v_0 + u_i[64:64+\ell] \bmod 2^{\ell}$ \Comment{$S_i[64:64+\ell] \in \{v_i, v'_i\}$}
-  \State $v'_i = v_i + 1 \bmod 2^{\ell}$
+  \State $w_i = w_0 \boxplus u_i[0:\ell]$ \Comment{$w_i = S_i[0:\ell]$}
+  \State $v_i = v_0 \boxplus u_i[64:64+\ell]$ \Comment{$S_i[64:64+\ell] \in \{v_i, v'_i\}$}
+  \State $v'_i = v_i \boxplus 1$
   \State $\mathcal{C}_i \gets \{ w_i \oplus (X_i \lll r_i)[0:\ell]~|~ 0\leq r_i < 64\}$ \Comment{Check eq.~\eqref{eq:consistency}}
   \If{$\{v_i, v'_i\} \cap \mathcal{C}_i = \emptyset$}
   \State \Return \textbf{False} \Comment{Bad Guesses}
@@ -1106,16 +1140,19 @@ eq.~\eqref{eq:consistency} combined with this observation to discard bad guesses
 \State 
   
 \Procedure{ReconstructPartialDifference}{$X_0, \dots, X_k$}
-  \For{$0 \leq w_0 < 2^{\ell}$ and $0 \leq c < 2^{\ell - 1}$} \Comment{Guess least-significant bits}
-  \State $K_j \gets a^j w_0 + (2c+1)(a^j - 1)(a-1)^{-1} \bmod 2^{128}$ \Comment{Known part}
+  \State // \emph{Statement involving $j$ must be repeated for $j=0, 1, 2, 3, 4$.}
+  \State $H \gets$ LLL reduction of $G_{4,64}$
+  \State $\ell \gets 14$
+\For{$0 \leq w_0 < 2^{\ell}$ and $0 \leq c_0 < 2^{\ell - 1}$} \Comment{Guess least-significant bits}
+\State $K_j \gets a^j w_0 + (2c_0 + 1)(a^j - 1)(a-1)^{-1} \bmod 2^{128}$ \Comment{Known part}
   \For{$0 \leq r_0, r_1, r_2, r_3, r_4 < 64$} \Comment{Guess rotations}
   \State $Y_j \gets X_j \lll r_j$ \Comment{Undo rotations}
   \State $T_j \gets \left(r_j \oplus Y_j[58:64]\right) +  64 \cdot \left(K_j \oplus Y_j\right)[0:\ell]$ \Comment{Truncated LCG}
-  \State $T'_j \gets T_j \boxminus  K_i[58:64+\ell]$ \Comment{Truncated geometric series}
-  \State \todo{Attention double retenue : $\pm 1$.}
-  \State $\Delta T'_j = (T'_{j+1} - T'_j) \bmod 2^{6 + \ell}$  \Comment{Difference}
-  \State $(\Delta U_0, \dots, \Delta U_3) \gets \left\lfloor (\Delta T'_0, \dots, \Delta T'_3) \cdot 2^{58-\ell} \cdot \widetilde G_4^{-1} \right\rceil \cdot \widetilde G_4$ \Comment{CVP}
-  \State $\Delta S_0[0:64+\ell] \gets \left((w_1 - w_0) \bmod 2^{\ell}\right) + 2^{\ell} \cdot \Delta U_0[0:58-\ell]$ \Comment{Check}
+  \State $\widetilde{T}'_j \gets T_j \boxminus  K_i[58:64+\ell]$ \Comment{Cancel known part}
+  \State $\widetilde{\Delta T'}_j = \widetilde{T'}_{j+1} \boxminus \widetilde{T}'_j$  \Comment{Difference (truncated geom. seq.)}
+  \State $(\Delta U_0, \dots, \Delta U_3) \gets \left\lfloor (\Delta T'_0, \dots, \Delta T'_3) \cdot 2^{58-\ell} \cdot \widetilde H^{-1} \right\rceil \cdot \widetilde H$ \Comment{CVP}
+  \State $\Delta S_0[0:64+\ell] \gets \left(K_1 \boxminus K_0\right)[0:\ell]
+  + 2^{\ell} \cdot \Delta U_0[0:64]$ \Comment{Check}
   \If{$\Call{ConsistencyCheck}{\Delta_0, w_0, Y_0, X_5, \dots, X_k}$}
   \State \Return $(w_0, c, r_0, \dots, r_4, \Delta_0)$.
   \EndIf
@@ -1129,56 +1166,27 @@ eq.~\eqref{eq:consistency} combined with this observation to discard bad guesses
 
 The heart of the algorithm is again the reconstruction of a truncated geometric
 progression. Looking at table~\ref{tab:babai}, we see that the best choice
-consists in guessing 5 consecutive rotations and $\ell=13$ least-significant
-bits. Therefore, \textsc{ReconstructPartialDifference} does $2^{55}$ iterations
+consists in guessing 5 consecutive rotations and $\ell=14$ least-significant
+bits. Therefore, \textsc{ReconstructPartialDifference} does $2^{57}$ iterations
 of the inner loop, and succeeds deterministically.
 
-
-% \begin{theorem}
-%   If $\ell \geq 13$, then algorithm \textsc{ReconstructPartialDifference} is
-%   correct (it always returns the correct values).
-% \end{theorem}
-
-% \begin{proof}
-%   \todo{WRITE-ME}
-%   \begin{align*}
-%   \mathbf{S} &= \LCG(S_0, c) \\
-%              &= \LCG\left(S_0[0:\ell] + 2^\ell S_0[\ell:128], c[0:\ell] + 2^\ell c[\ell:128]\right) \\
-%              &= \LCG\left(S_0[0:\ell], c[0:\ell]\right) + 2^\ell \LCG\left(S_0[\ell:128],  c[\ell:128]\right) \\
-%   \Delta \mathbf{S} &= \LCG(S_1, c) - \LCG(S_0, c) \\
-%              &= \LCG(S_1 - S_0, 0)
-% \end{align*}
-% \end{proof}
-
-\subsection{Full Difference Reconstruction}
-\label{sec:big_cvp}
+\subsection{Predicting all the Rotations}
 
 Knowing the values of $\Delta S_0[0:64+\ell]$ as well as the $\ell$
 least-significant bits of $S_0$ and $c$ is sufficient to get rid the nastier
 feature \textsf{PCG64}: armed with this knowledge, we can determine all the
 subsequent rotations deterministically, at negligible cost, using
-eq~\eqref{eq:find_rotation}.
+eq~\eqref{eq:find_rotation}. For each index $i$, it suffices to try the $64$
+possible values of $r_i$; only one should satisfy
+eq~\eqref{eq:find_rotation}. The complete pseudo-code is shown in
+algorithm~\ref{algo:unknown_2}.
 
-For each $i$, it suffices to try the $64$ possible values of $r_i$; only one
-should satisfy the equation. Using $X_0, \dots, X_{40}$, we thus recover the 6
-most-significant bits of $S_0, \dots, S_{40}$. We therefore compute the 6 most
-significant bits of the differences $\Delta S_i$ between consecutive states (up
-to missing carries), and we are faced with the problem of reconstructing a
-128-bit geometric progression using 39 consecutive outputs truncated to their 6
-most-significant bits. This can be done by solving an instance of CVP in
-dimension $\leq 40$. We use the off-the-shelf CVP solver embedded in
-\texttt{fplll}: it runs in no measurable time.
-
-More precisely, there are still details to be dealt with regarding
-carries. Indeed, the \textsc{ReconstructRotations} returns the 6 most
-significant bits of any number of $S_i$'s (denoted by $r_i$). Therefore, there
-are unknown 122-bit quantities $x_i$ such that:
-\begin{align*}
-  S_i &= 2^{122} r_i + x_i \\
-  \Delta S_i &\equiv 2^{122} (r_{i+1} - r_i) + (x_{i+1} - x_{i}) \bmod 2^{128}
-\end{align*}
-
-\todo{check indices nabla}
+It is unlikely that several possible values of $r_i$ match: each value is
+``checked'' on $\ell$ bits, so an accidental match happens with probability
+$2^{\ell-6}$. The total number of lists returned by
+\textsc{ReconstructRotations} then follows a binomial distribution of parameters
+$2^{\ell-6}, k$. With $\ell=14$ and $k=64$, then only one rotation vector should
+pass the test for $0 \leq i < 64$ on average.
 
 \begin{algorithm}
 \begin{algorithmic}[1]
@@ -1203,20 +1211,27 @@ are unknown 122-bit quantities $x_i$ such that:
   \EndFor
   \State \Return $\left\{ h\texttt{::} t~|~ h \in \mathcal{H}, t \in \mathcal{T} \right\}$ \Comment{Return $\mathcal{H} \times \mathcal{T}$}
   \EndFunction
-  \State
-  \Function{ReconstructFullDifference}{...}
-  \State \todo{WRITEME}
-  \EndFunction
 \end{algorithmic}
 \caption{Rotations and full difference reconstruction algorithm}
 \label{algo:unknown_2}
 \end{algorithm}
 
 
+\subsection{Full Difference Reconstruction}
+\label{sec:big_cvp}
 
-% \begin{theorem}
-%   The algorithm described above works with probability.... in time ...
-% \end{theorem}
+Using $X_0, X_1, \dots, X_{63}$, we recover all rotations and thus we recover
+the 6 most-significant bits of $S_0, S_1, \dots, S_{63}$. This allows us to
+compute the 6 most significant bits of the differences $\Delta S_i$ between
+consecutive states (up to missing carries), and we are faced with the problem of
+reconstructing a 128-bit geometric progression using 63 consecutive outputs
+truncated to their 6 most-significant bits. There is again an unknown vector of
+borrows $B$ such that $\Delta S_i[122:128] \boxplus C_i= r_{i+1} \boxminus r_i$.
+
+Reconstructing $\Delta S_0$ from the $r_i$ is exactly the problem discussed in
+section~\ref{sec:cvp_big}. This can be done by solving an instance of CVP in
+dimension $63$. We use the off-the-shelf CVP solver embedded in \texttt{fplll}:
+it runs in no measurable time.
 
 \subsection{Complete State Reconstruction}
 
