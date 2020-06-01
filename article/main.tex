@@ -692,10 +692,10 @@ When $\ell$ is greater than the values given in table~\ref{tab:babai}, then
 Babai's rounding technique will always return the closest vector, and allow us
 to reconstruct a truncated geometric series.
 
-\subsection{Application to the \texttt{Lehmer64} generator}
+\subsection{Application to the \texttt{lehmer64} generator}
 
 Adapting the previous reasoning enables an efficient state reconstruction
-algorithm for the \texttt{Lehmer64} generator shown in
+algorithm for the \texttt{lehmer64()} generator shown in
 Fig.~\ref{fig:prngs}. When clocked, it outputs the top 64 bits of a geometric
 sequence ($k=128$ and $\ell=64$). Three successive outputs are sufficient to
 reconstruct the internal state using Babai's rounding technique. This yields the
@@ -703,7 +703,7 @@ following reconstruction algorithm:
 \begin{minted}[fontsize=\scriptsize]{python}
 def reconstruct(X):
     """
-    Produce the internal state of the generator given three consecutive outputs.
+    Produce the internal state of the generator given three consecutive outputs of lehmer64().
     16 multiplications, 1 division, 11 additions and 3 roundings only.
     """
     a = 0xda942042e4dd58b5
@@ -716,7 +716,7 @@ def reconstruct(X):
     return state
 \end{minted}
 
-But enough fooling around. Let's go back to \textsf{PCG64}.
+But enough fooling around; let's go back to \textsf{PCG64}.
 
 \section{State Reconstruction for \textsf{PCG64} With Known Increment}
 \label{sec:Cknown}
