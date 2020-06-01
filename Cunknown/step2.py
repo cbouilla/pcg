@@ -11,7 +11,7 @@ known_up  = 6
 known_low  = 11
 a = 2549297995355413924 * 2**64 + 4865540595714422341
 nbiter = 5
-nboutput = 40
+nboutput = 64
 N = 2**128
 K = 2**64
 LOW = 2**known_low
@@ -199,8 +199,10 @@ def findDS(rot, W0, WC): #OK!
     for i in range(nboutput):
         rotprim.append((rot[i] - ((powA[i] * W0 + polA[i] * WC) >> 122)) % 64)
     tmp = tuple([(rotprim[i+1] - rotprim[i]) << (122 - known_low) for i in range(nboutput - 1)])
-    return fpylll.CVP.closest_vector(Greduite2, tmp, method = "proved")
-    
+    print("running fpylll")
+    return fpylll.CVP.closest_vector(Greduite2, tmp, method = "fast")
+    print("done")
+
 def findDSdebug(rot, W0, WC): #OK!
     """
     >>> rot = (36, 11, 26, 47, 27, 43, 40, 4, 6, 14, 46, 7, 26, 15, 29, 52, 5, 27, 59, 51, 50, 10, 18, 12, 20, 13, 41, 11, 33, 29, 11, 34, 57, 43, 57, 9, 4, 44, 5, 61)
@@ -219,8 +221,9 @@ def findDSdebug(rot, W0, WC): #OK!
     rotprim[1] = (rotprim[1] - 1) % 64
     # fin différence
     tmp = tuple([(rotprim[i+1] - rotprim[i]) << (122 - known_low) for i in range(nboutput - 1)])
-    return fpylll.CVP.closest_vector(Greduite2, tmp, method = "proved")
-
+    print("running fpylll")
+    return fpylll.CVP.closest_vector(Greduite2, tmp, method = "fast")
+    print("done")
 
 def full_DS(X, W0, WC, rots):
     uX = unrotateX(X,rot)    
@@ -243,7 +246,7 @@ def full_DS(X, W0, WC, rots):
 
 
 if __name__ == '__main__':
-    X = [0] * 48
+    X = [0] * nboutput
     X[ 0] = 0x46b9d66bb1e9fbf0;
     X[ 1] = 0xc0b7382496f0e363;
     X[ 2] = 0x78bf5fb5f4bbc09e;
@@ -292,6 +295,22 @@ if __name__ == '__main__':
     X[45] = 0xda17af3b16f6f009;
     X[46] = 0x7c245c9bdd4a47b7;
     X[47] = 0x20cb56ac9e64fc94;
+    X[48] = 0xcab2a2fa297cfda2;
+    X[49] = 0xc8eef8b5c071dc73;
+    X[50] = 0x5464d1c39e7dd241;
+    X[51] = 0xc67085808629fbf8;
+    X[52] = 0x47568a4997672211;
+    X[53] = 0xefb99a81907a1626;
+    X[54] = 0x5b6c6525364f7ddd;
+    X[55] = 0xd545d57e7e717622;
+    X[56] = 0xcff97172e291d1e9;
+    X[57] = 0x976f30a42d803d97;
+    X[58] = 0x58a2db3541cf5ab5;
+    X[59] = 0x6d348d057406d513;
+    X[60] = 0x898e54aba8484b09;
+    X[61] = 0xf9ae6eb5186c4414;
+    X[62] = 0x58b72fe04cc772c7;
+    X[63] = 0x8dd37431b790ff32;
 
 
     regex = re.compile(r"W_0 = (?P<W0>[0-9a-f]+) / W_c = (?P<WC>[0-9a-f]+) / r = (?P<r>[0-9a-f]+)")
