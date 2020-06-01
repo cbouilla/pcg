@@ -69,15 +69,16 @@ LIP6, CNRS, SU ? \\
 \begin{document}
 \maketitle
 
-\keywords{\todo{keyword}}
+\keywords{Pseudo-random number generator, guess-and-determine attack, truncated congruential generator, euclidean lattices, closest vector problem, practical attack}
 
 \begin{abstract}
   \todo{blabla}
 \end{abstract}
 
-\section{Introduction} 
 
 \epigraph{Any one who considers arithmetical methods of producing random digits is, of course, in a state of sin.}{John von Neumann, 1949}
+
+\section{Introduction} 
 
 Pseudo-random generators (PRG) are well-studied primitives in symmetric
 cryptography. A PRG is an efficient deterministic algorithm that stretch a small
@@ -94,21 +95,21 @@ encryption algorithm, by generating ``random'' masks to be used in the one-time
 pad. This is precisely what stream ciphers do.
 
 Not all pseudo-random generators are of cryptographic strength. In some
-applications, they are simply not necessary: to be used in Monte-Carlo
-numerical simulations or generate random choices in games, a relaxed,
-non-cryptographic notion of pseudo-randomness may be sufficient. This allows for
-faster algorithms. For instance, \textsf{python} standard library's
-\texttt{random} module uses the Mersenne Twister~\cite{MatsumotoN98}. The
-\textsf{C} library that comes along \texttt{gcc} (the \texttt{glibc}) uses a
-(poor) truncated linear congruential generator by default to implement the
-\texttt{rand} function.
+applications, it is simply not necessary: to be used in Monte-Carlo numerical
+simulations or generate random choices in games, a relaxed, non-cryptographic
+notion of pseudo-randomness may be sufficient. This allows for faster
+algorithms. For instance, \textsf{python} standard library's \texttt{random}
+module uses the Mersenne Twister~\cite{MatsumotoN98}. The \textsf{C} library
+that comes along \texttt{gcc} (the \texttt{glibc}) uses a (poor) truncated
+linear congruential generator by default to implement the \texttt{rand}
+function.
 
 In the realm of non-cryptographic random generators, a PRG is deemed ``good
 enough'' it is passes \emph{some} efficient statistical tests --- whereas the
 cryptographic notion of pseudo-randomness asks that it passes \emph{any}
 efficient test. There are \textit{de facto} statistical test suites; an initial
 battery of randomness tests for RNGs was suggested by Knuth in the 1969 first
-edition of The Art of Computer Programming. In 1996, Knuth's tests were then
+edition of \emph{The Art of Computer Programming}. In 1996, Knuth's tests were then
 supplanted by Marsaglia's \texttt{Diehard} tests. In 2007, L'Ecuyer proposed
 the \texttt{TestU01}~\cite{LEcuyerS07} library, whose ``BigCrush'' test is
 considered state-of-the-art by the relevant community, to the best of our
@@ -217,11 +218,11 @@ ciphers in counter mode~\cite{Salmon11}. The need for speed then leads to the
 use of weakened cryptographic primitives (round-reduced AES or custom and
 presumably weak block-ciphers)
 
-In most cases, it is fairly easy to see that a specific non-cryptographic PRG
-does not meet the cryptographic notion of pseudo-randomness, and there are few
+In most cases, it is fairly easy to see that a given conventional PRG does not
+meet the cryptographic notion of pseudo-randomness, and there are few
 exceptions. Most are fairly easy to predict, meaning that after having observed
 a prefix of the output, it is easy to produce the next ``pseudo-random''
-bits. This makes a good source of exercises for cryptography students.
+bits. This makes a good source of exercises for cryptology students.
 
 In this paper, we study the \textsf{PCG} family of non-cryptographic
 pseudo-random generators proposed by O'Neil~\cite{melissapaper,melissaweb}. She
@@ -249,8 +250,8 @@ internal state of the strongest member of the \textsf{PCG} family. This allows
 to predict the pseudo-random stream deterministically and clock the generator
 backwards. The original seeds can also easily be reconstructed. The state
 reconstruction algorithm is practical and we have executed it in practice. It
-follows that predicting the output of the \textsf{PCG} should not be considered
-challenging anymore.
+follows that predicting the output of the \textsf{PCG} should be considered
+practically feasible.
 
 While the \textsf{PCG} pseudo-random generator is not meant as a cryptographic
 primitive, obtaining an actual prediction algorithm requires the use of
@@ -282,9 +283,9 @@ bad guesses. This information can then be used in a subsequent and comparably
 inexpensive phase to recover the entire internal state. On average, the whole
 process requires a bit less than 20 000 CPU hours to complete.
 
-We implemented the algorithms in \textsf{C}, then asked the designer of the
-\textsf{PCG} family to send us ``challenge'' pseudo-random streams ; we ran our
-code and emailed back the (correct) seeds used to generate the challenge streams the next
+We implemented our algorithms, then asked the designer of the \textsf{PCG}
+family to send us ``challenge'' pseudo-random streams ; we ran our code and
+emailed back the (correct) seeds used to generate the challenge streams the next
 day.
 
 \paragraph{Related Work.} Deterministic pseudo-random generators can be traced
@@ -318,8 +319,7 @@ size of the modulus.
 Frieze \textit{et al}~\cite{Frieze} improved the efficiency of reconstruction
 algorithms in simpler cases. They supposed that the multiplier $a$ and the
 modulus $2^k$ were known and used lattice-based techniques to recover a
-truncated linear congruential generator more efficiently, with more truncated
-bits.  more efficiently.
+truncated linear congruential generator with more truncated bits.
 
 Later on, Joux and Stern extended this result to the case where the multiplier
 $a$ and the modulus $2^k$ are unknown, also using lattice
@@ -565,7 +565,7 @@ obtained by dropping least-significant bits cannot be arbitrarily far from a
 lattice point which reveals $U_0 \bmod 2^k$. Therefore, we may possibly
 reconstruct truncated geometric series by finding the lattice vector closest to
 the approximation we have. This means solving instances of the well-known
-\textsf{Closest Vector Problem} (CVP), a fundamental hard problem on
+\textsc{Closest Vector Problem} (CVP), a fundamental hard problem on
 lattices. It is NP-hard, and all known algorithms are exponential in the
 dimension of the lattice, yet they can be fairly practical up to dimension
 $\approx 70$.
@@ -603,7 +603,7 @@ such that $\sqrt{n} 2^{124} \leq \lambda_1\left(\mathcal{L}\right)$.
 
 Starting from $n=\lceil 122/6\rceil\rceil$, we computed the length of the
 shortest vector of the lattice spanned by $G_{n, 128}$ for each successive $n$
-until the condition holds. The \textsf{Shortest Vector Problem} is another
+until the condition holds. The \textsc{Shortest Vector Problem} (SVP) is another
 well-known lattice NP-hard problem; we used the (almost) off-the-shelf
 \texttt{G6K} library~\cite{AlbrechtDHKPS19}, which gave results very quickly by
 sieving. \texttt{fplll}~\cite{fplll} was too slow above dimension 50, in the
