@@ -8,7 +8,7 @@ CFLAGS = -O3 -Wall -Wextra -Werror -march=native -mtune=native -fopenmp -g
 LDFLAGS = -fopenmp
 LDLIBS = -lm
 
-all: main pre_validator
+all: main pre_validator success_proba
 
 main.o: CC=mpicc
 main: CC=mpicc	
@@ -16,8 +16,10 @@ main: CC=mpicc
 fonctions.o: fonctions.h
 fonctions_bonus.o: fonctions.h
 main.o: fonctions.h pcg_setseq.h
+success_proba.o: fonctions.h pcg_setseq.h
 
 main: fonctions.o main.o
+success_proba: fonctions.o success_proba.o
 pre_validator: fonctions.o pre_validator.o
 
 .PHONY: clean check
@@ -25,5 +27,3 @@ pre_validator: fonctions.o pre_validator.o
 clean:
 	rm -rf *.o main test test_falsenegative benchmark benchmark_omp pre_validator
 
-check: test test_falsenegative
-	prove -v ./test ./test_falsenegative

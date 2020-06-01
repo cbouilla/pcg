@@ -1356,6 +1356,39 @@ emailed back the seeds and received confirmation that they were indeed correct.
 We have therefore successfully taken the challenge of predicting the output of
 the \textsf{PCG64} generator.
 
+The analysis of section~\ref{sec:geometric} yields parameters that guarantee
+that the reconstruction procedure \emph{always} succeeds. In most cases, these
+parameters are pessimistic. We ran a series of experiments to determine more
+practical choices: using smaller-than-guaranteed values of $\ell$ (the number of
+guessed least-significant bits), we measured the success probability of the
+state reconstruction procedure. The results are shown in table~\ref{tab:empirical}.
+
+\begin{table}
+  \centering
+\begin{tabular}{|c|c|c|c|c|}
+  \cline{1-2}\cline{4-5}
+  \multicolumn{2}{|c|}{$n=3$ (section~\ref{sec:Cknown})} & &  \multicolumn{2}{c|}{$n=4$ (section~\ref{sec:cvp_small_2})} \\
+  \cline{1-2}\cline{4-5}
+  $\ell$ & Success proba. && $\ell$ & Success proba. \\
+  \cline{1-2}\cline{4-5}
+  \noalign{\vskip\doublerulesep
+  \vskip-\arrayrulewidth}
+  \cline{1-2}\cline{4-5}
+  16 & $\approx 0.125$     && 10 &  $\approx 0.12$ \\
+  \cline{1-2}\cline{4-5}
+  17 & $\approx 0.25$     && 11 &  $\approx 0.64$ \\
+  \cline{1-2}\cline{4-5}
+  18 & $\approx 0.5$      && 12 &  $\approx 0.995$ \\
+  \cline{1-2}\cline{4-5}
+  19 & 1                  && 13 &  1 \\
+  \cline{1-2}\cline{4-5}
+  20 & 1 (proved)         && 14 &  1 (proved) \\
+  \cline{1-2}\cline{4-5}
+\end{tabular}
+\caption{Empirical success probabilities with smaller parameters.}
+\label{tab:empirical}
+\end{table}
+
 \subsection{Known Increment}
 
 When the increment $c$ is known, algorithm~\ref{algo:known} is all it takes to
@@ -1364,8 +1397,15 @@ seed). We implemented it in \textsf{C}, using \textsf{OpenMP} to parallelize the
 outer loop that guess the least-significant bits of the state. This yields a
 simple multi-core implementation. We used the \texttt{gcc 8.3.0} compiler.
 
+From section~\ref{sec:cvp_small}, we know that guessing $\ell=20$
+least-significant bits ensures deterministic success. However, we observed
+empirically that $\ell=19$ works with probability $\approx 1$, and runs twice as
+fast. $\ell=18$ and $\ell=17$ run with probability $\approx 1/2$ and
+$\approx 1/4$ respectively, therefore are much less useful. In practice, we used
+$\ell=19$.
+
 We ran it on a server equipped with two 16-core \textsf{Intel Xeon Gold 6130 CPU
-  @ 2.10GHz} ``\emph{Skylake}'' CPUs. The inner loop does $2^{37}$ iterations
+  @ 2.10GHz} (``\emph{Skylake}'') CPUs. The inner loop does $2^{37}$ iterations
 and terminates in 42.3s, which makes 23 core minutes.
 
 These processors operate at a different frequency depending on the number of
@@ -1434,49 +1474,43 @@ clear the extra bit and the exponent, while correctly expanding the sign bit.
 \subsection{Unknown Increment}
 
 When the increment $c$ is known, the internal state of \textsf{PCG64} can be
-practically reconstructed from $X_0, \dots, X_{42}$ using the algorithms shows
+practically reconstructed from $X_0, \dots, X_{63}$ using the algorithms shown
 in section~\ref{sec:Cunknown}. Only algorithm~\ref{algo:unknown_1} is
 computationally expensive; we implemented it in \textsf{C}, while we implemented
 algorithms~\ref{algo:unknown_2} and~\ref{algo:last} in \textsf{Python}.
 
-We have shown that algorithm~\ref{algo:unknown_1} is correct when $\ell=13$. In
-fact, we empirically observed that it returns the right result with probability
-$\approx 66\%$ when $\ell=11$ and with probability $99\%$ when
-$\ell=12$. Decrementing $\ell$ reduces the workload by a factor of 4. Therefore,
-if $T$ denotes the running time when $\ell=13$, we actually used the following
-strategy:
-\begin{algorithmic}[1]
-\State Run with $\ell=11$ (if it succeeds, stop).
-\State Run with $\ell=11$ with different inputs.
-\State Run with $\ell=11$ with different inputs.
-\State Run with $\ell=12$.
-\State Run with $\ell=13$.
-\end{algorithmic}
-It is not difficult to check that the expected running time of this procedure is
-$\frac{1079}{10800} T \approx 0.1 T$. In our implementation, $T = 200,000$ CPU
+We have shown that algorithm~\ref{algo:unknown_1} is correct when $\ell=14$. The
+procedure does $2^{29 + 2\ell}$ iterations of the inner loop, so decreasing
+$\ell$ would really be interesting. Looking at table~\ref{tab:empirical}, we
+settle for $\ell=13$ in the worst case; let $T$ denotes the running time when
+$\ell=13$.
+
+It seems that the most promising strategy consists in choosing $\ell=11$; if the
+reconstruction procedure fails, then we try again with different inputs. The
+expected running time of this approach number of trials is
+$T/(16 \times 0.64) \approx T / 10.25$. In our implementation, $T = 200,000$ CPU
 hours, so the expected running time of the reconstruction procedure is about
 $20,000$ CPU hours. In fact we were lucky: on the challenge input, the first
-attempt with $\ell=11$ succeeded and took only $12,500$ CPU hours.
+attempt with $\ell=11$ succeeded, so the whole process took only $12,500$ CPU
+hours.
 
-The whole process actually ran in 35 wall-clock minutes using 512 cluster nodes,
-each equipped with two 20-cores \textsf{Intel Xeon Gold 6248 @ 2.5Ghz}
-(``\emph{Cascade Lake}''). The actual machine is the
-\verb|[----REDACTED FOR PEER REVIEW----]| computer located at the
-\verb|[----ALSO REDACTED----]| computation center. Note that on this particular
-parallel computer, running the algorithm with $\ell=13$ would take 10 hours
-using the same amount of resources, so the whole procedure \emph{is} practical,
-even in the absolute worst case.
+It actually ran in 35 wall-clock minutes using 512 cluster nodes, each equipped
+with two 20-cores \textsf{Intel Xeon Gold 6248 @ 2.5Ghz} (``\emph{Cascade
+  Lake}''). The actual machine is the \verb|[----REDACTED FOR PEER REVIEW----]|
+computer located at the \verb|[----ALSO REDACTED----]| computation center. Note
+that on this particular parallel computer, running the algorithm with $\ell=13$
+would take 10 hours using the same amount of resources, so the whole procedure
+\emph{is} practical, even in the absolute worst case.
 
 The outer loop of algorithm~\ref{algo:unknown_1} makes $2^{2\ell - 1}$
 iterations while the inner loop makes $2^{30}$ iterations. Using a single
 hardware execution context, we measured that one of the outer loop takes between
 41.5s and 44s (apparently not all nodes of the cluster are running at exactly
 the same speed, potentially because of ``turbo boost'' adjustments and thermal
-constraints; most of the time, they take exactly... 42 seconds). Because of this
-variability, we implemented a master-slave work distribution pattern, in which a
-master process dispatches iterations of the outer loop to slave processes. This
-also made checkpointing very easy. We used \textsf{MPI} for inter-process
-communication.
+constraints). Because of this variability, we implemented a master-slave work
+distribution pattern, in which a master process dispatches iterations of the
+outer loop to slave processes. This also made checkpointing very easy. We used
+\textsf{MPI} for inter-process communication.
 
 With $\ell=11$, the whole process took $2^{56.74}$ CPU cycles, which makes less
 than 6 cycles per iteration of the inner loop. We used essentially the same
