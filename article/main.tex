@@ -69,10 +69,10 @@ LIP6, CNRS, SU ? \\
 \begin{document}
 \maketitle
 
-\keywords{keywords}
+\keywords{\todo{keyword}}
 
 \begin{abstract}
-  blablabla
+  \todo{blabla}
 \end{abstract}
 
 \section{Introduction} %ce qu'on avait écrit pour le projet, peut-être pas incroyable...
@@ -96,7 +96,7 @@ encryption algorithm, by generating ``random'' masks to be used in the one-time
 pad. This is precisely what stream ciphers do.
 
 Not all pseudo-random generators are of cryptographic strength. In some
-applications, it is not necessarily necessary: to be used in Monte-Carlo
+applications, it is not necessarily necessary \todo{lourd}: to be used in Monte-Carlo
 numerical simulations or generate random choices in games, a relaxed,
 non-cryptographic notion of pseudo-randomness may be sufficient. This allows for
 faster algorithms. For instance, \textsf{python} standard library's
@@ -286,7 +286,7 @@ process requires a bit less than 20 000 CPU hours to complete.
 
 We implemented the algorithms in \textsf{C}, then asked the designer of the PCG
 family to send us ``challenge'' pseudo-random streams ; we ran our code and
-emailed back the seeds used to generate the challenge streams the next day.
+emailed back the seeds used to generate the challenge streams the next day.\todo{et on avait tout juste, enfin j'espère}
 
 \paragraph{Related Work.} Deterministic pseudo-random generators can be traced
 back to the work of Von Neumann and Metropolis on the ENIAC
@@ -308,13 +308,9 @@ linear congruential generator $x_{i+1} = ax_i + c \bmod 2^k$ when $a$ and $c$
 are unknown~\cite{Knuth85}; he gave an algorithm exponential in the number of
 truncated bits.
 
-The LCG have been largely studied, and considered as cryptographically insecure. 
+In 1989, J. Boyar studied further the problem \cite{Boyar1989}. She presented an algorithm which could predict a LCG where all the parameters (multiplier, increment and initial state) where unknown under the condition that the number of bit unrevealed was really small in comparison to the modulus.
 
-A reconstruction algorithm has been proposed by D. Knuth in 1985\cite{Knuth85}. The LCG he considered revealed only the upper bits of each internal state. The modulus $2^k$ was known while the multiplier $a$ and the increment $c$ weren't. This algorithm could reconstruct the LCG in $\mathcal{O}(2^l)$ where $l$ is the number of non revealed bit of each internal state.
-
-In 1989, J. Boyar improve the result in a first way \cite{Boyar1989}. She presented an algorithm which could predict a LCG where all the parameters (multiplier, increment and initial state) where unknown under the condition that the number of bit unrevealed was really small in comparison to the modulus.
-
-In 1988, A. Frieze \textit{et al} \cite{Frieze} improve the result in a second way. They supposed that the multiplier $a$ and the modulus $2^k$ were known and used lattice-based technique to recover the LCG more efficiently.
+In 1988, A. Frieze \textit{et al} \cite{Frieze} improved the efficiency of reconstruction algorithms in simpler cases. They supposed that the multiplier $a$ and the modulus $2^k$ were known and used lattice-based technique to recover the LCG more efficiently.
 
 Here we will use techniques presented in \cite{Frieze} to reconstruct some Lehmer's generator (LCG where the increment $c$ is zero) \cite{Lehmer}.
 
@@ -342,7 +338,7 @@ congruential generator modulo~$2^{128}$. More precisely:
 \[
   S_{i+1} = a S_i + c \bmod 2^{128},
 \]
-Where is a fixed 126-bit constant. The first initial state $S_0$ is the seed of
+Where \todo{il manque une lettre, je suppose que c'est a} is a fixed 126-bit constant. The first initial state $S_0$ is the seed of
 the generator. The increment $c$ may be specified by the user of the PRNG to
 produce different output streams with the same seed (just as the IV acts in a
 stream cipher). If no value of $c$ is specified, then a default increment is
@@ -446,7 +442,7 @@ In the rest of this paper, we often perform arithmetic operations on integers
 where only some bits are known. This leads to generation of unknown carries. If
 $a, b$ are integers modulo $2^{128}$ and $0\leq i<j<128$, then there is a
 \emph{carry} $0 \leq \gamma \leq 1$ (resp. a \emph{borrow}
-$0 \leq 1 \leq \beta$) such that:
+$0 \leq 1 \leq \beta$ \todo{je pense pas que ce soit ça}) such that:
 \begin{align}
   (a \boxplus b)[i:j]  &= a[i:j] \boxplus  b[i:j] \boxplus  \gamma, \label{eq:caryy}  \\
   (a \boxminus b)[i:j] &= a[i:j] \boxminus b[i:j] \boxminus \beta.  \label{eq:borrow}
@@ -572,7 +568,7 @@ the \emph{first minimum} of the lattice, is denoted by $\lambda_1(\mathcal{L})$.
 %What can we say about $|CVP(L,2^{k-\ell}\widetilde{T})-U'|$ ?
 By the triangular inequality, we have:
 \begin{align*}
-|\CVP(\mathcal{L}, T) - U'| %&= \left| \CVP\left( \mathcal{L}, 2^{k-\ell}\widetilde{T} \right) \riht| + \left|2^{k-\ell}\widetilde{T} - U'\right| %-2^{k-\ell}\widetilde{T}+2^{k-\ell}\widetilde{T}-U'|\\
+|\CVP(\mathcal{L}, 2^{k-\ell}\widetilde{T}) - U'| %&= \left| \CVP\left( \mathcal{L}, 2^{k-\ell}\widetilde{T} \right) \riht| + \left|2^{k-\ell}\widetilde{T} - U'\right| %-2^{k-\ell}\widetilde{T}+2^{k-\ell}\widetilde{T}-U'|\\
                              & \leq \left| \CVP\left(\mathcal{L}, 2^{k-\ell}\widetilde{T} \right) - 2^{k-\ell}\widetilde{T}\right | + \left|2^{k-\ell}\widetilde{T} - U'\right|.
 \end{align*}
 But, as the vector $U'$ belongs to the lattice, by definition of the closest
@@ -580,12 +576,12 @@ vector and by lemma~\ref{thm:close}:
 % $|CVP(L,2^{k-\ell}\widetilde{T})-2^{k-\ell}\widetilde{T}| \leq
 % |2^{k-\ell}\widetilde{T}-U'| $, hence
 \[
-  |\CVP(\mathcal{L}, T) - U'| \leq 2 \left|2^{k-\ell} \widetilde{T} - U' \right| \leq 4 \sqrt{n} 2^{k-\ell}.
+  |\CVP(\mathcal{L}, 2^{k-\ell}\widetilde{T}) - U'| \leq 2 \left|2^{k-\ell} \widetilde{T} - U' \right| \leq 4 \sqrt{n} 2^{k-\ell}.
 \]
 
 If we can prove that the right side of this inequality is smaller than the first
 minimum of the lattice $\lambda_1(\mathcal{L})$, then we would have proved that
-$\CVP(\mathcal{L}, T)$ indeed reveals $U_0 \bmod 2^k$.
+$\CVP(\mathcal{L}, 2^{k-\ell}\widetilde{T})$ indeed reveals $U_0 \bmod 2^k$.
 
 In section~\ref{sec:big_cvp}, we will be facing the problem of reconstructing a
 geometric sequence modulo $2^{128}$ given arbitrarily many (noisy versions of
@@ -1487,7 +1483,7 @@ $\mathcal{C} = \cup_i \mathcal{C}_i$. This slightly increase the probability of
 false positives, but makes our code slightly simpler.
 
 \section{Conclusion}
-
+\todo{y'a pas de conclusion}
 % pas dans la version anonyme.
 % \paragraph{Acknowledgements.} The authors thank Damien Vergnaud and Vincent
 % Zucca for helpful discussions. We also thank Léo Ducas for helping with the
