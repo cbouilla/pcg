@@ -191,13 +191,6 @@ void master(const u64 (*X)[nboutput])
 	    break;
 	}
 
-#if 0
-	/* DEBUG */
-	int W_0 = 0x01d0;
-	int W_c = 0x035b;
-	task_ptr = (W_0 << (known_low - 1)) + (W_c - 1) / 2;
-#endif
-
 	FILE *journal_file = fopen(journal_filename, "a");
 	if (journal_file == NULL)
 		err(1, "Impossible to open journal file %s for append\n", journal_filename);	
@@ -306,6 +299,7 @@ int main(int argc, char **argv)
 
 	init_var_globales();
 	
+	// challenge input from M. O'Neil
 	u64 X[nboutput];
 	X[ 0] = 0x46b9d66bb1e9fbf0;
 	X[ 1] = 0xc0b7382496f0e363;

@@ -5,6 +5,9 @@
 
 #include "fonctions.h"
 
+/* auxiliary script to determine the success probability of the reconstruction procedure
+   with small ell */
+
 FILE *f; 
 
 bool run_test()
@@ -29,41 +32,21 @@ bool run_test()
 	for (int i = 0; i < nbiter; i++)
 		rot[i] = (int) (S[i] >> 122);
 	
-      	// for (int i = 0; i < nbiter; i++)
-      	// 	printf("X[%d] = %016llx\n", i, X[i]);
-      	// printf("W0 = %llx\n", W0);
-
-
 	struct task_t task;
 	setup_task(W0, X, &task);
+	refresh_task(rot, &task);
 
-	//int rot[nbiter] = {0, 0, 0};
-	
-	//for (int r = 0 ; r < 1 << (nbiter*6) ; r++) {
-	//	/* bump rotations */
-	//    rot[0] = (rot[0] + 1) % 64;
-	//    int i = 0;
-	//    while (rot[i] == 0 && i < nbiter) {
-	//	i++;
-	//	rot[i] = (rot[i] + 1) % 64;
-	//    }
-	//    if (i > 0)
-	    	refresh_task(rot, &task);
-
-	    pcg128_t S_target[nbiter];
-	    if (solve(S_target, rot, &task)) {
+	pcg128_t S_target[nbiter];
+	if (solve(S_target, rot, &task)) {
 	    	assert(S_target[0] == S[0]);
 		return true;
-	    }
-	//}
+	}
 	return false;
 }
 
 
 int main()
 {
-    
-    /*  INITIALISATION DES PARAMETRES  */    
     init_var_globales();
     f = fopen("/dev/urandom", "r");
     if (f == NULL) {

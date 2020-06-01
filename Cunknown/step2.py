@@ -57,24 +57,10 @@ Greduite1 = getGreduite(nbiter - 1, 2**64)
 Greduite2 = getGreduite(nboutput - 1, 2**(128 - known_low))
 
 
-#### Récupération des données ####
-#def recupDonnees():
-#   listfiles = os.listdir('results')
-#   print(listfiles)
-#   listDonnees = []
-#   for i in range(listfiles):
-#       listDonnees.append[]
-#       f = open(listfiles[i], "r")
-#       while(1):
-#           s = f.readline()
-            
-
 
 def sortiesGenerateur():#OK !
     c = random.randrange(N) | 1
     S = [random.randrange(N)]
-    #c=6364136223846793005 * 2^64 + 1442695040888963407#increment par defaut de pcg (connu)
-    #S=[8487854484825256858 + 11929896274893053136 * 2^64]
     for i in range (nboutput - 1):
         S.append((S[i] * a + c) % N)
     X = []
@@ -246,6 +232,7 @@ def full_DS(X, W0, WC, rots):
 
 
 if __name__ == '__main__':
+    # challenge input from M. O'Neil
     X = [0] * nboutput
     X[ 0] = 0x46b9d66bb1e9fbf0;
     X[ 1] = 0xc0b7382496f0e363;

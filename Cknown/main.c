@@ -19,10 +19,7 @@ void result_found(pcg128_t S, double start)
 
 
 int main()
-{
-    
-    /*  INITIALISATION DES PARAMETRES  */
-    
+{    
     init_var_globales();
 	
     /********** INPUT ***********/
