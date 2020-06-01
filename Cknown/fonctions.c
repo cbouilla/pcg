@@ -35,7 +35,7 @@ void init_var_globales(){
     //increment polynome polC OK !
     polC[0] = 0;
     pcg128_t powA =1;
-    for (int i = 1; i < nbiter ; i++){
+    for (int i = 1; i < 3 ; i++){
         polC[i] = polC[i-1] + powA * c;
         powA *= a;
     }
@@ -65,7 +65,7 @@ static u64 rot(u64 x, int i)
 void getPolW(pcg128_t *polW, u64 W0)
 { //OK !
     polW[0] = W0;
-    for(int i = 1 ; i < nbiter ; i++){
+    for(int i = 1 ; i < 3 ; i++){
         polW[i] = polW[i-1] * a;
     }
 }
@@ -73,7 +73,7 @@ void getPolW(pcg128_t *polW, u64 W0)
 void getSumPol(u64* sumPol, u64* sumPolY, const pcg128_t* polW)
 {
     pcg128_t sum;
-    for(int i = 0 ; i < nbiter ; i++){
+    for(int i = 0 ; i < 3 ; i++){
         sum = polC[i] + polW[i];
         sumPol[i] = sum;
         sumPolY[i] = (sum >> 58) % (1 << (known_low + 6));
@@ -98,9 +98,9 @@ static inline long long crazy_round(double x)
 
 void setup_task(u64 W0, const u64 *urX, struct task_t *task)
 {
-        pcg128_t polW[nbiter]; // temporary byproduct
-        u64 sumPol[nbiter]; // temporary byproduct
-        u64 sumPolY[nbiter]; // temporary byproduct
+        pcg128_t polW[3]; // temporary byproduct
+        u64 sumPol[3]; // temporary byproduct
+        u64 sumPolY[3]; // temporary byproduct
         
         // initialise polW à partir de W0
         getPolW(polW, W0);
@@ -108,8 +108,8 @@ void setup_task(u64 W0, const u64 *urX, struct task_t *task)
         // initialise sumPol et sumPolY à partir de polW
         getSumPol(sumPol, sumPolY, polW);
 
-        u64 Yprime[nbiter][64];
-        for (int i = 0; i < nbiter; i++)
+        u64 Yprime[3][64];
+        for (int i = 0; i < 3; i++)
                 for (int j = 0; j < 64; j++) {
                         u64 X = rot(urX[i], j);
                         u64 Y = (((sumPol[i] ^ X) % (1 << known_low)) << 6) + (j ^ (X >> 58));
@@ -117,19 +117,19 @@ void setup_task(u64 W0, const u64 *urX, struct task_t *task)
                         task->X[i][j] = X;
                 }
 
-        for (int i = 0; i < nbiter; i++)
-                for (int j = 0; j < nbiter; j++)
+        for (int i = 0; i < 3; i++)
+                for (int j = 0; j < 3; j++)
                         for (int k = 0; k < 64; k++)
-                                task->Ginv_Yprime[i][j][k] = invG[i * nbiter + j] * Yprime[j][k];
+                                task->Ginv_Yprime[i][j][k] = invG[i * 3 + j] * Yprime[j][k];
 
         task->sumPol0 = sumPol[0];
 }
 
 void refresh_task(const int *rot, struct task_t *task)
 {
-    for (int i = 0; i < nbiter; i++) {
+    for (int i = 0; i < 3; i++) {
         task->tmp2[i] = 0;
-        for(int j = 1; j < nbiter; j++)
+        for(int j = 1; j < 3; j++)
             task->tmp2[i] += task->Ginv_Yprime[i][j][rot[j]];
     }
 }
@@ -137,7 +137,7 @@ void refresh_task(const int *rot, struct task_t *task)
 bool solve(pcg128_t* S, const int* rot, const struct task_t *task)
 {  
     u64 Sprim0 = 0;
-    for (int i = 0; i < nbiter; i++) {
+    for (int i = 0; i < 3; i++) {
         double tmp2 = task->tmp2[i] + task->Ginv_Yprime[i][0][rot[0]];
         Sprim0 += Greduite[i] * crazy_round(tmp2);
     }
@@ -147,7 +147,7 @@ bool solve(pcg128_t* S, const int* rot, const struct task_t *task)
     S[0] = (((pcg128_t) (Smod ^ task->X[0][rot[0]])) << 64) + ((pcg128_t) Smod);
 
     // clock PCG two times, check that we reconstruct the correct (de-rotated) output
-    for (int i = 1; i < nbiter; i++) {
+    for (int i = 1; i < 3; i++) {
         S[i] = S[i - 1] * a + c;
         u64 XX = S[i] ^ (S[i] >> 64);
         if (XX != task->X[i][rot[i]])
