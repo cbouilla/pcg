@@ -17,7 +17,6 @@ int main()
 		perror("Something went wrong when reading /dev/urandom");
 		exit(EXIT_FAILURE);
 	}
-	seed = (((pcg128_t) 0x5b3d418b8b51364b) << 64) + ((pcg128_t) 0x74eed710223e763f);
 	printf("Seed : %016" PRIx64 " %016" PRIx64 "\n\n", (uint64_t) (seed >> 64), (uint64_t) seed);
 
 	pcg64s_random_t rng;

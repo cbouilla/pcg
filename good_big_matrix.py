@@ -105,3 +105,6 @@ for i in range(64):
 
 #target = [G[0, i] + random.randrange(-2**120, 2**120) for i in range(64)]
 print(log(GG[0].norm(), 2))
+
+# SVP = 1h20 pour GG (approx.  HKZ-réduite)
+#     = ???? pour G (seulement LLL-réduite)

@@ -59,6 +59,8 @@ def sortiesGenerateur(S0, c, k):
 
 
 if __name__ == '__main__':
+
+    # challenge input from M. O'Neil
     X = [0] * 48
     X[ 0] = 0x46b9d66bb1e9fbf0;
     X[ 1] = 0xc0b7382496f0e363;
