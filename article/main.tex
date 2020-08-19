@@ -49,7 +49,7 @@
 
 %\newcommand{\todo}[1]{\textcolor{red}{TODO:[#1]}}
 
-\title{Predicting the PCG Pseudo-Random Number Generator In Practice} 
+\title{Practical seed-recovery for the PCG Pseudo-Random Number Generator} 
 
 \author{Charles Bouillaguet\inst{1} \and Florette Martinez\inst{2} \and Julia Sauvage\inst{3}}
 
@@ -703,14 +703,14 @@ most-significant bits such that:
 
 \begin{table}[htbp!]
   \centering
-  \begin{tabular}{|c|Sc|Sc|c|}
+  \begin{tabular}{|c|Sc|Sc|c|Sc|}
 	\hline
-	n & $\vvvert H \vvvert \times \left\vvvert H^{-1} \right\vvvert$ & $ \lambda_1(\mathcal{L}) $ & minimum $t$ \\
+	n & $\vvvert H \vvvert \times \left\vvvert H^{-1} \right\vvvert$ & $ \lambda_1(\mathcal{L}) $ & minimum $t$ & \(\left(1 + \vvvert H \vvvert \times \left\vvvert H^{-1} \right\vvvert \right) 2 \sqrt{n} 2^{64-t}\)\\
 	\hline
-	3 & 2.87 & $4.09e^{12} \simeq 2^{41.9}$ & 26 \\
-	4 & 2.06 & $2.44e^{14} \simeq 2^{47.8}$ & 20 \\
-	5 & 3.77 & $1.72e^{15}\simeq 2^{50.6}$ & 18 \\
-	6 & 2.69 & $1.03e^{16}\simeq 2^{53.2}$ & 15 \\
+	3 & 2.87 & $4.09e^{12} \simeq 2^{41.9}$ & 26 & \(3.69e^{12}\) \\
+	4 & 2.06 & $2.44e^{14} \simeq 2^{47.8}$ & 20 &\(2.15e^{14}\)\\
+	5 & 3.77 & $1.72e^{15}\simeq 2^{50.6}$ & 18 &\(1.5e^{15}\)\\
+	6 & 2.69 & $1.03e^{16}\simeq 2^{53.2}$ & 15 &\(1.02e^{16}\)\\
 	\hline
   \end{tabular}
   \caption{minimal $t$ needed for a given $n$}
@@ -1190,7 +1190,7 @@ eq.~\eqref{eq:consistency} combined with this observation to discard bad guesses
 \end{algorithm}
 
 The heart of the algorithm is again the reconstruction of a truncated geometric
-progression knowing the \(t=\ell+6\) upper bits. Looking at table~\ref{tab:babai}, we see that the best choice
+progression knowing the \(t=\ell+6\) upper bits of four consecutive terms. Looking at table~\ref{tab:babai}, we see that the best choice
 consists in guessing 5 consecutive rotations and $\ell=14$ least-significant
 bits. Therefore, \textsc{ReconstructPartialDifference} does $2^{57}$ iterations
 of the inner loop, and succeeds deterministically.
@@ -1198,8 +1198,8 @@ of the inner loop, and succeeds deterministically.
 \subsection{Predicting all the Rotations}
 
 Knowing the values of $\Delta S_0[0:64+\ell]$ as well as the $\ell$
-least-significant bits of $S_0$ and $c$ is sufficient to get rid the nastier
-feature \textsf{PCG64}: armed with this knowledge, we can determine all the
+least-significant bits of $S_0$ and $c$ is sufficient to get rid of the nastier
+feature of \textsf{PCG64}: armed with this knowledge, we can determine all the
 subsequent rotations deterministically, at negligible cost, using
 eq~\eqref{eq:find_rotation}. For each index $i$, it suffices to try the $64$
 possible values of $r_i$; only one should satisfy
@@ -1256,7 +1256,7 @@ borrows $B$ such that $\Delta S_i[122:128] \boxplus C_i= r_{i+1} \boxminus r_i$.
 Reconstructing $\Delta S_0$ from the $r_i$ is exactly the problem discussed in
 section~\ref{sec:cvp_big}. This can be done by solving an instance of CVP in
 dimension $63$. We use the off-the-shelf CVP solver embedded in \texttt{fplll}:
-it runs in no measurable time.
+it runs in negligible time.
 
 \subsection{Complete State Reconstruction}
 
