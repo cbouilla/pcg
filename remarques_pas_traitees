@@ -1,0 +1,19 @@
+-As the attack use LLL to solve SVP in ``small" dimension, is there any argument on the security/insecurity of PCG with larger state size?
+
+-Can the authors give an estimation of the cost of the ``very simple strategy" described in page 10?
+
+- I'm not a fan of the title, even if you don't focus on a cryptographic generator, seed recovery is (for me) stronger than "predicting", so maybe you could change the title in that sense (but it is not a requirement, more a remark
+
+-The authors could tabulate the exact computational complexity of each phase of the attack.
+
+-321 may the table should also list the entire product (1+|||H||| * |||H^{-1}|||) sqrt(n) 2^{65-l}  
+
+-382 What happens when guess is wrong ?
+
+-469 "is sufficient to get rid the nastier feature PCG64" : what does this sentence mean ?
+
+-464 again table 1 for n=5, we have l=18 ##j'ai un probleme là ###
+
+-487 "it runs in no measurable time." - what does this mean .. surely the cpu time can be computed ?
+
+ 

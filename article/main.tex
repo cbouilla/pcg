@@ -1,5 +1,5 @@
 % !TeX spellcheck = en
-\documentclass[preprint,svgnames,journal=tosc]{iacrtrans}
+\documentclass[submission,svgnames,journal=tosc]{iacrtrans}
 
 \usepackage[utf8]{inputenc}
 \usepackage{amssymb, amsmath, amsfonts, amscd}
@@ -120,7 +120,7 @@ linear congruential generator by default to implement the \texttt{rand}
 function.
 
 In the realm of non-cryptographic random generators, a PRG is deemed ``good
-enough'' it is passes \emph{some} efficient statistical tests --- whereas the
+enough'' if it passes \emph{some} efficient statistical tests --- whereas the
 cryptographic notion of pseudo-randomness asks that it passes \emph{any}
 efficient test. There are \textit{de facto} statistical test suites; an initial
 battery of randomness tests for RNGs was suggested by Knuth in the 1969 first
@@ -273,11 +273,11 @@ primitive, obtaining an actual prediction algorithm requires the use of
 cryptanalytic techniques. Making it practical requires in addition a non-trivial
 implementation effort.
 
-Our algorithm reconstruct the internal state using a ``guess-and-determine''
+Our algorithm reconstructs the internal state using a ``guess-and-determine''
 approach: some bits of the internal state are guessed ; assuming the guesses are
 correct, some other information is computed ; a consistency check discards bad
 guesses early on ; then candidate internal states are computed and fully
-tested. The problem actually come in two distinct flavors.
+tested. The problem actually comes in two distinct flavors.
 
 When the increment is known (for instance when it is the default value), a
 simplified prediction algorithm recovers the internal state from 192 bits of
@@ -515,24 +515,24 @@ congruential generators is due to Frieze \textit{et al.}~\cite{Frieze}.
 Let $U$ be a vector of $n$ integers modulo $2^k$ such that
 $U_{i+1} = a U_i \bmod 2^k$; it is a geometric progression of common ratio $a$,
 modulo $2^k$, therefore $(U_0, \dots, U_{n-1}) \in \mathcal{L}$. Let
-$T_i = U_i[k-\ell:k]$ denote the top $\ell$ bits of $U_i$, and let $N$ denote an
+$T_i = U_i[k-t:k]$ denote the top $t$ bits of $U_i$, and let $N$ denote an
 arbitrary ``noise vector'' such that $N_i \in \{-1, 0, 1\}$. Finally, set
-$\widetilde{T}_i = T_i + N_i \bmod 2^{\ell}$.  We will be facing the following
+$\widetilde{T}_i = T_i + N_i \bmod 2^{t}$.  We will be facing the following
 problem (``reconstructing noisy truncated geometric series'') several times:
 \begin{description}
-\item[INPUT]  $\widetilde{T} = (\widetilde{T}_0, \dots, \widetilde{T}_{n-1}) \in \left(\mathbb{Z}_{2^\ell}\right)^n$, a (noisy) version of $U$ truncated to the top $\ell$ bits.
+\item[INPUT]  $\widetilde{T} = (\widetilde{T}_0, \dots, \widetilde{T}_{n-1}) \in \left(\mathbb{Z}_{2^t}\right)^n$, a (noisy) version of $U$ truncated to the top $t$ bits.
 \item[OUTPUT] $U_0 \bmod 2^k$, the first term of the (non-truncated) geometric sequence.
 \end{description}
 
 We will be facing a ``high-dimension'' instance in section~\ref{sec:big_cvp}
 and many ``low-dimension'' in sections~\ref{sec:Cknown}
 and~\ref{sec:Cunknown}. The rest of this section discusses algorithmic tools to
-solve these problems. We first claim that $2^{k-\ell} \widetilde{T}$ is
-``close'' to a point of the lattice $\mathcal{L}_{n,k}$.
+solve these problems. We first claim that $2^{k-t} \widetilde{T}$ is
+``close'' to a point of the lattice $\mathcal{L}$.
 
 \begin{lemma}\label{thm:close}
   There exists $U' \in \mathcal{L}$ such that $U'_i \equiv U_i \bmod 2^k$
-  and $\left\lVert U' -2^{k-\ell} \widetilde{T} \right\rVert \leq 2 \sqrt{n} 2^{k-\ell}$.
+  and $\left\lVert U' -2^{k-t} \widetilde{T} \right\rVert \leq 2 \sqrt{n} 2^{k-t}$.
 \end{lemma}
 
 
@@ -541,34 +541,34 @@ solve these problems. We first claim that $2^{k-\ell} \widetilde{T}$ is
   \begin{itemize}
   \item If $\widetilde{T}_i = T_i + N_i$ (without modulo), then we have:
     \begin{align*}
-      \left| 2^{k-\ell}\widetilde{T}_i-U_i \right| &= \left| 2^{k-\ell}(T_i + N_i)-U_i \right| 
-                                                     = \left| 2^{k-\ell}N_i - U_i[0,k-\ell] \right| \\
-                                                   &\leq \left| 2^{k-\ell}N_i\rvert + \lvert U_i[0,k-\ell] \right| 
+      \left| 2^{k-t}\widetilde{T}_i-U_i \right| &= \left| 2^{k-t}(T_i + N_i)-U_i \right| 
+                                                     = \left| 2^{k-t}N_i - U_i[0,k-t] \right| \\
+                                                   &\leq \left| 2^{k-t}N_i\rvert + \lvert U_i[0,k-t] \right| 
                                                    % &\leq 2^{k-\ell} + 2^{k-\ell} - 1\\
-      \leq 2^{k-\ell +1 }.
+      \leq 2^{k-t +1 }.
     \end{align*}
     
   \item Otherwise, there are two possible ``wraparound'' cases:
     \begin{itemize}
-    \item Either $T_i = 0$ and $N_i = -1$, which leads to $\widetilde{T}_i = 2^\ell-1$. 
-      In this case, we have $U_i = U_i[0,k-\ell]$ and we set $U'_i = U_i + 2^{k}$ (note that this amount to adding a lattice vector to $U'$, so $U'$ stays in the lattice). We have:
+    \item Either $T_i = 0$ and $N_i = -1$, which leads to $\widetilde{T}_i = 2^t-1$. 
+      In this case, we have $U_i = U_i[0,k-t]$ and we set $U'_i = U_i + 2^{k}$ (note that this amount to adding a lattice vector to $U'$, so $U'$ stays in the lattice). We have:
       \[
-        \left| 2^{k-\ell}\widetilde{T}_i-(U_i + 2^k) \right| = %\left| 2^{k-\ell}(2^\ell -1) -(U_i + 2^k) \right| =
-        \left| 2^{k-\ell} + U_i[0,k-\ell]\right| \leq 2^{k-\ell + 1}. 
+        \left| 2^{k-t}\widetilde{T}_i-(U_i + 2^k) \right| = %\left| 2^{k-t}(2^t -1) -(U_i + 2^k) \right| =
+        \left| 2^{k-t} + U_i[0,k-t]\right| \leq 2^{k-t + 1}. 
       \]
       
-    \item Or $T_i = 2^{\ell}-1$ and $N_i = +1$, which leads to
+    \item Or $T_i = 2^{t}-1$ and $N_i = +1$, which leads to
       $\widetilde{T}_i = 0$.  This implies that
-      $U_i= 2^k-2^{k-\ell} + U_i[0,k-\ell]$; we set $U'_i = U_i - 2^k$ (again,
+      $U_i= 2^k-2^{k-t} + U_i[0,k-t]$; we set $U'_i = U_i - 2^k$ (again,
       with this modification $U'$ stays in the lattice), and we find:
       \[
-        \left| 2^{k-\ell}\widetilde{T}_i-(U_i - 2^k) \right| %=\left| 0 -(U_i - 2^k) \right|
-        = \left| 2^k-2^{k-\ell} + U_i[0,k-\ell] - 2^k\right| \leq 2^{k-\ell + 1}.
+        \left| 2^{k-t}\widetilde{T}_i-(U_i - 2^k) \right| %=\left| 0 -(U_i - 2^k) \right|
+        = \left| 2^k-2^{k-t} + U_i[0,k-t] - 2^k\right| \leq 2^{k-t + 1}.
       \]
     \end{itemize}
   \end{itemize}
   In the end, we have
-  $\left\| U' -2^{k-\ell} \widetilde{T} \right\| \leq 2 \sqrt{n} 2^{k-\ell}$,
+  $\left\| U' -2^{k-t} \widetilde{T} \right\| \leq 2 \sqrt{n} 2^{k-t}$,
   and $U' \equiv U \mod 2^k $.
 \end{proof}
 
@@ -587,36 +587,36 @@ $\approx 70$.
 
 Let $\CVP(\mathcal{L}, x)$ denote the vector of $\mathcal{L}$ closest to the
 input vector $x$. Using the same notations as above, we want to know if
-$\CVP\left(\mathcal{L}, 2^{k-\ell}\widetilde{T}\right)$ is indeed $U'$. This
-will necessarily be the case when $\|2^{k-\ell}\widetilde{T} - U'\|$ is smaller
+$\CVP\left(\mathcal{L}, 2^{k-t}\widetilde{T}\right)$ is indeed $U'$. This
+will necessarily be the case when $\|2^{k-t}\widetilde{T} - U'\|$ is smaller
 than the length of the shortest non-zero vector of $\mathcal{L}$ --- this quantity,
 the \emph{first minimum} of the lattice, is denoted by $\lambda_1(\mathcal{L})$.
 %What can we say about $|CVP(L,2^{k-\ell}\widetilde{T})-U'|$ ?
 By the triangular inequality, we have:
 \begin{align*}
-|\CVP(\mathcal{L}, 2^{k-\ell}\widetilde{T}) - U'| %&= \left| \CVP\left( \mathcal{L}, 2^{k-\ell}\widetilde{T} \right) \riht| + \left|2^{k-\ell}\widetilde{T} - U'\right| %-2^{k-\ell}\widetilde{T}+2^{k-\ell}\widetilde{T}-U'|\\
-                             & \leq \left| \CVP\left(\mathcal{L}, 2^{k-\ell}\widetilde{T} \right) - 2^{k-\ell}\widetilde{T}\right | + \left|2^{k-\ell}\widetilde{T} - U'\right|.
+|\CVP(\mathcal{L}, 2^{k-t}\widetilde{T}) - U'| %&= \left| \CVP\left( \mathcal{L}, 2^{k-\ell}\widetilde{T} \right) \riht| + \left|2^{k-\ell}\widetilde{T} - U'\right| %-2^{k-\ell}\widetilde{T}+2^{k-\ell}\widetilde{T}-U'|\\
+                             & \leq \left| \CVP\left(\mathcal{L}, 2^{k-t}\widetilde{T} \right) - 2^{k-t}\widetilde{T}\right | + \left|2^{k-t}\widetilde{T} - U'\right|.
 \end{align*}
 But, as the vector $U'$ belongs to the lattice, by definition of the closest
 vector and by lemma~\ref{thm:close}:
 % $|CVP(L,2^{k-\ell}\widetilde{T})-2^{k-\ell}\widetilde{T}| \leq
 % |2^{k-\ell}\widetilde{T}-U'| $, hence
 \[
-  |\CVP(\mathcal{L}, 2^{k-\ell}\widetilde{T}) - U'| \leq 2 \left|2^{k-\ell} \widetilde{T} - U' \right| \leq 4 \sqrt{n} 2^{k-\ell}.
+  |\CVP(\mathcal{L}, 2^{k-t}\widetilde{T}) - U'| \leq 2 \left|2^{k-t} \widetilde{T} - U' \right| \leq 4 \sqrt{n} 2^{k-t}.
 \]
 
 If we can prove that the right side of this inequality is smaller than the first
 minimum of the lattice $\lambda_1(\mathcal{L})$, then we would have proved that
-$\CVP(\mathcal{L}, 2^{k-\ell}\widetilde{T})$ indeed reveals $U_0 \bmod 2^k$.
+$\CVP(\mathcal{L}, 2^{k-t}\widetilde{T})$ indeed reveals $U_0 \bmod 2^k$.
 
 In section~\ref{sec:big_cvp}, we will be facing the problem of reconstructing a
 geometric sequence modulo $2^{128}$ given arbitrarily many (noisy versions of
 the) most-significant $6$ bits of successive elements of the sequence. Therefore
-we have $k=128$ and $\ell=6$, and we wish to determine the required number of
+we have $k=128$ and $t=6$, and we wish to determine the required number of
 samples, \textit{i.e.} the value of $n$. This means finding the values of $n$
 such that $\sqrt{n} 2^{124} \leq \lambda_1\left(\mathcal{L}\right)$.
 
-Starting from $n=\lceil 122/6\rceil\rceil$, we computed the length of the
+Starting from $n=\lceil 122/6\rceil$, we computed the length of the
 shortest vector of the lattice spanned by $G_{n, 128}$ for each successive $n$
 until the condition holds. The \textsc{Shortest Vector Problem} (SVP) is another
 well-known lattice NP-hard problem; we used the (almost) off-the-shelf
@@ -633,7 +633,7 @@ the geometric sequence with
 \]
 then reducing the terms modulo $2^{128}$ in zero-centered representation
 (subtracting $2^{128}$ to $U_i$ if $U_i > 2^{127}$). It follows that when
-$n\geq 63, k=128$ and $\ell=6$, any CVP oracle will return a vector congruent to
+$n\geq 63, k=128$ and $t=6$, any CVP oracle will return a vector congruent to
 the original $U$ when given $\widetilde{T}$.
 
 
@@ -665,26 +665,26 @@ is also spanned by the rows of $H$. For instance, with $n=3$:
                 8655886039732 & 3303731088004 & 6319848582548
               \end{array}\right)
 \]
-Set $S = 2^{k-\ell} \widetilde{T}H^{-1}$; as $2^{k-\ell}\widetilde{T}$ is not
-\textit{a priori} an element of the lattice, $S$ need not be an integer
+Set $S = 2^{k-t} \widetilde{T}H^{-1}$; as $2^{k-t}\widetilde{T}$ does not belong
+\textit{a priori} to the lattice, $S$ does not have to be an integer
 vector. Let then $R$ denote the rounding of $S$, \textit{i.e.}
 $R_i = \left\lfloor S_i \right\rceil$. Then $R H$ is an element of the
 lattice. Under the right conditions, it will be the vector of the lattice
-closest to $2^{k-\ell} \widetilde{T}$. Indeed:
+closest to $2^{k-t} \widetilde{T}$. Indeed:
 \begin{align*}
-\lVert U' - R H \rVert &= \left\| U' - \left(R - 2^{k-\ell}\widetilde{T}H^{-1} + 2^{k-\ell}\widetilde{T}H^{-1}\right)H \right\| \\
-&= \left\| U' - 2^{k-\ell}\widetilde{T} - \left(R - 2^{k-\ell} \widetilde{T}H^{-1}\right )H \right\| \\
-&\leq \left\| U' - 2^{k-\ell}\widetilde{T} \right\| + \left\| R - 2^{k-\ell}\widetilde{T}H^{-1} \right\| \times \vvvert H \vvvert.
+\lVert U' - R H \rVert &= \left\| U' - \left(R - 2^{k-t}\widetilde{T}H^{-1} + 2^{k-t}\widetilde{T}H^{-1}\right)H \right\| \\
+&= \left\| U' - 2^{k-t}\widetilde{T} - \left(R - 2^{k-t} \widetilde{T}H^{-1}\right )H \right\| \\
+&\leq \left\| U' - 2^{k-t}\widetilde{T} \right\| + \left\| R - 2^{k-t}\widetilde{T}H^{-1} \right\| \times \vvvert H \vvvert.
 \end{align*}
 By definition, $R$ is the closest integer vector to
-$2^{k-\ell}\widetilde{T}H^{-1}$. But as $U'$ is an element of the lattice,
-$U'H^{-1}$ is an integer vector. Thus $R-2^{k-\ell}\widetilde{T}G^{-1}$ is
-shorter than $U'G^{-1}-2^{k-\ell}\widetilde{T}G^{-1}$. Hence :
+$2^{k-t}\widetilde{T}H^{-1}$. But as $U'$ is an element of the lattice,
+$U'H^{-1}$ is an integer vector. Thus $R-2^{k-t}\widetilde{T}H^{-1}$ is
+shorter than $U'H^{-1}-2^{k-t}\widetilde{T}H^{-1}$. Hence :
 \begin{align*}
-  \left\| U' - RH \right\| &\leq \left\| U' - 2^{k-\ell}\widetilde{T} \right\| + \left\|R - 2^{k-\ell}\widetilde{T}H^{-1}\right\| \times \vvvert H \vvvert \\	
-                        &\leq \left\| U' - 2^{k-\ell}\widetilde{T} \right\| + \left\|U'H^{-1}-2^{k-\ell}\widetilde{T}H^{-1}\right\| \times \vvvert H \vvvert \\	
-                        &\leq \left\| U' - 2^{k-\ell}\widetilde{T} \right\| + \left\|U' - 2^{k-\ell}\widetilde{T}\right\| \times \left\vvvert H^{-1} \right\vvvert  \times \vvvert H \vvvert \\
-                        & 	\leq \left\| U' - 2^{k-\ell}\widetilde{T} \right\| \times \left(1 + \vvvert H^{-1} \vvvert  \times \vvvert H \vvvert \right).
+  \left\| U' - RH \right\| &\leq \left\| U' - 2^{k-t}\widetilde{T} \right\| + \left\|R - 2^{k-t}\widetilde{T}H^{-1}\right\| \times \vvvert H \vvvert \\	
+                        &\leq \left\| U' - 2^{k-t}\widetilde{T} \right\| + \left\|U'H^{-1}-2^{k-t}\widetilde{T}H^{-1}\right\| \times \vvvert H \vvvert \\	
+                        &\leq \left\| U' - 2^{k-t}\widetilde{T} \right\| + \left\|U' - 2^{k-t}\widetilde{T}\right\| \times \left\vvvert H^{-1} \right\vvvert  \times \vvvert H \vvvert \\
+                        & 	\leq \left\| U' - 2^{k-t}\widetilde{T} \right\| \times \left(1 + \vvvert H^{-1} \vvvert  \times \vvvert H \vvvert \right).
 \end{align*}
 
 Note that $\vvvert H^{-1} \vvvert \times \vvvert H \vvvert$ is the condition
@@ -694,18 +694,18 @@ can prove that the right side of the inequality is smaller than the first
 minimum of the lattice, then we would have proved that $RH$ is indeed the
 closest vector we were searching for. Because we have fixed $k = 64$, by
 lemma~\ref{thm:close} we have
-$\left\| 2^{k-\ell}\widetilde{T} - U' \right\| \leq 2 \sqrt{n}2^{64-\ell}-1
-$. So, if we fix $n$ we can search for the minimum number $\ell$ of known
+$\left\| 2^{k-t}\widetilde{T} - U' \right\| \leq 2 \sqrt{n}2^{64-t}-1
+$. So, if we fix $n$ we can search for the minimum number $t$ of known
 most-significant bits such that:
 \[
-  \left(1 + \vvvert H \vvvert \times \left\vvvert H^{-1} \right\vvvert \right) 2 \sqrt{n} 2^{64-\ell} \leq \lambda_1(\mathcal{L})
+  \left(1 + \vvvert H \vvvert \times \left\vvvert H^{-1} \right\vvvert \right) 2 \sqrt{n} 2^{64-t} \leq \lambda_1(\mathcal{L})
 \]
 
 \begin{table}[htbp!]
   \centering
   \begin{tabular}{|c|Sc|Sc|c|}
 	\hline
-	n & $\vvvert H \vvvert \times \left\vvvert H^{-1} \right\vvvert$ & $ \lambda_1(\mathcal{L}) $ & minimum $\ell$ \\
+	n & $\vvvert H \vvvert \times \left\vvvert H^{-1} \right\vvvert$ & $ \lambda_1(\mathcal{L}) $ & minimum $t$ \\
 	\hline
 	3 & 2.87 & $4.09e^{12} \simeq 2^{41.9}$ & 26 \\
 	4 & 2.06 & $2.44e^{14} \simeq 2^{47.8}$ & 20 \\
@@ -713,11 +713,11 @@ most-significant bits such that:
 	6 & 2.69 & $1.03e^{16}\simeq 2^{53.2}$ & 15 \\
 	\hline
   \end{tabular}
-  \caption{minimal $\ell$ needed for a given $n$}
+  \caption{minimal $t$ needed for a given $n$}
   \label{tab:babai}
 \end{table}
 
-When $\ell$ is greater than the values given in table~\ref{tab:babai}, then
+When $t$ is greater than the values given in table~\ref{tab:babai}, then
 Babai's rounding technique will always return the closest vector, and allow us
 to reconstruct a truncated geometric series.
 
@@ -726,7 +726,7 @@ to reconstruct a truncated geometric series.
 Adapting the previous reasoning enables an efficient state reconstruction
 algorithm for the \texttt{lehmer64()} generator shown in
 Fig.~\ref{fig:prngs}. When clocked, it outputs the top 64 bits of a geometric
-sequence ($k=128$ and $\ell=64$). Three successive outputs are sufficient to
+sequence ($k=128$ and $t=64$). Three successive outputs are sufficient to
 reconstruct the internal state using Babai's rounding technique. This yields the
 following reconstruction algorithm:
 \begin{minted}[fontsize=\scriptsize]{python}
@@ -770,7 +770,7 @@ from $X_0, X_1, X_2, \dots$. A very simple strategy could be the following:
 \end{enumerate}
 
 This ``baseline'' procedure requires $2^{64}$ iterations of a loop that does a
-dozen arithmetic operations; it always output the correct value of $S_0$, and
+dozen arithmetic operations; it always outputs the correct value of $S_0$, and
 may output a few other ones (they can be easily discarded by checking $X_2$). An
 improved ``guess-and-determine'' state reconstruction algorithm is possible,
 which essentially amounts to expose a truncated version of the underlying linear
@@ -935,7 +935,7 @@ We consider the sequence of internal states
 $S = (S_0, S_1, \dots) = \LCG_{128}(S_0, c)$. We will guess the $\ell$
 least-significant bits of $S_0$, therefore let us assume that their value is
 known and denote it by $w$. We define $S' = \LCG_{128}(S_0 - w, 0)$ and
-$K = \LCG_{128}(w, c)$ --- this is Known. By~\eqref{eq:lcg-additive}, we have
+$K = \LCG_{128}(w, c)$ --- this is known. By~\eqref{eq:lcg-additive}, we have
 $S' = S - K$. The point is that the elements of $S'$ follow a geometric
 progression of common ratio $a$; in addition, the $\ell$ least significant bits
 of each components are equal to zero. It follows that $S'[\ell:64+\ell]$ also
@@ -953,7 +953,7 @@ borrows are unknown, we in fact compute
 $\widetilde{T'} = S[58:64+\ell] \boxminus K[58:64+\ell]$, and clearly
 $\widetilde{T'} = T' \boxplus B$. We are thus in the context of the problem
 discussed in section~\ref{sec:geometric}, namely reconstructing a geometric
-sequence given $6+\ell$ (noisy) most-significant bits. The ``noise'' is the
+sequence given $t = 6+\ell$ (noisy) most-significant bits. The ``noise'' is the
 unknown vector $B$ of borrows. %Notice that the noise is asymmetric.
 
 We will guess $n$ rotations and $\ell$ least-significant bits of the state, for
@@ -1017,7 +1017,7 @@ reduced success probablity).
 The algorithm of section~\ref{sec:Cknown} does not apply directly to the general
 case where the value of $c$ is unknown. A ``baseline'' procedure would consist
 in guessing $S_0[64:128]$ and $S_1[64:128]$; using eq.~\eqref{eq:output}, this
-would reveal $S_0$ and $S_1$; from there, the increment $c$ is easily to obtain,
+would reveal $S_0$ and $S_1$; from there, the increment $c$ is easy to obtain,
 and every secret information has been reconstructed. This would take $2^{128}$
 iterations of a very simple procedure, which is completely infeasible.
 
@@ -1034,7 +1034,7 @@ Let us set:
   \nabla S_i \stackrel{def}{=} S_i - S_0 \equiv \sum_{j=0}^{i-1} \Delta S_j \equiv \Delta S_0 \cdot \sum_{j=0}^{i-1} a^j \equiv \Delta S_0 \frac{a^i-1}{a-1} \mod 2^{128}
 \end{equation}
 Note that $\nabla S_0 = 0$ and $\nabla S_1 = \Delta S_0$. Therefore, knowledge
-of $\Delta_0$ entails that of the whole sequence of $\nabla S_i$. The prediction
+of $\Delta S_0$ entails that of the whole sequence of $\nabla S_i$. The prediction
 algorithm we propose proceeds in three phases:
 \begin{enumerate}
 \item Reconstruct $\Delta S_0[0:64+\ell]$ from $X_0, \dots, X_{4}$, check consistency with $X_5, \dots, X_{63}$.
@@ -1054,7 +1054,7 @@ least significant bits of $S_0$ and some rotations, then check consistency. The
 difference is that, since $c$ is unknown, we must in addition guess the least
 significant bits of $c$ to obtain the same ``long-term advantage'' ($c$ is
 always odd; this makes one less bit to guess). We must also guess $k+1$
-successive rotation to get information on $k$ successive differences
+successive rotations to get information on $k$ successive differences
 $\Delta S_i$.
 
 Confirming that the guesses are correct is less immediate. When $c$ was known,
@@ -1070,8 +1070,8 @@ We consider again the sequence of internal states
 $S = (S_0, S_1, \dots) = \LCG_{128}(S_0, c)$. We will guess the $\ell$
 least-significant bits of $S_0$ and of $c$, therefore let us assume that their
 value is known and denote it by $w_0$ and $c_0$. We define
-$S' = \LCG_{128}(S_0 - w, c - c_0)$ and $K = \LCG_{128}(w_0, c_0)$ --- again,
-$K$ is Known and $S' = S - K$. This time, the components of $S'$ do \emph{not}
+$S' = \LCG_{128}(S_0 - w_0, c - c_0)$ and $K = \LCG_{128}(w_0, c_0)$ --- again,
+$K$ is known and $S' = S - K$. This time, the components of $S'$ do \emph{not}
 follow a geometric progression; but we still have that the $\ell$ least
 significant bits of each $S'_i$ are zero. Set
 $\Delta S'_i \stackrel{def}{=} S'_{i+1} - S'_i$; $\Delta S'[\ell:64+\ell]$
@@ -1190,7 +1190,7 @@ eq.~\eqref{eq:consistency} combined with this observation to discard bad guesses
 \end{algorithm}
 
 The heart of the algorithm is again the reconstruction of a truncated geometric
-progression. Looking at table~\ref{tab:babai}, we see that the best choice
+progression knowing the \(t=\ell+6\) upper bits. Looking at table~\ref{tab:babai}, we see that the best choice
 consists in guessing 5 consecutive rotations and $\ell=14$ least-significant
 bits. Therefore, \textsc{ReconstructPartialDifference} does $2^{57}$ iterations
 of the inner loop, and succeeds deterministically.
