@@ -1,5 +1,5 @@
 % !TeX spellcheck = en
-\documentclass[submission,svgnames,journal=tosc]{iacrtrans}
+\documentclass[journal=tosc,final]{iacrtrans}
 
 \usepackage[utf8]{inputenc}
 \usepackage{amssymb, amsmath, amsfonts, amscd}
@@ -61,11 +61,12 @@ Univ. Lille, CNRS, Centrale Lille, UMR 9189 - CRIStAL - Centre de Recherche en I
 Sorbonne Université, CNRS, LIP6, F-75005 Paris, France \\
 \email{florette.martinez@lip6.fr}
 \and 
-Sorbonne Université \\
+Sorbonne Université, F-75005 Paris, France \\
 \email{julia.sauvage@etu.upmc.fr}
 }
 
 \begin{document}
+\input{settings.tosc}
 \maketitle
 
 \keywords{Pseudo-random number generator, guess-and-determine attack, truncated congruential generator, euclidean lattices, closest vector problem, practical attack}
@@ -75,7 +76,7 @@ Sorbonne Université \\
   (non-cryptographic) pseudo-random generators designed in 2014. They are used
   by default in the \texttt{NumPy} scientific computing package. Even though
   they are not of cryptographic strength, their designer stated that predicting
-  their output should be nevertheless be "challenging".
+  their output should nevertheless be "challenging".
 
   In this article, we present a practical algorithm that recovers all the hidden
   parameters and reconstructs the successive internal states of the
@@ -96,7 +97,7 @@ Sorbonne Université \\
 \section{Introduction} 
 
 Pseudo-random generators (PRG) are well-studied primitives in symmetric
-cryptography. A PRG is an efficient deterministic algorithm that stretch a small
+cryptography. A PRG is an efficient deterministic algorithm that stretches a small
 random seed into a longer pseudo-random stream. To achieve cryptographic-grade
 pseudo-randomness, a PRG must ensure that the pseudo-random stream is
 computationally indistinguishable from a ``truly'' random sequence of bits by
@@ -106,7 +107,7 @@ pseudo-random bit with non-negligible accuracy. The two definitions are in fact
 equivalent.
 
 It is well-known that pseudo-random generators can be turned into symmetric
-encryption algorithm, by generating ``random'' masks to be used in the one-time
+encryption algorithms, by generating ``random'' masks to be used in the one-time
 pad. This is precisely what stream ciphers do.
 
 Not all pseudo-random generators are of cryptographic strength. In some
@@ -223,7 +224,7 @@ pseudo-random generators: a 32-bit linear congruential generator, two LFSRs,
 various combinations thereof, etc. They observed that changing the source of
 random numbers significantly altered the outcome of the numerical
 simulation. Different generators produced different biases: in particular a
-given LFSRs yielded energy levels that were systematically too low and critical
+given LFSR yielded energy levels that were systematically too low and critical
 temperatures that were always too high, while another kind of generator yielded
 the opposite (in many, repeated, trials).
 
@@ -355,7 +356,7 @@ floating point number, then $\lfloor x \rceil$ denotes the nearest integer
 in IEEE754 arithmetic). If $U$ is a vector or a sequence, then $U_i$ is the
 $i$-th element (we use capital letters for these). If $U$ is such a sequence, we
 denote by $U \bmod M$ the sequence $(U_0 \bmod M, U_1 \bmod M, \dots)$. The XOR
-operation is denoted $\oplus$, left and right rotations are denote $\lll$ and
+operation is denoted $\oplus$, left and right rotations are denoted $\lll$ and
 $\ggg$ respectively. Modular addition is denoted $+$ (or $\boxplus$ to make it
 even more explicit).
 
@@ -364,7 +365,7 @@ congruential generator modulo~$2^{128}$. More precisely:
 \[
   S_{i+1} = a S_i + c \bmod 2^{128},
 \]
-Where the ``multiplier'' $a$ is a fixed 126-bit constant. The first initial state $S_0$ is the seed of
+where the ``multiplier'' $a$ is a fixed 126-bit constant. The first initial state $S_0$ is the seed of
 the generator. The increment $c$ may be specified by the user of the PRNG to
 produce different output streams with the same seed (just as the IV acts in a
 stream cipher). If no value of $c$ is specified, then a default increment is
@@ -396,7 +397,7 @@ function.
 
 Updating the internal state requires a $128 \times 128 \rightarrow 128$
 multiplication operation. In fact, this can be done with three
-$64 \times 64 \rightarrow 128$ multiplication and two 64-bit additions. High-end
+$64 \times 64 \rightarrow 128$ multiplications and two 64-bit additions. High-end
 desktop CPUs all implement these operations in hardware, so the generator is
 quite fast on these platforms.
 
@@ -651,8 +652,8 @@ If $M$ is a square matrix, we denote by $\vvvert M \vvvert$ the induced matrix n
 \[
   \vvvert M \vvvert =  \sup_{x \in \mathbb{R}^n} \frac{\| xM \|}{\| x \|}
 \]
-In the case of the $\| \cdot \|_2$ norm used throughout this paper, $\| M \|$ is
-the largest singular value of $G$; equivalently, it is the square root of the
+In the case of the $\| \cdot \|_2$ norm used throughout this paper, $\vvvert M \vvvert$ is
+the largest singular value of $M$; equivalently, it is the square root of the
 absolute value of the largest eigenvalue of $M^{t} M$.
 
 Denote again by $\mathcal{L}$ the $n$-dimensional lattice spanned by the rows of
@@ -719,7 +720,7 @@ most-significant bits such that:
 
 When $t$ is greater than the values given in table~\ref{tab:babai}, then
 Babai's rounding technique will always return the closest vector, and allow us
-to reconstruct a truncated geometric series.
+to reconstruct a truncated geometric serie.
 
 \subsection{Application to the \texttt{lehmer64} generator}
 
@@ -795,8 +796,8 @@ ingredients:
 In figure~\ref{fig:Cknown}, we see that guessing $S_0[0:\ell]$ and a few 6-bit
 rotations $r_i$ give access to $S_i[58:64+\ell]$ for the corresponding
 states. Therefore, looking at $S_i[\ell:64+\ell]$, we are facing a truncated
-linear congruential generator on $64$ bits, where we have access to the most
-$6+\ell$ bits of each state (denoted by $T$), for a few consecutive states. This
+linear congruential generator on $64$ bits, where we have access to the
+$6+\ell$ most-significant bits of each state (denoted by $T$), for a few consecutive states. This
 is sufficient to reconstruct entirely the successive states of this truncated
 linear congruential generator. This reveals $S_0[\ell:64+\ell]$, and
 using~\eqref{eq:output} the entire $S_0$ can be reconstructed. The precise
@@ -810,7 +811,7 @@ details follow.
   % S_0
   \begin{scope}
     % remplissage
-    \fill[fill=Yellow] (4.6, 0) rectangle +(2.4, 1);
+    \fill[fill=yellow] (4.6, 0) rectangle +(2.4, 1);
     \fill[fill=magenta] (0, 0) rectangle node {$r_0$} +(0.6, 1);
     \fill[fill=magenta] (11, 0) rectangle node {$w$} +(1.8, 1);
     
@@ -850,7 +851,7 @@ details follow.
   % S_1
   \begin{scope}[yshift=-3cm]
     % remplissage
-    \fill[fill=Yellow] (4.6, 0) rectangle +(2.4, 1);
+    \fill[fill=yellow] (4.6, 0) rectangle +(2.4, 1);
     \fill[fill=magenta] (0, 0) rectangle node {$r_1$} +(0.6, 1);
     \fill[fill=cyan] (11, 0) rectangle node[text=white] {$w_1$} +(1.8, 1);
     
@@ -887,7 +888,7 @@ details follow.
   % S_2
   \begin{scope}[yshift=-6cm]
     % remplissage
-    \fill[fill=Yellow] (4.6, 0) rectangle +(2.4, 1);
+    \fill[fill=yellow] (4.6, 0) rectangle +(2.4, 1);
     \fill[fill=magenta] (0, 0) rectangle node {$r_2$} +(0.6, 1);
     \fill[fill=cyan] (11, 0) rectangle node[text=white] {$w_2$} +(1.8, 1);
     
@@ -958,7 +959,7 @@ unknown vector $B$ of borrows. %Notice that the noise is asymmetric.
 
 We will guess $n$ rotations and $\ell$ least-significant bits of the state, for
 a total of $2^{6n + \ell}$ guessed bits. Table~\ref{tab:babai} gives a
-lower-bound on $\ell$ given $n$, and we see that the total number of guessed
+lower-bound on $t=6+\ell$ given $n$, and we see that the total number of guessed
 bits reaches a minimum of $38$ when $n=3$ and $\ell=20$. Therefore, success is
 guaranteed if we guess $\ell = 20$ low-order bits of the state and three
 consecutive rotations.
@@ -1304,7 +1305,7 @@ eq.~\eqref{eq:master}. We then look a a specific index $\mathfrak{i} > 0$ such t
 \[
    \nabla S_{\mathfrak{i}}[j-1] \neq \mathcal{C}_{\mathfrak{i}}[j-1] \quad \text{and} \quad \nabla S_{\mathfrak{i}}[64 + j-1] = \mathcal{C}_{\mathfrak{i}}[64 + j-1].
 \]
-The point is that, thanks to the majority functions,
+The point is that, thanks to the majority function,
 $\mathcal{C}_{\mathfrak{i}}[j] = S_0[j-1]$ and
 $\mathcal{C}_{\mathfrak{i}}[64+j] = \nabla S_{\mathfrak{i}}[64 + j-1]$. It follows
 that:
@@ -1382,7 +1383,7 @@ the \textsf{PCG64} generator.
 
 The analysis of section~\ref{sec:geometric} yields parameters that guarantee
 that the reconstruction procedure \emph{always} succeeds. In most cases, these
-parameters are pessimistic. We ran a series of experiments to determine more
+parameters are pessimistic. We ran a serie of experiments to determine more
 practical choices: using smaller-than-guaranteed values of $\ell$ (the number of
 guessed least-significant bits), we measured the success probability of the
 state reconstruction procedure. The results are shown in table~\ref{tab:empirical}.
@@ -1404,7 +1405,7 @@ state reconstruction procedure. The results are shown in table~\ref{tab:empirica
   \cline{1-2}\cline{4-5}
   18 & $\approx 0.5$      && 12 &  $\approx 0.995$ \\
   \cline{1-2}\cline{4-5}
-  19 & 1                  && 13 &  1 \\
+  19 & \(\approx 1\)                  && 13 &  \(\approx 1\) \\
   \cline{1-2}\cline{4-5}
   20 & 1 (proved)         && 14 &  1 (proved) \\
   \cline{1-2}\cline{4-5}
@@ -1418,7 +1419,7 @@ state reconstruction procedure. The results are shown in table~\ref{tab:empirica
 When the increment $c$ is known, algorithm~\ref{algo:known} is all it takes to
 reconstruct the internal state of the generator and predict it (or output the
 seed). We implemented it in \textsf{C}, using \textsf{OpenMP} to parallelize the
-outer loop that guess the least-significant bits of the state. This yields a
+outer loop that guesses the least-significant bits of the state. This yields a
 simple multi-core implementation. We used the \texttt{gcc 8.3.0} compiler.
 
 From section~\ref{sec:cvp_small}, we know that guessing $\ell=20$
