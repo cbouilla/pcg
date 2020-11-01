@@ -5,7 +5,7 @@
 \usepackage{amssymb, amsmath, amsfonts, amscd}
 \usepackage[T1]{fontenc}
 \usepackage{graphicx}
-\usepackage{url}
+\usepackage[hyphens]{url}
 \usepackage{xspace}
 \usepackage{subcaption}
 \usepackage{algorithm}
@@ -62,7 +62,7 @@ Sorbonne Université, CNRS, LIP6, F-75005 Paris, France \\
 \email{florette.martinez@lip6.fr}
 \and 
 Sorbonne Université, F-75005 Paris, France \\
-\email{julia.sauvage@etu.upmc.fr}
+\email{julia.sauvage@etu.sorbonne-universite.fr}
 }
 
 \begin{document}
@@ -151,11 +151,10 @@ Firefox and Safari.
   \begin{minipage}[t]{5cm}
 \begin{minted}[fontsize=\small,frame=single]{C}
 u128 a;
-u64 m = 0xda942042e4dd58b5;
 
 u64_t lehmer64() 
 {
-    a *= m;
+    a *= 0xda942042e4dd58b5;
     return a >> 64;
 }
 \end{minted}
@@ -164,7 +163,6 @@ u64_t lehmer64()
 % 128-bit LFSR
 \begin{minted}[fontsize=\small,frame=single]{C}
 u32 a, b, c, d;
-
 
 u32 xorshift128()
 {
@@ -185,7 +183,6 @@ u32 xorshift128()
     % xorshift128+ (as in google's V8)
 \begin{minted}[fontsize=\small,frame=single]{C}
 u64 a, b;
-
 
 u64 xorshift128plus()
 {
@@ -1444,7 +1441,7 @@ but allows to better saturate the execution units of the CPU and yields a nearly
 20\% speedup overall.
 
 Therefore the algorithm requires $2^{41.67}$ CPU cycles in total; this makes
-less than 5 cycles per iteration of the inner loop. We used several
+less than 26 cycles per iteration of the inner loop. We used several
 implementation tricks to reach this level of efficiency:
 
 \begin{itemize}
@@ -1538,7 +1535,7 @@ outer loop to slave processes. This also made checkpointing very easy. We used
 \textsf{MPI} for inter-process communication.
 
 With $\ell=11$, the whole process took $2^{56.74}$ CPU cycles, which makes less
-than 6 cycles per iteration of the inner loop. We used essentially the same
+than 54 cycles per iteration of the inner loop. We used essentially the same
 implementation tricks discussed above. However, this time we had to additionally
 implement the \textsc{ConsistencyCheck} procedure, which is called in the inner
 loop. We observed that the set of possible candidate values $\mathcal{C}$ only
@@ -1567,10 +1564,11 @@ detectable properties. Whether these properties may affect the results of
 Monte-Carlo numerical simulations is another matter entirely.
 
 % pas dans la version anonyme.
-\paragraph{Acknowledgements.} The authors thank Thomas Espitau, Damien Vergnaud
-and Vincent Zucca for helpful discussions. We also thank Léo Ducas for helping
-us with the \texttt{G6K} library and Melissa O'Neil for kindly indulging our
-request for challenge inputs.
+\paragraph{Acknowledgements.} The authors thank Thomas Espitau, Virgile Tellier,
+Damien Vergnaud and Vincent Zucca for helpful discussions. We also thank Léo
+Ducas for helping us with the \texttt{G6K} library and Melissa O'Neil for kindly
+indulging our request for challenge inputs. We finally thank Alexandra Assanovna
+Elbakyan for helping scientists to access the works of their colleagues.
 
 This work was granted access to the HPC resources of IDRIS under the allocation
 2019-A0060610749 made by GENCI.

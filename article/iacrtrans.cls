@@ -1,12 +1,12 @@
-\def\fileversion{0.91}
-\def\filedate{2019/11/14}
+\def\fileversion{0.92}
+\def\filedate{2020/08/24}
 
 \NeedsTeXFormat{LaTeX2e}[1995/12/01]
 \typeout{^^J  ***  LaTeX class for IACR Transactions v\fileversion\space ***^^J}
 \ProvidesClass{iacrtrans}[\filedate]
 
 % IACR Transactions DOCUMENT CLASS
-% Written by Gaetan Leurent gaetan.leurent@inria.fr (2016-2018)
+% Written by Gaetan Leurent gaetan.leurent@inria.fr and others (2016-2020)
 %
 % To the extent possible under law, the author(s) have dedicated all
 % copyright and related and neighboring rights to this software to the
@@ -102,6 +102,8 @@
 % Options
 \newif\if@loadhr
 \@loadhrtrue
+\newif\if@hyperxmp@doi
+\@hyperxmp@doifalse
 \define@key{IACR}{nohyperref}[]{\@loadhrfalse}
 \newif\if@floatrow
 \@floatrowfalse
@@ -132,6 +134,29 @@
 
 % article class with a4paper
 \LoadClass[10pt,twoside]{article}[2007/10/19]
+
+% Hyperref must be loaded last, but before other AtEndPreamble hooks
+\if@loadhr
+  \RequirePackage{xcolor}
+  \RequirePackage{etoolbox}
+  \AtEndPreamble{
+    \@ifpackageloaded{hyperref}{}{\RequirePackage{hyperref}}
+    \hypersetup{pdflang=en}
+    \hypersetup{colorlinks=true,
+      citecolor=black!70!green,
+      linkcolor=black!70!red}
+    % Disable latexdiff commands in PDF links
+    \pdfstringdefDisableCommands{%
+      \def\DIFadd#1{#1}%
+      \def\DIFdel#1{}%
+    }
+    % Old versions of hyperxmp do not support DOI
+    \@ifpackagelater{hyperxmp}{2019/03/14}{\@hyperxmp@doitrue\hypersetup{keeppdfinfo=true}}{}
+  }
+  \RequirePackage{hyperxmp} % hyperxmp 5.x has issues with AtEndPreamble
+  \setcounter{tocdepth}{2}
+\fi
+
 
 % Geometry
 \RequirePackage[a4paper,hscale=0.65,vscale=0.75,marginratio=1:1,marginparwidth=2.7cm]{geometry}
@@ -220,7 +245,7 @@
         \small
         \setcounter{IACR@author@cnt}{1}%
         \def\and{\par\stepcounter{IACR@author@cnt}$^\theIACR@author@cnt$~}
-        \ifnum\IACR@inst@last>1 $^1$~\fi
+        \ifnum\IACR@inst@last>1 $^1$~\fi\ignorespaces%
         \@institute
         \fi
       }%
@@ -295,7 +320,6 @@
       \hypersetup{pdfcopyright={Licensed under Creative Commons License CC-BY 4.0.}}
       \hypersetup{pdflicenseurl={http://creativecommons.org/licenses/by/4.0/}}
       \hypersetup{pdfsubject={\publname{}, DOI:\IACR@DOI}}
-      \hypersetup{pdflang=en}
     \fi
   \fi%!preprint
 \fi%!submission
@@ -390,17 +414,6 @@
       \typeout{IACR@AUTHOR: \IACR@runningauthors}
     \else
       \protected@edef\@tmp{\expandafter\@author}
-      \protected@edef\@tmp{\expandafter\zap@last@comma\@tmp,\@empty,\@empty}
-      \protected@edef\@tmp{\expandafter\insert@last@space\@tmp,\@empty}
-      \protected@edef\@tmp{\expandafter\zap@comma@space\@tmp ,\@empty}
-      \protected@edef\@tmp{\expandafter\insert@last@space\@tmp,\@empty}
-      \protected@edef\@tmp{\expandafter\zap@dbl@space\@tmp \@empty}
-      \ifx\@tmp\empty\else
-        \protected@edef\@tmp{\expandafter\zap@first@space \@tmp}
-        \hypersetup{pdfauthor=\@tmp}
-      \fi
-      %% Print author to log file for script use
-      \protected@edef\@tmp{\expandafter\@author}
       \protected@edef\@tmp{\expandafter\insert@last@space\@tmp,\@empty}
       \protected@edef\@tmp{\expandafter\zap@comma@space\@tmp ,\@empty}
       \protected@edef\@tmp{\expandafter\insert@last@space\@tmp,\@empty}
@@ -408,6 +421,7 @@
       \ifx\@tmp\empty\else
         \protected@edef\@tmp{\expandafter\zap@first@space \@tmp}
         \typeout{IACR@AUTHOR: \@tmp}
+        \hypersetup{pdfauthor=\@tmp}
       \fi
     \fi
     %% PDF title
@@ -424,42 +438,25 @@
         \typeout{IACR@TITLE: \@tmp^^J}
       \fi
     \fi
+    % PDF metadata
+    \if@submission\else
+      \if@preprint\else
+        \if@hyperxmp@doi{
+          \hypersetup{%
+            pdfdoi=\IACR@DOI,%
+            pdfissn=\IACR@ISSN,%
+            pdfpubtype=journal,%
+            pdfpublication=\publname,%
+            pdfvolumenum=\IACR@vol,%
+            pdfissuenum=\IACR@no,%
+            pdfpagerange={\IACR@fp-\IACR@lp},%
+        }}
+      \fi
+    \fi
   \fi
 }
 
 
-% Hyperref
-\if@loadhr
-  \RequirePackage{xcolor}
-  \RequirePackage{etoolbox}
-  \AtEndPreamble{
-    \@ifpackageloaded{hyperref}{}{\RequirePackage{hyperref}}
-    \@ifpackageloaded{hyperxmp}{}{\RequirePackage{hyperxmp}}
-    % Add Doi to dc schema
-    \renewcommand*{\hyxmp@dc@schema}{%
-      \hyxmp@add@to@xml{%
-    ______<rdf:Description rdf:about=""^^J%
-    ____________xmlns:dc="http://purl.org/dc/elements/1.1/">^^J%
-    _________<dc:format>application/pdf</dc:format>^^J%
-      }%
-      \hyxmp@rdf@dc{title}{\@pdftitle}%
-      \hyxmp@rdf@dc{description}{\@pdfsubject}%
-      \hyxmp@rdf@dc{rights}{\@pdfcopyright}%
-      \hyxmp@rdf@dc{identifier}{doi:\IACR@DOI}%
-      \hyxmp@list@to@xml{creator}{Seq}{\@pdfauthor}%
-      \hyxmp@list@to@xml{subject}{Bag}{\@pdfkeywords}%
-      \hyxmp@list@to@xml{date}{Seq}{\hyxmp@today}%
-      \hyxmp@add@to@xml{%
-    ______</rdf:Description>^^J%
-      }%
-    }
-
-    \hypersetup{colorlinks=true,
-      citecolor=black!70!green,
-      linkcolor=black!70!red}
-  }
-  \setcounter{tocdepth}{2}
-\fi
 % autoref: capitals for Sections, and adding Algorithm
 \def\equationautorefname{Equation}%
 \def\footnoteautorefname{footnote}%
