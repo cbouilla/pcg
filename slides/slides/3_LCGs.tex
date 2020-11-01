@@ -22,11 +22,11 @@
         % déco autour
         \node<2->[draw] at (6.4, 3) (update) {$\times a \bmod 2^{k}$};
         \draw<2->[thick,->] (12.8, 0.5) -- (13.8, 0.5) node[below right] {} -- (13.8, 3) -- (update);
-        \draw<2-> (13.7, 2.5) -- +(0.2, -0.2);
-        \path<2-> (13.9, 2.5);
+%        \draw<2-> (13.7, 2.5) -- +(0.2, -0.2);
+%        \path<2-> (13.9, 2.5);
         \draw<2->[thick,->] (update) -- (-2, 3) -- (-2, 0.5) node[below left] {} -- (0, 0.5);
-        \draw<2-> (-2.1, 2.5) -- +(0.2, -0.2);
-        \path<2-> (-1.9, 2.5);
+ %       \draw<2-> (-2.1, 2.5) -- +(0.2, -0.2);
+%        \path<2-> (-1.9, 2.5);
     
         
         \node[font=\footnotesize,anchor=east] at (12.9, -0.33) {0};
@@ -38,7 +38,7 @@
  
         \draw<3->[->] (1.5, -0.5) -- (1.5, -2);
         \path<3-> (1.7, -1) ;
-        \node<3-> at (1.5,-2.5) {\(T'_i\)};
+        \node<3-> at (1.5,-2.5) {\(T_i\)};
         
         \draw<3->[->] (7.5, -0.5) -- (7.5, -2);
         \path<3-> (7.7, -1) ;
@@ -84,15 +84,15 @@
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\begin{frame}{\textbf{Lattices and Basis reduction}}
+\begin{frame}[label=lattice]{\textbf{Lattices and Basis reduction}}
 \begin{itemize}
     \item Lattice : subgroup of $\mathbb{R}^n$ isomorphic to $\mathbb{Z}^m$
 \end{itemize}
 \begin{center}
-\begin{tikzpicture}
+\begin{tikzpicture}[scale=0.85]
 
-    \foreach \x in {2,3,4,5}{
-		\foreach \y in {0,1,2}{
+    \foreach \x in {0,1,2,3,4,5,6,7}{
+		\foreach \y in {-1,0,1,2}{
 			\node[draw,circle,inner sep=2pt,fill] at (2*\x,2*\y) {};
 			\node[draw,circle,inner sep=2pt,fill] at (2*\x+1,2*\y+1) {};
 			
@@ -100,24 +100,20 @@
 	}
     \draw[->,thick,red] (6,0) --(7,2.9);
     \draw[->,thick,red] (6,0) --(7,0.9);
-    %\draw[->,dashed,red] (7,3) --(8,3.9);
-    %\draw[->,dashed,red] (7,1) --(8,3.9);
     
-    \draw<2->[->,thick,blue] (6,0) --(7,0.9);
-    \draw<2->[->,thick,blue] (6,0) --(5,0.9);
-    %\draw<2->[->,dashed,blue] (5,1) --(6,1.9);
-    %\draw<2->[->,dashed,blue] (7,1) --(6,1.9);
+    \draw<3->[->,thick,blue] (6,0) --(7,0.9);
+    \draw<3->[->,thick,blue] (6,0) --(5,0.9);
     
-    \node<3>[draw,circle,inner sep=2pt,green,fill] at (2*4.3, 2*2) {};
-    \draw<3>[draw,thick,green,->,>=stealth] (2*4.3, 2*2) -- +(-0.5, 0);
+    \node<2->[draw,circle,inner sep=2pt,green,fill] at (2*4.3, 2*2) {};
+    \draw<2->[draw,thick,green,->,>=stealth] (2*4.3, 2*2) -- +(-0.5, 0);
     
 \end{tikzpicture}
 \end{center}
-\pause[2]
-\begin{itemize}
-    \item The blue basis is \emph{shorter} than the red basis.
-    \item LLL algorithm reduces bases in polynomial time.
-\end{itemize}
+% \pause[3]
+% \begin{itemize}
+%     \item The blue basis is \emph{shorter} than the red basis.
+%     \item LLL algorithm reduces bases in polynomial time.
+% \end{itemize}
 \end{frame}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
