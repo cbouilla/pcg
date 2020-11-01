@@ -1,0 +1,52 @@
+\documentclass[11pt]{beamer}
+
+%%%%%%%% teme %%%%%%%%
+\mode<presentation> {
+\usetheme{Madrid}
+%\usecolortheme{albatross}
+}
+\beamertemplatenavigationsymbolsempty
+\input{config.tex}
+
+%%%%%%%% titre %%%%%%%%
+\title[Seed-Recovery for PCG]{Practical Seed-Recovery for the \\ PCG Pseudo-Random Number Generator}
+
+%%%%%%%% noms des auteurs %%%%%%%%
+\author[Bouillaguet, Martinez, Sauvage]{
+Charles Bouillaguet, Florette Martinez and \alert{Julia Sauvage}} 
+
+%\includeonlyframes{bragging}
+
+\begin{document}
+
+
+
+\input{slides/0_pre-slides.tex}
+
+%%%%%%%% slides %%%%%%%%
+\section{Introduction}
+\input{slides/1_intro.tex}
+
+
+\section{PCG generators}
+\input{slides/2_PCG.tex}
+\input{slides/3_LCGs.tex}
+
+\section{Case with known increment (easy)}
+\input{slides/6_implementation(Cknown).tex}
+
+\section{Case with unknown increment (hard)}
+\input{slides/7_Cunknown.tex}
+
+\section{Conclusion}
+\input{slides/8_implementation(Cunknown).tex}
+
+\end{document}
+
+
+%%% Local Variables:
+%%% TeX-command-extra-options: "-shell-escape"
+%%% ispell-local-dictionary: "english"
+%%% eval: (flyspell-mode 1)
+%%% eval: (reftex-mode 1)
+%%% End:
