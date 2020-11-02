@@ -1,20 +1,14 @@
-
-
 \begin{frame}{Implementation (Easy case, known increment)}
-
-%With \(n=3\) and \(\ell=20\), we prove that the Babai rounding solve exactly the CVP in our case.
-
-%In practice, the Babai Rounding is still exact for \(\ell=19\)
-
   \begin{block}{Summary}
     \begin{itemize}
+    \item Observe 3 outputs $X_0, X_1, X_2$ (192 bits).
     \item Guess 37 bits:
       \begin{itemize}
       \item \(n=3\) successive rotations (6 bits each),
       \item \(\ell=19\) least significant bits of \(S_0\),
       \end{itemize}
     \item Solve \(2^{37}\) instances of CVP in dimension 3 (Babai Rounding).
-    \item Reconstruct initial state, check.
+    \item Reconstruct initial state, check outputs.
     \end{itemize}
   \end{block}
 
@@ -26,9 +20,10 @@
     \begin{itemize}
     \item $25$ CPU cycles per guess, 23 CPU-minutes in total.
     \end{itemize}
-  \end{exampleblock}
-  
+  \end{exampleblock}  
 \end{frame}
+
+
 %%% Local Variables:
 %%% mode: latex
 %%% TeX-master: "../main"

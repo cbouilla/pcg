@@ -15,8 +15,8 @@
 
     \item \textbf{Reconstruct} hidden information using lattice techniques.
     \begin{itemize}
-          \item<3-> Easy case: full state
-          \item<3-> Hard case: partial information (next rotations)
+          \item<3-> Easy case (\alert{$c$} known): full state
+          \item<3-> Hard case (\alert{$c$} unknown): only partial information
       \end{itemize}
     
     \medskip
@@ -45,7 +45,9 @@ If the \alert{increment} (\alert{c}) is \textbf{known}...
 
 \bigskip
 
-Yields $S' :$ sequence of states with $c=0$ (geometric sequence).
+Yields $S' :$ sequence of states with $c=0$
+
+$\rightarrow$ \textbf{Geometric sequence}.
 
 \end{frame}
 
@@ -83,7 +85,7 @@ Yields $S' :$ sequence of states with $c=0$ (geometric sequence).
   % T_0
   \begin{scope}[xshift=4.6cm, yshift=-1.5cm]    
     \draw<5->[dashed]  (0, 0) rectangle +(6.4, 1);
-    \draw<5->[thick]   (0, 0) rectangle +(2.4, 1);
+    \draw<5->[thick,fill=yellow]   (0, 0) rectangle +(2.4, 1);
     \draw<5>[]   (1.8, 0) rectangle +(0, 1);
     \path<5->  (2.4, 0) rectangle node {$?????????????????$} (6.4, 1);
   \end{scope}
@@ -122,7 +124,7 @@ Yields $S' :$ sequence of states with $c=0$ (geometric sequence).
   % T_1
   \begin{scope}[xshift=4.6cm, yshift=-4.5cm]    
     \draw<5->[dashed]  (0, 0) rectangle +(6.4, 1);
-    \draw<5->[thick]  (0, 0) rectangle +(2.4, 1);
+    \draw<5->[thick,fill=yellow]  (0, 0) rectangle +(2.4, 1);
     \draw<5>[]  (1.8, 0) rectangle +(0, 1);
     \path<5-> (2.4, 0) rectangle node {$?????????????????$} (6.4, 1);
   \end{scope}
@@ -156,7 +158,7 @@ Yields $S' :$ sequence of states with $c=0$ (geometric sequence).
   % T_2
   \begin{scope}[xshift=4.6cm, yshift=-7.5cm]    
     \draw<5->[dashed]  (0, 0) rectangle +(6.4, 1);
-    \draw<5->[thick]  (0, 0) rectangle +(2.4, 1);
+    \draw<5->[thick,fill=yellow]  (0, 0) rectangle +(2.4, 1);
     \draw<5>[]  (1.8, 0) rectangle +(0, 1);
     \path<5-> (2.4, 0) rectangle node {$?????????????????$} (6.4, 1);
 

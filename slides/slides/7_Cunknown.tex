@@ -60,7 +60,7 @@
   % T_0
   \begin{scope}[xshift=4.6cm, yshift=-1.5cm]    
     \draw<5->[dashed]  (0, 0) rectangle +(6.4, 1);
-    \draw<5->[thick]   (0, 0) rectangle +(2.4, 1);
+    \draw<5->[thick,fill=yellow]   (0, 0) rectangle +(2.4, 1);
     \draw<5>[]   (1.8, 0) rectangle +(0, 1);
     \path<5->  (2.4, 0) rectangle node {$?????????????????$} (6.4, 1);
   \end{scope}
@@ -99,7 +99,7 @@
   % T_1
   \begin{scope}[xshift=4.6cm, yshift=-4.5cm]    
     \draw<5->[dashed]  (0, 0) rectangle +(6.4, 1);
-    \draw<5->[thick]  (0, 0) rectangle +(2.4, 1);
+    \draw<5->[thick,fill=yellow]  (0, 0) rectangle +(2.4, 1);
     \draw<5>[]  (1.8, 0) rectangle +(0, 1);
     \path<5-> (2.4, 0) rectangle node {$?????????????????$} (6.4, 1);
   \end{scope}
@@ -133,7 +133,7 @@
   % T_2
   \begin{scope}[xshift=4.6cm, yshift=-7.5cm]    
     \draw<5->[dashed]  (0, 0) rectangle +(6.4, 1);
-    \draw<5->[thick]  (0, 0) rectangle +(2.4, 1);
+    \draw<5->[thick,fill=yellow]  (0, 0) rectangle +(2.4, 1);
     \draw<5>[]  (1.8, 0) rectangle +(0, 1);
     \path<5-> (2.4, 0) rectangle node {$?????????????????$} (6.4, 1);
   \end{scope}
@@ -167,7 +167,7 @@
   % T_3
   \begin{scope}[xshift=4.6cm, yshift=-10.5cm]    
     \draw<5->[dashed]  (0, 0) rectangle +(6.4, 1);
-    \draw<5->[thick]  (0, 0) rectangle +(2.4, 1);
+    \draw<5->[thick,fill=yellow]  (0, 0) rectangle +(2.4, 1);
     \draw<5>[]  (1.8, 0) rectangle +(0, 1);
     \path<5-> (2.4, 0) rectangle node {$?????????????????$} (6.4, 1);
   \end{scope}
@@ -201,7 +201,7 @@
   % T_4
   \begin{scope}[xshift=4.6cm, yshift=-13.5cm]    
     \draw<5->[dashed]  (0, 0) rectangle +(6.4, 1);
-    \draw<5->[thick]  (0, 0) rectangle +(2.4, 1);
+    \draw<5->[thick,fill=yellow]  (0, 0) rectangle +(2.4, 1);
     \draw<5>[]  (1.8, 0) rectangle +(0, 1);
     \path<5-> (2.4, 0) rectangle node {$?????????????????$} (6.4, 1);
   \end{scope}
@@ -236,6 +236,12 @@
   \draw<6>[red,->] (T1) edge[bend right] node[left] {$\times a \bmod 2^{64}$} (T2);
   \draw<6>[red,->] (T2) edge[bend right] node[left] {$\times a \bmod 2^{64}$} (T3);
 
+  % flèches w
+  \draw<3>[thick,->] (11.9, 0) -- node[left] {$\times a + c \bmod \alert{2^\ell}$} +(0, -2);
+  \draw<3>[thick,->] (11.9, -3) -- node[left] {$\times a + c \bmod \alert{2^\ell}$} +(0, -2);
+  \draw<3>[thick,->] (11.9, -6) -- node[left] {$\times a + c \bmod \alert{2^\ell}$} +(0, -2);
+  \draw<3>[thick,->] (11.9, -9) -- node[left] {$\times a + c \bmod \alert{2^\ell}$} +(0, -2);
+  
 \end{tikzpicture}
 \end{center}
 \end{figure}
@@ -353,7 +359,7 @@
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\begin{frame}[label=hard_finish]{Finishing it Off}
+\begin{frame}<1>[label=hard_finish]{Finishing it Off}
 
   \begin{block}{Summary so far}
     \begin{itemize}
@@ -376,12 +382,57 @@
     \item Correct partial $\Delta S_i$ + consistency check $\leadsto$ \textbf{all} rotations $r_i$.
     \item[$\Rightarrow$] MSB of all $S_i$ $\leadsto$ MSB of all $\Delta S_i$.
     \item[$\Rightarrow$] CVP in dim. 64 $\leadsto$ full $\Delta S_0$.
+      \pause
     \item The rest is easy.
     \end{itemize}
   \end{exampleblock}
 \end{frame}
 
 
+\againframe<5>{hard_test_dtl}
+\againframe<2>{hard_finish}
+
+
+\begin{frame}[label=hard_big_cvp]{Reconstructing the Full Differences (CVP in dim. 64)}
+  \begin{center}
+    \begin{tikzpicture}[xscale=0.7, yscale=0.475]
+      \path[red, use as bounding box] (-4, -16) rectangle (12.8, 1);
+      
+      
+      % T_0
+      \foreach \i in {0, 1, ..., 9} {
+        \begin{scope}[yshift=-\i*1.5cm]    
+          \draw[dashed]  (0, 0) rectangle +(12.8, 1);
+          \draw[thick,fill=yellow]  (0, 0) rectangle +(0.6, 1);
+          \path (0.6, 0) rectangle node[font=\scriptsize] {$????????????????????????????????????????$} (12.8, 1);
+          \node [anchor=east] at (0, 0.45) (DS_\i) {$\Delta S_{\i}$};
+        \end{scope}
+      }
+      
+        \begin{scope}[yshift=-10.5*1.5cm]    
+          \node [anchor=east] at (0.3, 0.45) (DS_10) {\phantom{$\Delta S_{11}$}};
+        \end{scope}
+
+      
+      % arrows
+      \draw[red,->] (DS_0) edge[bend right=2cm] node[left,font=\scriptsize] {$\times a$} (DS_1);
+      \draw[red,->] (DS_1) edge[bend right=2cm] node[left,font=\scriptsize] {$\times a$} (DS_2);
+      \draw[red,->] (DS_2) edge[bend right=2cm] node[left,font=\scriptsize] {$\times a$} (DS_3);
+      \draw[red,->] (DS_3) edge[bend right=2cm] node[left,font=\scriptsize] {$\times a$} (DS_4);
+      \draw[red,->] (DS_4) edge[bend right=2cm] node[left,font=\scriptsize] {$\times a$} (DS_5);
+      \draw[red,->] (DS_5) edge[bend right=2cm] node[left,font=\scriptsize] {$\times a$} (DS_6);
+      \draw[red,->] (DS_6) edge[bend right=2cm] node[left,font=\scriptsize] {$\times a$} (DS_7);
+      \draw[red,->] (DS_7) edge[bend right=2cm] node[left,font=\scriptsize] {$\times a$} (DS_8);
+      \draw[red,->] (DS_8) edge[bend right=2cm] node[left,font=\scriptsize] {$\times a$} (DS_9);
+      \draw[red,->,dashed] (DS_9) edge[bend right=2cm] (DS_10);
+
+      % size
+      \draw[<->] (0, -14.5) -- node[below] {128} +(12.8, 0);
+    \end{tikzpicture}
+  \end{center}
+\end{frame}
+
+\againframe<3>{hard_finish}
 
 %%% Local Variables:
 %%% mode: latex
