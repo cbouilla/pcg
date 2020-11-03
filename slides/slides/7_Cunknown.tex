@@ -5,7 +5,7 @@
     \begin{itemize}
     \item The \alert{increment} (\alert{c}) is \textbf{known}:
       \begin{itemize}
-      \item Remove it, get truncated geometric sequence.
+      \item Remove it, get truncated geometric sequence, CVP.
       \end{itemize}
     \end{itemize}
   \end{exampleblock}
@@ -55,6 +55,7 @@
     % déco autour
     \node<1-5> at (-0.5, 0.5) {$S_0$};
     \draw<2-5>[<->] (12.8, 1.5) -- node[above] {$\ell$ bits} +(-1.775, 0);
+    \draw<2-5>[<->] (0, 1.5) -- node[above] {6} +(0.6, 0);
   \end{scope}
 
   % T_0
@@ -90,12 +91,8 @@
     
     % déco autour
     \node<1-5> at (-0.5, 0.5) {$S_1$};
-
-    % flèches S_i --> T_i
-    \draw<5>[ultra thick,->] (5.5, 0.5) -- +(0, -1.5);
-    \draw<5>[ultra thick,->] (6.7, 0.5) -- +(0, -1.5);
   \end{scope}
-
+  
   % T_1
   \begin{scope}[xshift=4.6cm, yshift=-4.5cm]    
     \draw<5->[dashed]  (0, 0) rectangle +(6.4, 1);
@@ -104,6 +101,13 @@
     \path<5-> (2.4, 0) rectangle node {$?????????????????$} (6.4, 1);
   \end{scope}
 
+  \begin{scope}[yshift=-3cm]
+    % flèches S_i --> T_i
+    \draw<5>[ultra thick,->] (5.5, 0.5) -- +(0, -1.5);
+    \draw<5>[ultra thick,->] (6.7, 0.5) -- +(0, -1.5);
+  \end{scope}
+
+  
   %%%%%%%%%%%%%
 
   
@@ -124,12 +128,8 @@
     
     % déco autour
     \node<1-5> at (-0.5, 0.5) {$S_2$};
-    
-    % flèches S_i --> T_i
-    \draw<5>[ultra thick,->] (5.5, 0.5) -- +(0, -1.5);
-    \draw<5>[ultra thick,->] (6.7, 0.5) -- +(0, -1.5);
-  \end{scope}
-
+  \end{scope}    
+  
   % T_2
   \begin{scope}[xshift=4.6cm, yshift=-7.5cm]    
     \draw<5->[dashed]  (0, 0) rectangle +(6.4, 1);
@@ -138,6 +138,13 @@
     \path<5-> (2.4, 0) rectangle node {$?????????????????$} (6.4, 1);
   \end{scope}
 
+  \begin{scope}[yshift=-6cm]
+    % flèches S_i --> T_i
+    \draw<5>[ultra thick,->] (5.5, 0.5) -- +(0, -1.5);
+    \draw<5>[ultra thick,->] (6.7, 0.5) -- +(0, -1.5);
+  \end{scope}
+
+  
   %%%%%%%%%%%%%
 
   
@@ -158,11 +165,7 @@
     
     % déco autour
     \node<1-5> at (-0.5, 0.5) {$S_3$};
-    
-    % flèches S_i --> T_i
-    \draw<5>[ultra thick,->] (5.5, 0.5) -- +(0, -1.5);
-    \draw<5>[ultra thick,->] (6.7, 0.5) -- +(0, -1.5);
-  \end{scope}
+   \end{scope}
 
   % T_3
   \begin{scope}[xshift=4.6cm, yshift=-10.5cm]    
@@ -172,6 +175,12 @@
     \path<5-> (2.4, 0) rectangle node {$?????????????????$} (6.4, 1);
   \end{scope}
 
+  \begin{scope}[yshift=-9cm]
+  % flèches S_i --> T_i
+    \draw<5>[ultra thick,->] (5.5, 0.5) -- +(0, -1.5);
+    \draw<5>[ultra thick,->] (6.7, 0.5) -- +(0, -1.5);
+  \end{scope}
+  
     %%%%%%%%%%%%%
 
   
@@ -192,11 +201,7 @@
     
     % déco autour
     \node<1-5> at (-0.5, 0.5) {$S_4$};
-    
-    % flèches S_i --> T_i
-    \draw<5>[ultra thick,->] (5.5, 0.5) -- +(0, -1.5);
-    \draw<5>[ultra thick,->] (6.7, 0.5) -- +(0, -1.5);
-  \end{scope}
+  \end{scope}    
 
   % T_4
   \begin{scope}[xshift=4.6cm, yshift=-13.5cm]    
@@ -204,6 +209,11 @@
     \draw<5->[thick,fill=yellow]  (0, 0) rectangle +(2.4, 1);
     \draw<5>[]  (1.8, 0) rectangle +(0, 1);
     \path<5-> (2.4, 0) rectangle node {$?????????????????$} (6.4, 1);
+  \end{scope}
+  \begin{scope}[yshift=-12cm]
+  % flèches S_i --> T_i
+    \draw<5>[ultra thick,->] (5.5, 0.5) -- +(0, -1.5);
+    \draw<5>[ultra thick,->] (6.7, 0.5) -- +(0, -1.5);
   \end{scope}
 
   

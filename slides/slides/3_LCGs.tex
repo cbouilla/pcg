@@ -1,4 +1,4 @@
-\begin{frame}<3>{Truncated Linear Congruencial Generators (\textsf{TLCG})}
+\begin{frame}<3>{Truncated Linear Congruential Generators}
     \begin{itemize}
             \item Internal state : \(2^k\)-bit state.
             \item Multiplier $a$: known constant.
@@ -60,11 +60,13 @@
 \begin{center}
   \begin{tikzpicture}[yscale=0.5]
     \path[red,use as bounding box] (-2, -2.5) rectangle (4.5, 2.5);
+    \begin{scope}[yshift=-0.75cm]
     \draw[thick] (-5, 0) rectangle node {$u_i$} +(4, 1);
     \draw[thick,fill=yellow] (-5, -1.5) rectangle node {$T_i$} +(1, 1);
     \draw[thick] (-4, -1.5) rectangle node {?????????} +(3, 1);
-    
-    \node at (2.5, 0) {$\displaystyle
+  \end{scope}
+  
+    \node at (1.5, 0) {$\displaystyle
     \begin{pmatrix}
     1 & a   & a^2 & \dots & a^{n-1} \\
     0 & 2^{k} & 0   & \dots & 0 \\

@@ -3,8 +3,8 @@
 \begin{itemize}
     \item \textbf{Guess} some bits in a few successive states.
     \begin{itemize}
-          \item<2-> Least-significant bits
-          \item<2-> Rotations
+          \item Least-significant bits
+          \item Rotations
     \end{itemize}
       
     \medskip
@@ -15,8 +15,8 @@
 
     \item \textbf{Reconstruct} hidden information using lattice techniques.
     \begin{itemize}
-          \item<3-> Easy case (\alert{$c$} known): full state
-          \item<3-> Hard case (\alert{$c$} unknown): only partial information
+          \item<2-> Easy case (\alert{$c$} known): full state
+          \item<2-> Hard case (\alert{$c$} unknown): only partial information
       \end{itemize}
     
     \medskip
@@ -55,7 +55,6 @@ $\rightarrow$ \textbf{Geometric sequence}.
 
 \begin{frame}[label=atk_details]{Attack Details}
 
-\begin{figure}
 \begin{center}
 \begin{tikzpicture}[xscale=0.85, yscale=0.66]
   \path[red, use as bounding box] (-0.75, -9.5) rectangle (12.8, 2.25);
@@ -77,9 +76,10 @@ $\rightarrow$ \textbf{Geometric sequence}.
     
     % déco autour
     \node<1-5> at (-0.5, 0.5) {$S_0$};
-    \draw<1-5>[<->] (0, 1.5) -- node[above] {64 bits} +(6.375, 0);
+    \draw<1>[<->] (0, 1.5) -- node[above] {64 bits} +(6.375, 0);
     \draw<1>[<->] (6.425, 1.5) -- node[above] {64 bits} +(6.375, 0);
     \draw<2-5>[<->] (12.8, 1.5) -- node[above] {$\ell$ bits} +(-1.775, 0);
+    \draw<2-5>[<->] (0, 1.5) -- node[above] {6} +(0.6, 0);
   \end{scope}
 
   % T_0
@@ -115,10 +115,6 @@ $\rightarrow$ \textbf{Geometric sequence}.
     
     % déco autour
     \node<1-5> at (-0.5, 0.5) {$S_1$};
-
-    % flèches S_i --> T_i
-    \draw<5>[ultra thick,->] (5.5, 0.5) -- +(0, -1.5);
-    \draw<5>[ultra thick,->] (6.7, 0.5) -- +(0, -1.5);
   \end{scope}
 
   % T_1
@@ -127,6 +123,12 @@ $\rightarrow$ \textbf{Geometric sequence}.
     \draw<5->[thick,fill=yellow]  (0, 0) rectangle +(2.4, 1);
     \draw<5>[]  (1.8, 0) rectangle +(0, 1);
     \path<5-> (2.4, 0) rectangle node {$?????????????????$} (6.4, 1);
+  \end{scope}
+
+  \begin{scope}[yshift=-3cm]  
+    % flèches S_i --> T_i
+    \draw<5>[ultra thick,->] (5.5, 0.5) -- +(0, -1.5);
+    \draw<5>[ultra thick,->] (6.7, 0.5) -- +(0, -1.5);
   \end{scope}
 
   %%%%%%%%%%%%%
@@ -149,12 +151,8 @@ $\rightarrow$ \textbf{Geometric sequence}.
     
     % déco autour
     \node<1-5> at (-0.5, 0.5) {$S_2$};
-    
-    % flèches S_i --> T_i
-    \draw<5>[ultra thick,->] (5.5, 0.5) -- +(0, -1.5);
-    \draw<5>[ultra thick,->] (6.7, 0.5) -- +(0, -1.5);
-  \end{scope}
-
+  \end{scope}    
+  
   % T_2
   \begin{scope}[xshift=4.6cm, yshift=-7.5cm]    
     \draw<5->[dashed]  (0, 0) rectangle +(6.4, 1);
@@ -168,6 +166,12 @@ $\rightarrow$ \textbf{Geometric sequence}.
     \draw<6->[<->] (0, -1.25) -- node[below] {64 bits} +(6.4, 0);
   \end{scope}
 
+  \begin{scope}[yshift=-6cm]
+      % flèches S_i --> T_i
+    \draw<5>[ultra thick,->] (5.5, 0.5) -- +(0, -1.5);
+    \draw<5>[ultra thick,->] (6.7, 0.5) -- +(0, -1.5);
+  \end{scope}
+
   % flèches w
   \draw<3>[thick,->] (11.9, 0) -- node[left] {$\times a + c \bmod \alert{2^\ell}$} +(0, -2);
   \draw<3>[thick,->] (11.9, -3) -- node[left] {$\times a + c \bmod \alert{2^\ell}$} +(0, -2);
@@ -175,8 +179,6 @@ $\rightarrow$ \textbf{Geometric sequence}.
 
 \end{tikzpicture}
 \end{center}
-\end{figure}
-
 \end{frame}
 
 %%%%%%%%%%%%%%

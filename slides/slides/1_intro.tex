@@ -1,4 +1,4 @@
-\begin{frame}[label=intro]{Introduction}
+\begin{frame}<1>[label=intro]{Introduction}
     
     \begin{exampleblock}{What?}
         Cryptanalysis of the \textbf{Permuted Congruential Generator} (PCG).
@@ -40,13 +40,13 @@
     \includegraphics[height=\textheight]{pictures/accepted.jpg}
 \end{frame}
 
-\againframe{intro}
+\againframe<2>{intro}
 
-\begin{frame}{Permuted Congruencial Generators (\textsf{PCG})}
+\begin{frame}{Permuted Congruential Generators (\textsf{PCG})}
     \begin{itemize}
         \item Conventional (non-crypto) pseudo-random generators
         \item Designed in 2014 by Melissa O'Neil
-        \item Version studied : \textsf{PCG64}
+        \item \textsf{PCG64}
         \begin{itemize}
             \item Internal state : 128-bit state and 128-bit \alert{increment}
             \item 64-bit outputs
