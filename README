@@ -1,0 +1,35 @@
+Code for the algorithms that recover seeds for the PCG pseudo-random number 
+generator.
+
+Written by Julia Sauvage (julia.sauvage@etu.sorbonne-universite.fr) and
+Charles Bouillaguet (charles.bouillaguet@sorbonne-universite.fr).
+
+This code is in the public domain.
+
+
+challenges/ folder: tools to generate challenge inputs and expected output.
+
+
+Cknown/ folder: case where the default increment is used. 
+
+main.c: Multi-thread program that recovers the seed from 3 consecutive outputs. 
+        Takes about 25 CPU-minutes. A simple procedure is repeated 2**37 times.
+
+
+
+Cunknown/ folder: case where an unknown increment is used (default in numpy). 
+
+main.c: MPI program that recovers a partial difference between two states from
+        10 consecutive outputs. Takes about 12500 CPU-hours. Uses MPI, so is
+        parallelizable on a cluster. A simple procedure is repeated 2**51 times.
+
+step2.py: given 64 consecutive outputs and the result from the previous program,
+          finds the full difference between any two consecutive states. Very
+          fast.
+
+step3.py: given 64 consecutive outputs and the result from the two previous 
+          programs, prints the seeds. Very fast.
+
+
+
+Other folders: journal article, slides, random junk.

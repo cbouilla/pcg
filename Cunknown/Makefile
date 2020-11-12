@@ -8,7 +8,7 @@ CFLAGS = -O3 -Wall -Wextra -Werror -march=native -mtune=native -fopenmp -g
 LDFLAGS = -fopenmp
 LDLIBS = -lm
 
-all: main pre_validator success_proba
+all: main
 
 main.o: CC=mpicc
 main: CC=mpicc	

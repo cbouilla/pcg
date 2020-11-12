@@ -3,6 +3,11 @@
 #include <stdio.h>
 #include <time.h>
 
+/* 
+ * This program reconstructs the seed of PCG when the default increment is used.
+ * It requires 3 consecutive outputs (given in X in the main function). 
+ * The program runs in less than 25 minutes on a single core.
+ */
 
 void result_found(pcg128_t S, double start)
 {
@@ -26,9 +31,9 @@ int main()
     u64 X[nbiter];
 
     // challenge output given by M. O'Neil
-    X[ 0] = 0x6ec191a37a421087;
-    X[ 1] = 0xec140ace169176fc;
-    X[ 2] = 0x85994d489913af70;
+    X[0] = 0x6ec191a37a421087;
+    X[1] = 0xec140ace169176fc;
+    X[2] = 0x85994d489913af70;
 
     double start = wtime();
     u64 done = 0;
