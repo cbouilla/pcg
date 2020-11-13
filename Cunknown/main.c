@@ -10,6 +10,14 @@
 
 static const bool VERBOSE = false;
 
+/* 
+ * This program reconstructs the seed of PCG when an increment is used.
+ * It requires 10 consecutive outputs (given in X in the main function). 
+ * The program must be run in parallel using MPI. It should take 12500 
+ * CPU-hours, and succeeds with probability about 66%.
+ * This uses a master-slave design, so it requires at least two MPI 
+ * processes (e.g. mpirun -n 2 ./main).
+ */
 
 enum chkpt_status {GOOD_CHECKPOINT, NO_CHECKPOINT, BAD_CHECKPOINT};
 struct checkpoint_t {
